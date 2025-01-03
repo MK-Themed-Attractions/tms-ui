@@ -1,11 +1,16 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { Button } from "@/components/ui/button";
+</script>
 <template>
-  <div class="bg-red-500">
-    <p class="text-2xl">
-      Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequatur
-      optio deleniti praesentium facere ab voluptatibus, error fugiat nobis a,
-      iure provident. Ipsum omnis quisquam nobis a fugiat delectus,
-      reiciendisqweqwe atque!
+  <div class="container">
+    <p class="">
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem unde
+      cupiditate sunt debitis adipisci voluptates tenetur facilis dolor
+      perspiciatis, quibusdam eius iusto voluptas, beatae numquam illo sint
+      earum aperiam doloremque?
+      <div class="flex justify-center">
+        <Button>Get started</Button>
+      </div>
     </p>
   </div>
 </template>
