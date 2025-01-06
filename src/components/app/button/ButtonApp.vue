@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import { LoaderCircle } from "lucide-vue-next";
 import type { ButtonProps } from ".";
 import { Button, type ButtonVariants } from "@/components/ui/button";
 
 const props = defineProps<ButtonProps>();
 </script>
 <template>
-  <Button class="flex items-center gap-2">
-    <component :is="props.prependIcon" v-if="props.prependIcon" />
+  <Button class="flex items-center gap-2" :disabled="loading">
+    <component
+      :is="props.prependIcon"
+      v-if="props.prependIcon && !props.loading"
+    />
+    <LoaderCircle v-if="loading" class="animate-spin" />
+
     <slot />
+
     <component :is="props.appendIcon" v-if="props.appendIcon" />
   </Button>
 </template>

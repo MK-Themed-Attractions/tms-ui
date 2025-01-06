@@ -1,14 +1,30 @@
 <script setup lang="ts">
-import { Button } from "@/components/ui/button";
+import { ref } from "vue";
+import type { LoginCredential } from "@/types/auth";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { LoginCredential } from "@/types/auth";
-import { ref } from "vue";
+import { useAuthStore } from "@/stores/authStore";
+import { storeToRefs } from "pinia";
+import { ButtonApp } from "@/components/app/button";
+import LoginErrorAlert from "./LoginErrorAlert.vue";
 
 const form = ref<LoginCredential>({
   email: "",
   password: "",
 });
+
+const authStore = useAuthStore();
+const { errors, loading } = storeToRefs(authStore);
+
+async function login() {
+  await authStore.login(form.value);
+
+  /* clear the password when theres an error */
+  if (errors.value) {
+    form.value.password = "";
+  }
+}
 </script>
 
 <template>
@@ -22,7 +38,12 @@ const form = ref<LoginCredential>({
             Enter your email below to login to your account
           </p>
         </div>
-        <div class="grid gap-4">
+
+        <LoginErrorAlert v-if="errors">{{
+          errors.data.message
+        }}</LoginErrorAlert>
+
+        <form class="grid gap-4" @submit.prevent="login">
           <div class="grid gap-2">
             <Label for="email">Email</Label>
             <Input
@@ -44,8 +65,10 @@ const form = ref<LoginCredential>({
             </div>
             <Input id="password" type="password" v-model="form.password" />
           </div>
-          <Button type="submit" class="w-full"> Login </Button>
-        </div>
+          <ButtonApp type="submit" class="w-full" :loading="loading">
+            Login
+          </ButtonApp>
+        </form>
         <div class="mt-4 text-center text-sm">
           Don't have an account?
           <a href="#" class="underline"> Sign up </a>
