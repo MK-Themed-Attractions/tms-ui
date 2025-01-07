@@ -25,3 +25,13 @@ export interface LoginResponse {
     refresh_token: Token;
   };
 }
+
+export interface BearerTokenPayload {
+  access_token: string;
+  user_id: string;
+}
+export interface BearerTokenResponse {
+  access_token: string;
+  bearer_token: string;
+  validity: string;
+}
