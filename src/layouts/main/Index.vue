@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navItemData } from ".";
+import { navItemData } from "./data";
 
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-vue-next";

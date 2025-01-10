@@ -9,3 +9,23 @@ export interface SimplePaginate<T> {
   prev_page_url: string;
   to: number;
 }
+
+/**
+ * For responses that uses Laravel API Resources
+ */
+export interface SimplePaginateAPIResource<T> {
+  data: T[];
+  links: {
+    first: string;
+    last: string;
+    prev: string;
+    next: string;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    path: string;
+    per_page: number;
+    to: number;
+  };
+}

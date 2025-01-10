@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navItemData } from "..";
+import { navItemData } from "../data";
 
 import { Package2 } from "lucide-vue-next";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";

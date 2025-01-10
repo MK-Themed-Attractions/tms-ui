@@ -25,6 +25,12 @@ const router = createRouter({
           name: "workerManagement",
           component: () => import("@/pages/worker-management/Index.vue"),
         },
+        {
+          path: "worker-department",
+          name: "workerDepartment",
+          component: () =>
+            import("@/pages/worker-management/department/Index.vue"),
+        },
       ],
     },
     {
