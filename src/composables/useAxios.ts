@@ -28,7 +28,7 @@ export const useAxios = (config: CreateAxiosDefaults) => {
   const errors = ref<AxiosResponseError | null>(null);
   const loading = ref(false);
 
-  async function get<T>(url: string, config: AxiosRequestConfig) {
+  async function get<T>(url: string, config?: AxiosRequestConfig) {
     try {
       loading.value = true;
       const res = await axios.get(url, config);

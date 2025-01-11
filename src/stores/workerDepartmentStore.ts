@@ -3,16 +3,19 @@ import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
-import type { WorkerDepartment } from "@/types/workers";
+import type { WorkerDepartment, WorkerDepartmentForm } from "@/types/workers";
 import { computed, ref } from "vue";
 
 export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   const baseUrl = "http://tms-workers.local";
-
+  const bearerToken = useStorage("tms-workers-bearer-token", "");
   const { errors, get, loading, post } = useAxios({
     baseURL: baseUrl,
+    headers: {
+      "Bearer-Token": bearerToken.value,
+    },
   });
-  const bearerToken = useStorage("tms-workers-bearer-token", "");
+
   const authStore = useAuthStore();
   const paginatedResponse =
     ref<SimplePaginateAPIResource<WorkerDepartment> | null>(null);
@@ -26,21 +29,28 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
 
   /* ACTIONS */
   async function getDepartments() {
-    if (!bearerToken.value) {
-      authStore.checkTokenValidity(`${baseUrl}/api/auth/bearer-token`);
-    }
+    await checkToken();
 
-    const res = await get<SimplePaginateAPIResource<WorkerDepartment>>(
-      "/api/department",
-      {
-        headers: {
-          "Bearer-Token": bearerToken.value,
-        },
-      },
-    );
+    const res =
+      await get<SimplePaginateAPIResource<WorkerDepartment>>("/api/department");
 
     if (res) {
       paginatedResponse.value = res;
+    }
+  }
+
+  async function createDepartment(form: WorkerDepartmentForm) {
+    await checkToken();
+
+    await post<
+      WorkerDepartmentForm,
+      SimplePaginateAPIResource<WorkerDepartment>
+    >("/api/department", form);
+  }
+
+  async function checkToken() {
+    if (!bearerToken.value) {
+      await authStore.checkTokenValidity(`${baseUrl}/api/auth/bearer-token`);
     }
   }
 
@@ -50,5 +60,6 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     loading,
     paginatedResponse,
     departments,
+    createDepartment,
   };
 });

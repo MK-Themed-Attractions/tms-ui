@@ -40,7 +40,7 @@ const isChildRouteSelected = computed(() => {
     :to="to"
   >
     <slot name="icon">
-      <component v-if="icon" :is="icon" class="h-4 w-4" />
+      <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
     </slot>
 
     <slot />
@@ -56,7 +56,7 @@ const isChildRouteSelected = computed(() => {
           class="flex items-center gap-3"
           :class="{ 'text-primary': isChildRouteSelected }"
         >
-          <component v-if="icon" :is="icon" class="h-4 w-4" />
+          <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
           <slot />
         </div>
       </AccordionTrigger>
@@ -69,7 +69,11 @@ const isChildRouteSelected = computed(() => {
             :class="{ 'bg-muted text-primary': $route.name === child.to.name }"
           >
             <slot name="icon">
-              <component v-if="child.icon" :is="child.icon" class="h-4 w-4" />
+              <component
+                v-if="child.icon"
+                :is="child.icon"
+                class="h-6 w-6 lg:h-4 lg:w-4"
+              />
             </slot>
 
             <span>{{ child.name }}</span>

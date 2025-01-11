@@ -17,7 +17,7 @@ const props = defineProps<{
     >
       <template #item.code="{ item }">
         <TableCell>
-          <span class="rounded-md border px-2 text-xs font-medium">
+          <span class="rounded-md border px-2 text-xs font-medium uppercase">
             {{ item.code }}
           </span>
         </TableCell>

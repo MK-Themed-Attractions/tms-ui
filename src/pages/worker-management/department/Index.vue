@@ -3,6 +3,8 @@ import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { storeToRefs } from "pinia";
 import DepartmentDataTable from "./components/DepartmentDataTable.vue";
 import DepartmentToolbar from "./components/DepartmentToolbar.vue";
+import { provide } from "vue";
+import { workerDepartmentOnSuccessKey } from "@/lib/injectionKeys";
 
 const { fetchDepartments, departments } = useWorkerDepartment();
 
@@ -21,10 +23,18 @@ function useWorkerDepartment() {
     departments,
   };
 }
+
+/**
+ * use to provide a central fetching function
+ * everytime a CRUD happens to any child component
+ */
+provide(workerDepartmentOnSuccessKey, async () => {
+  await fetchDepartments();
+});
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="container space-y-6">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Workers Department</h1>
       <p class="w-[70ch] text-sm text-muted-foreground md:text-base">
@@ -33,7 +43,7 @@ function useWorkerDepartment() {
       </p>
     </div>
 
-    <div class="lg:max-w-[50%]">
+    <div>
       <DepartmentToolbar class="mb-4" />
 
       <DepartmentDataTable v-if="departments" :departments="departments">
