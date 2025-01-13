@@ -10,6 +10,13 @@ export interface Worker {
   department?: WorkerDepartment;
 }
 
+export interface WorkerForm {
+  worker_number: string;
+  given_name: string;
+  last_name: string;
+  rfid_card: string;
+}
+
 export interface WorkerDepartment {
   code: string;
   name: string;

@@ -3,24 +3,30 @@ import { useAxios } from "@/composables/useAxios";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { useStorage } from "@vueuse/core";
-import type { Worker } from "@/types/workers";
+import type { Worker, WorkerForm } from "@/types/workers";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
+import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
   const baseUrl = "http://tms-workers.local";
+  const bearerToken = useStorage("tms-workers-bearer-token", "");
+
   const { errors, get, loading, post } = useAxios({
     baseURL: baseUrl,
+    headers: {
+      "Bearer-Token": bearerToken.value,
+    },
   });
 
   const authStore = useAuthStore();
-  const bearerToken = useStorage("tms-workers-bearer-token", "");
 
   /**
    * paginatedResponse holds the raw response from api/worker
    */
   const paginatedResponse = ref<SimplePaginateAPIResource<Worker> | null>(null);
 
+  /* GETTERS*/
   const workers = computed(() => {
     if (paginatedResponse.value) {
       return paginatedResponse.value.data;
@@ -29,21 +35,34 @@ export const useWorkerStore = defineStore("workers", () => {
     }
   });
 
-  async function getWorkers() {
+  /* ACTIONS */
+  async function getWorkers(config?: AxiosRequestConfig) {
+    await checkToken();
+
+    const res = await get<SimplePaginateAPIResource<Worker>>(
+      "/api/worker",
+      config,
+    );
+
+    if (res) {
+      paginatedResponse.value = res;
+    }
+  }
+
+  async function createWorker(form: WorkerForm) {
+    await checkToken();
+
+    await post<WorkerForm, SimplePaginateAPIResource<Worker>>(
+      "/api/worker",
+      form,
+    );
+  }
+
+  async function checkToken() {
     if (!bearerToken.value) {
       bearerToken.value = await authStore.checkTokenValidity(
         `${baseUrl}/api/auth/bearer-token`,
       );
-    }
-
-    const res = await get<SimplePaginateAPIResource<Worker>>("/api/worker", {
-      headers: {
-        "Bearer-Token": bearerToken.value,
-      },
-    });
-
-    if (res) {
-      paginatedResponse.value = res;
     }
   }
 
@@ -53,5 +72,6 @@ export const useWorkerStore = defineStore("workers", () => {
     loading,
     workers,
     paginatedResponse,
+    createWorker,
   };
 });

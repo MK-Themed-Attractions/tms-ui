@@ -13,4 +13,8 @@ export const displayColumns: DataTableColumns[] = [
     key: "description",
     title: "Description",
   },
+  {
+    key: "actions",
+    title: "",
+  },
 ];

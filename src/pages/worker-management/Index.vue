@@ -4,28 +4,55 @@ import { storeToRefs } from "pinia";
 import WorkerDataTable from "./components/WorkerDataTable.vue";
 
 import WorkerToolbar from "./components/WorkerToolbar.vue";
+import { provide } from "vue";
+import { workerOnSuccessKey } from "@/lib/injectionKeys";
+import { useRouterQuery } from "@/composables/useRouterQuery";
 
-const { fetchWorkers, workers } = useWorkers();
-
+const { fetchWorkers, workers, loading } = useWorkers();
+const { handleSearch, q } = useSearch();
 if (!workers.value) await fetchWorkers();
 
 function useWorkers() {
   const workerStore = useWorkerStore();
-  const { workers } = storeToRefs(workerStore);
+  const { workers, loading } = storeToRefs(workerStore);
 
   async function fetchWorkers() {
-    await workerStore.getWorkers();
+    await workerStore.getWorkers({ params: { q: q.value } });
   }
 
   return {
     fetchWorkers,
     workers,
+    loading,
   };
 }
+
+function useSearch() {
+  /* Search query URL */
+  const [q, setQ] = useRouterQuery("q", async () => {
+    await fetchWorkers();
+  });
+
+  function handleSearch(search: string) {
+    setQ(search);
+  }
+  return {
+    q,
+    handleSearch,
+  };
+}
+
+/**
+ * use to provide a central fetching function
+ * everytime a CRUD happens to any child component
+ */
+provide(workerOnSuccessKey, async () => {
+  await fetchWorkers();
+});
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="container space-y-6">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Worker Management</h1>
       <p class="w-[70ch] text-sm text-muted-foreground md:text-base">
@@ -34,8 +61,12 @@ function useWorkers() {
       </p>
     </div>
 
-    <div class="space-y-4 lg:max-w-[70%]">
-      <WorkerToolbar />
+    <div class="space-y-4">
+      <WorkerToolbar
+        @search="handleSearch"
+        :loading="loading"
+        :search-default-value="q?.toString()"
+      />
       <WorkerDataTable
         v-if="workers"
         :workers="workers"

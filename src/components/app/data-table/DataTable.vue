@@ -46,9 +46,11 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
     </slot>
     <TableHeader>
       <TableRow>
-        <TableHead v-for="column in selectedColumns" :key="column.key">{{
-          column.title
-        }}</TableHead>
+        <template v-for="column in selectedColumns" :key="column.key">
+          <slot :name="`header.${column.key}`" :item="column">
+            <TableHead>{{ column.title }}</TableHead>
+          </slot>
+        </template>
       </TableRow>
     </TableHeader>
 
@@ -71,7 +73,7 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
         :colspan="selectedColumns.length"
       >
         <div class="text-center">
-          <ImageApp image="/no_photo.png" class="max-w-40" />
+          <ImageApp image="/no_file.png" class="mx-auto max-w-5" />
           <span class="font-medium text-muted-foreground"
             >No Data Available</span
           >
