@@ -15,6 +15,7 @@ export interface WorkerForm {
   given_name: string;
   last_name: string;
   rfid_card: string;
+  department_id:string;
 }
 
 export interface WorkerDepartment {

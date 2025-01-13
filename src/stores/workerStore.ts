@@ -9,7 +9,7 @@ import { computed } from "@vue/reactivity";
 import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = "http://tms-workers.local";
+  const baseUrl = "http://192.168.110.21:9000";
   const bearerToken = useStorage("tms-workers-bearer-token", "");
 
   const { errors, get, loading, post } = useAxios({

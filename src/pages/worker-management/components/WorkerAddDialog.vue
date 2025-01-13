@@ -28,8 +28,18 @@ import { AlertCircle, Plus, ScanQrCode } from "lucide-vue-next";
 import { inject, ref } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useWorkerStore } from "@/stores/workerStore";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 
 const { createWorker, loading, errors } = useWorker();
+const { departments, fetchWorkerDepartments } = useWorkerDepartment();
 const dialog = ref(false);
 const onSuccess = inject(workerOnSuccessKey, null);
 const formSchema = toTypedSchema(
@@ -38,6 +48,7 @@ const formSchema = toTypedSchema(
     given_name: z.string().max(255).nonempty("Input must not be empty"),
     last_name: z.string().max(255).nonempty("Input must not be empty"),
     rfid_card: z.string().max(50).nonempty("Input must not be empty"),
+    department_id: z.string().max(255),
   }),
 );
 
@@ -88,6 +99,23 @@ function useWorker() {
     createWorker,
   };
 }
+
+function useWorkerDepartment() {
+  const workerDepartmentStore = useWorkerDepartmentStore();
+  const { departments } = storeToRefs(workerDepartmentStore);
+
+  async function fetchWorkerDepartments() {
+    if (!departments.value) await workerDepartmentStore.getDepartments();
+  }
+
+  return {
+    fetchWorkerDepartments,
+    departments,
+  };
+}
+
+/* INIT */
+await fetchWorkerDepartments();
 </script>
 <template>
   <Dialog v-model:open="dialog">
@@ -153,6 +181,31 @@ function useWorker() {
                 <Input type="text" v-bind="componentField" />
                 <FormMessage />
               </FormControl>
+            </FormItem>
+          </FormField>
+
+          <FormField v-slot="{ componentField }" name="department_id">
+            <FormItem class="">
+              <FormLabel>Department</FormLabel>
+              <Select v-bind="componentField">
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department"></SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem
+                      v-for="dept in departments"
+                      :key="dept.id"
+                      :value="dept.id"
+                    >
+                      {{ dept.name }}
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FormMessage />
             </FormItem>
           </FormField>
 
