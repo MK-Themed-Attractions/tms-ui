@@ -64,6 +64,17 @@ export const useWorkerStore = defineStore("workers", () => {
     await put(`/api/worker/${workerId}`, form);
   }
 
+  async function deactivateWorker(workers: Worker[]) {
+    await checkToken();
+
+    const workerIds = workers.reduce<string[]>((acc, cur) => {
+      acc.push(cur.id);
+      return acc;
+    }, []);
+
+    await put("/api/workers/deactivate", { worker_ids: workerIds });
+  }
+
   async function checkToken() {
     if (!bearerToken.value) {
       bearerToken.value = await authStore.checkTokenValidity(
@@ -80,5 +91,6 @@ export const useWorkerStore = defineStore("workers", () => {
     paginatedResponse,
     createWorker,
     updateWorker,
+    deactivateWorker,
   };
 });
