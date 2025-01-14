@@ -2,8 +2,6 @@
 import { onBeforeUnmount, ref, watch, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
 import { useIntersectionObserver } from "@vueuse/core";
-import { useRouterQuery } from "@/composables/useRouterQuery";
-import { onBeforeRouteUpdate } from "vue-router";
 
 import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +22,7 @@ function useProduct() {
   async function fetchProducts() {
     await productStore.getProducts({
       page: page.value,
+      includes: "images",
     });
   }
   return {
@@ -62,7 +61,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <!-- Product Index -->
+  <div class="space-y-6" v-if="$route.name === 'products'">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Products</h1>
       <p class="text-muted-foreground">
@@ -85,7 +85,11 @@ onBeforeUnmount(() => {
     <div>
       <ul class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         <li v-for="product in products">
-          <ProductCard :product="product"></ProductCard>
+          <RouterLink
+            :to="{ name: 'productShow', params: { productId: product.id } }"
+          >
+            <ProductCard :product="product"></ProductCard>
+          </RouterLink>
         </li>
 
         <!-- INFINITE SCROLLING  -->
@@ -98,6 +102,9 @@ onBeforeUnmount(() => {
       </ul>
     </div>
   </div>
+
+  <!-- Product Show -->
+  <RouterView v-else></RouterView>
 </template>
 
 <style scoped></style>

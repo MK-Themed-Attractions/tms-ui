@@ -19,6 +19,14 @@ const router = createRouter({
           path: "products",
           name: "products",
           component: () => import("@/pages/products/Index.vue"),
+          children: [
+            {
+              path: ":productId",
+              name: "productShow",
+              component: () => import("@/pages/products/show/Index.vue"),
+              props: true,
+            },
+          ],
         },
         {
           path: "worker-management",

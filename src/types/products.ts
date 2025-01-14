@@ -26,4 +26,5 @@ export interface Image {
 /* config for product API get method parameters */
 export interface ProductQueryParameter {
   page: number;
+  includes: string;
 }

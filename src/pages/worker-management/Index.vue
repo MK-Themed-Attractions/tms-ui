@@ -17,7 +17,9 @@ function useWorkers() {
   const { workers, loading } = storeToRefs(workerStore);
 
   async function fetchWorkers() {
-    await workerStore.getWorkers({ params: { q: q.value } });
+    await workerStore.getWorkers({
+      params: { q: q.value, includes: "department" },
+    });
   }
 
   return {

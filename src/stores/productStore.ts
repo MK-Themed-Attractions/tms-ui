@@ -23,7 +23,7 @@ export const useProductStore = defineStore("products", () => {
     baseURL: baseUrl,
   });
 
-  async function getProducts(params?: ProductQueryParameter) {
+  async function getProducts(params?: Partial<ProductQueryParameter>) {
     if (!bearerToken.value)
       bearerToken.value = await authStore.checkTokenValidity(
         `${baseUrl}/api/auth/bearer-token`,
@@ -42,6 +42,10 @@ export const useProductStore = defineStore("products", () => {
     products.value = res?.data ?? null;
 
     return res?.data;
+  }
+
+  async function getProduct() {
+    
   }
 
   return {
