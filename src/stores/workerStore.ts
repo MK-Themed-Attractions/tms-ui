@@ -9,10 +9,10 @@ import { computed } from "@vue/reactivity";
 import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = "http://192.168.110.21:9000";
+  const baseUrl = "http://tms-workers.local";
   const bearerToken = useStorage("tms-workers-bearer-token", "");
 
-  const { errors, get, loading, post } = useAxios({
+  const { errors, get, loading, post, put } = useAxios({
     baseURL: baseUrl,
     headers: {
       "Bearer-Token": bearerToken.value,
@@ -58,6 +58,12 @@ export const useWorkerStore = defineStore("workers", () => {
     );
   }
 
+  async function updateWorker(workerId: string, form: WorkerForm) {
+    await checkToken();
+
+    await put(`/api/worker/${workerId}`, form);
+  }
+
   async function checkToken() {
     if (!bearerToken.value) {
       bearerToken.value = await authStore.checkTokenValidity(
@@ -73,5 +79,6 @@ export const useWorkerStore = defineStore("workers", () => {
     workers,
     paginatedResponse,
     createWorker,
+    updateWorker,
   };
 });

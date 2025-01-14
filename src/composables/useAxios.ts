@@ -35,7 +35,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
 
       errors.value = null;
       return res.data as T;
-      
     } catch (err) {
       errors.value = err as AxiosResponseError;
     } finally {
@@ -61,10 +60,30 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     }
   }
 
+  async function put<T, U>(
+    url: string,
+    payload?: T,
+    config?: AxiosRequestConfig,
+  ) {
+    try {
+      loading.value = true;
+      const res = await axios.put(url, payload, config);
+
+      errors.value = null;
+
+      return res.data as U;
+    } catch (err) {
+      errors.value = err as AxiosResponseError;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     get,
     post,
     loading,
     errors,
+    put,
   };
 };

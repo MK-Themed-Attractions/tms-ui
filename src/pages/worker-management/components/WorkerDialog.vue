@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { WorkerForm } from "@/types/workers";
+import type { Worker, WorkerForm } from "@/types/workers";
 import { toTypedSchema } from "@vee-validate/zod";
 import { storeToRefs } from "pinia";
 import { useForm } from "vee-validate";
@@ -25,7 +25,7 @@ import * as z from "zod";
 import { toast } from "vue-sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Plus, ScanQrCode } from "lucide-vue-next";
-import { inject, ref } from "vue";
+import { inject, onUpdated, ref, watch } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useWorkerStore } from "@/stores/workerStore";
 import {
@@ -38,9 +38,13 @@ import {
 } from "@/components/ui/select";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 
-const { createWorker, loading, errors } = useWorker();
-const { departments, fetchWorkerDepartments } = useWorkerDepartment();
-const dialog = ref(false);
+const props = defineProps<{
+  worker?: Worker;
+}>();
+const dialog = defineModel({ default: false });
+
+const { createWorker, loading, errors, updateWorker } = useWorker();
+const { departments } = useWorkerDepartment();
 const onSuccess = inject(workerOnSuccessKey, null);
 const formSchema = toTypedSchema(
   z.object({
@@ -52,19 +56,22 @@ const formSchema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, resetForm } = useForm({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: formSchema,
 });
 
 const onSubmit = handleSubmit(async (values) => {
-  await createWorker(values);
+  if (!isUpdating()) await createWorker(values);
+  else await updateWorker(values);
 
   /**
    * display a success toaster when response in OK
    */
   if (!errors.value) {
     toast("Success", {
-      description: "A new worker has been added.",
+      description: isUpdating()
+        ? "Worker has been updated."
+        : "A new worker has been added.",
     });
 
     /**
@@ -93,10 +100,15 @@ function useWorker() {
     await workerStore.createWorker(form);
   }
 
+  async function updateWorker(form: WorkerForm) {
+    if (props.worker) await workerStore.updateWorker(props.worker?.id, form);
+  }
+
   return {
     loading,
     errors,
     createWorker,
+    updateWorker,
   };
 }
 
@@ -114,16 +126,43 @@ function useWorkerDepartment() {
   };
 }
 
+function isUpdating() {
+  /**
+   * if worker props is available
+   * you are assumed to be UPDATING the worker
+   */
+  return !props.worker ? false : true;
+}
+
 /* INIT */
-await fetchWorkerDepartments();
+
+onUpdated(() => {
+  if (isUpdating()) {
+    setFieldValue("department_id", props.worker?.department?.id);
+    setFieldValue("given_name", props.worker?.given_name);
+    setFieldValue("last_name", props.worker?.last_name);
+    setFieldValue("rfid_card", props.worker?.rfid_card);
+    setFieldValue("worker_number", props.worker?.worker_number);
+  }
+});
 </script>
+
 <template>
   <Dialog v-model:open="dialog">
-    <ButtonApp :prepend-icon="Plus" @click="dialog = true">Add</ButtonApp>
+    <slot
+      :props="{
+        onClick: () => {
+          dialog = true;
+        },
+      }"
+    >
+    </slot>
 
     <DialogContent @pointer-down-outside="(e) => e.preventDefault()">
       <DialogHeader>
-        <DialogTitle>Add Worker</DialogTitle>
+        <slot name="header.title">
+          <DialogTitle>Add Worker</DialogTitle>
+        </slot>
         <DialogDescription
           >Fill the form below correct data, Click save when your're
           done.</DialogDescription

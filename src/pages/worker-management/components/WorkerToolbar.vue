@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
-import { Search, WifiOff } from "lucide-vue-next";
-import WorkerAddDialog from "./WorkerAddDialog.vue";
+import { Plus, Search, WifiOff } from "lucide-vue-next";
+import WorkerAddDialog from "./WorkerDialog.vue";
 import { ref, watch, watchEffect } from "vue";
+import { DialogTrigger } from "@/components/ui/dialog";
 
 const emits = defineEmits<{
   (e: "search", search: string): void;
@@ -52,7 +53,11 @@ watch(search, (newValue) => {
     </form>
 
     <div class="flex gap-2">
-      <WorkerAddDialog></WorkerAddDialog>
+      <WorkerAddDialog>
+        <DialogTrigger>
+          <ButtonApp :prepend-icon="Plus">Add</ButtonApp>
+        </DialogTrigger>
+      </WorkerAddDialog>
       <ButtonApp variant="outline" :prepend-icon="WifiOff"
         >Deactivate RFID</ButtonApp
       >

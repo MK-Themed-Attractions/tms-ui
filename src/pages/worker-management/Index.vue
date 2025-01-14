@@ -7,23 +7,40 @@ import WorkerToolbar from "./components/WorkerToolbar.vue";
 import { provide } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useRouterQuery } from "@/composables/useRouterQuery";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
-if (!workers.value) await fetchWorkers();
+const { departments, fetchWorkerDepartments } = useWorkerDepartment();
 
 function useWorkers() {
   const workerStore = useWorkerStore();
   const { workers, loading } = storeToRefs(workerStore);
 
   async function fetchWorkers() {
-    await workerStore.getWorkers({ params: { q: q.value } });
+    await workerStore.getWorkers({
+      params: { q: q.value, includes: "department" },
+    });
   }
 
   return {
     fetchWorkers,
     workers,
     loading,
+  };
+}
+
+function useWorkerDepartment() {
+  const workerDepartmentStore = useWorkerDepartmentStore();
+  const { departments } = storeToRefs(workerDepartmentStore);
+
+  async function fetchWorkerDepartments() {
+    if (!departments.value) await workerDepartmentStore.getDepartments();
+  }
+
+  return {
+    fetchWorkerDepartments,
+    departments,
   };
 }
 
@@ -49,6 +66,10 @@ function useSearch() {
 provide(workerOnSuccessKey, async () => {
   await fetchWorkers();
 });
+
+/* INIT */
+if (!workers.value) await fetchWorkers();
+if (!departments.value) await fetchWorkerDepartments();
 </script>
 
 <template>
