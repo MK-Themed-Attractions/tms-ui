@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navItemData } from "..";
+import { navItemData } from "../data";
 
 import { Package2 } from "lucide-vue-next";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -23,15 +23,25 @@ import NavItem from "./NavItem.vue";
         </RouterLink>
         <NavItem
           v-for="item in navItemData"
-          :key="item.to.name"
+          :key="item.to?.name || item.name"
           :to="item.to"
+          :icon="item.icon"
+          :children="item.children"
+          >{{ item.name }}</NavItem
+        >
+
+        <!-- <NavItem
+          v-for="item in navItemData"
+          :key="item.to?.name || item.name"
+          :to="item.to"
+          :children="item.children"
           class="mx-[-0.65rem]"
         >
           <template #icon v-if="item.icon">
             <component :is="item.icon" class="aspect-square h-5" />
           </template>
           {{ item.name }}
-        </NavItem>
+        </NavItem> -->
       </nav>
     </SheetContent>
   </Sheet>

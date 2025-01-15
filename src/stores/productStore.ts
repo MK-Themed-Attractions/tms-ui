@@ -1,19 +1,20 @@
 import { useAxios } from "@/composables/useAxios";
 import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
-import { useStorage } from "@vueuse/core";
 import { ref } from "vue";
 
-import type { BearerTokenPayload, BearerTokenResponse } from "@/types/auth";
-import type { SimplePaginate } from "@/types/pagination";
+import { type SimplePaginateAPIResource } from "@/types/pagination";
 import type { Product, ProductQueryParameter } from "@/types/products";
+import { useStorage } from "@vueuse/core";
 
 export const useProductStore = defineStore("products", () => {
+  const baseUrl = import.meta.env.VITE_PRODUCT_URL;
   const authStore = useAuthStore();
-  const { accessToken, user } = storeToRefs(authStore);
-
-  const bearerToken = useStorage("bearer-token", "");
   const products = ref<Product[] | null>(null);
+  const bearerToken = useStorage(
+    import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY,
+    "",
+  );
 
   /**
    * accumulated products is used to append products on each API request
@@ -21,49 +22,32 @@ export const useProductStore = defineStore("products", () => {
    */
   const accumulatedProducts = ref<Product[]>([]);
 
-  const { errors, loading, get, post } = useAxios({
-    baseURL: "http://tms-products.local",
+  const { errors, loading, get, setHeader } = useAxios({
+    baseURL: baseUrl,
   });
-
-  async function checkTokenValidity() {
-    const res = await post<BearerTokenPayload, BearerTokenResponse>(
-      "/api/auth/bearer-token",
-      {
-        access_token: accessToken?.value?.token || "",
-        user_id: user.value.id,
-      },
-    );
-
-    if (!errors.value) bearerToken.value = res?.bearer_token;
-  }
+  setHeader("Bearer-Token", bearerToken);
 
   async function getProducts(params?: ProductQueryParameter) {
-    if (!bearerToken.value) {
-      await checkTokenValidity();
-    }
-
-    const res = await get<{ products: SimplePaginate<Product> }>(
-      "/api/products",
-      {
-        params,
-        headers: {
-          "Bearer-Token": bearerToken.value,
-        },
-      },
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
     );
+
+    const res = await get<SimplePaginateAPIResource<Product>>("/api/products", {
+      params,
+    });
     accumulatedProducts.value = accumulatedProducts.value.concat(
-      res?.products.data ?? [],
+      res?.data ?? [],
     );
-    products.value = res?.products.data ?? null;
+    products.value = res?.data ?? null;
 
-    return res?.products;
+    return res?.data;
   }
 
   return {
     getProducts,
     errors,
     loading,
-    checkTokenValidity,
     products,
     accumulatedProducts,
   };

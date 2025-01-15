@@ -1,6 +1,16 @@
 import { useAxios } from "@/composables/useAxios";
-import type { LoginCredential, LoginResponse, Token, User } from "@/types/auth";
-import { StorageSerializers, useStorage } from "@vueuse/core";
+import type {
+  BearerTokenResponse,
+  LoginCredential,
+  LoginResponse,
+  Token,
+  User,
+} from "@/types/auth";
+import {
+  StorageSerializers,
+  useStorage,
+  type MaybeRefOrGetter,
+} from "@vueuse/core";
 
 import { defineStore } from "pinia";
 
@@ -26,8 +36,9 @@ export const useAuthStore = defineStore("auth", () => {
   );
 
   const { errors, loading, post } = useAxios({
-    baseURL: "http://tms-users.local",
+    baseURL: import.meta.env.VITE_USERS_URL,
   });
+
   async function login(payload: LoginCredential) {
     const res = await post<LoginCredential, LoginResponse>(
       "/api/auth/login",
@@ -39,6 +50,56 @@ export const useAuthStore = defineStore("auth", () => {
     refreshToken.value = res?.token.refresh_token;
   }
 
+  async function checkTokenValidity(
+    bearerEndPoint: string,
+    bearerToken: MaybeRefOrGetter,
+  ) {
+    if (!bearerToken.value) {
+      const res = await post<any, BearerTokenResponse>(
+        bearerEndPoint,
+        {
+          access_token: accessToken.value?.token ?? "",
+          user_id: user.value.id,
+          permissions: [
+            "can-create-product",
+            "can-update-product",
+            "can-attach-user-permission",
+            "can-attach-user-role",
+            "can-update-role",
+            "can-update-permission",
+            "can-create-worker",
+            "can-update-worker",
+            "can-create-department",
+            "can-update-department",
+            "can-set-worker-department",
+            "can-unset-worker-department",
+          ],
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          baseURL: "/",
+        },
+      );
+
+      bearerToken.value = res?.bearer_token;
+    }
+  }
+
+  async function logout() {
+    await post(
+      "api/auth/logout",
+      { id: user.value.id },
+      {
+        headers: {
+          "Access-Token": accessToken.value?.token,
+        },
+      },
+    );
+    user.value = null;
+  }
+
   return {
     login,
     user,
@@ -46,5 +107,7 @@ export const useAuthStore = defineStore("auth", () => {
     refreshToken,
     errors,
     loading,
+    checkTokenValidity,
+    logout,
   };
 });

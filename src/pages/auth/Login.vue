@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { storeToRefs } from "pinia";
 import { ButtonApp } from "@/components/app/button";
 import LoginErrorAlert from "./LoginErrorAlert.vue";
+import { useRouter } from "vue-router";
 
 const form = ref<LoginCredential>({
   email: "",
@@ -16,6 +17,7 @@ const form = ref<LoginCredential>({
 
 const authStore = useAuthStore();
 const { errors, loading } = storeToRefs(authStore);
+const router = useRouter();
 
 async function login() {
   await authStore.login(form.value);
@@ -23,6 +25,9 @@ async function login() {
   /* clear the password when theres an error */
   if (errors.value) {
     form.value.password = "";
+  } else {
+    /* redirect the user to home page */
+    router.push({ name: "home" });
   }
 }
 </script>

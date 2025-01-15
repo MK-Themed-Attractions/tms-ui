@@ -32,9 +32,10 @@ const props = defineProps<{
         <nav class="grid items-start px-2 text-sm font-medium lg:px-4">
           <NavItem
             v-for="item in items"
-            :key="item.to.name"
+            :key="item.to?.name || item.name"
             :to="item.to"
             :icon="item.icon"
+            :children="item.children"
             >{{ item.name }}</NavItem
           >
         </nav>

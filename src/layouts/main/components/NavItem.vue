@@ -1,26 +1,87 @@
 <script setup lang="ts">
-import type { Component } from "vue";
+import { useRoute } from "vue-router";
+import { computed, type Component } from "vue";
 import { RouterLink, type RouteLocationAsRelativeGeneric } from "vue-router";
+import type { NavItem } from "./SideNavigation.vue";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export type NavItemProps = {
   icon?: Component;
-  to: RouteLocationAsRelativeGeneric;
+  to?: RouteLocationAsRelativeGeneric;
+  children?: NavItem[];
 };
 const props = defineProps<NavItemProps>();
+
+const route = useRoute();
+
+/**
+ * for giving the parent a style
+ * depending on whether one of its child route is currenly an active route
+ */
+const isChildRouteSelected = computed(() => {
+  return props.children?.some((child) => {
+    return child.to?.name === route.name;
+  });
+});
 </script>
 
 <template>
+  <!-- For navigation without children -->
   <RouterLink
+    v-if="!children?.length && to"
     class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
     :class="{ 'bg-muted text-primary': $route.name === to.name }"
     :to="to"
   >
     <slot name="icon">
-      <component v-if="icon" :is="icon" class="h-4 w-4" />
+      <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
     </slot>
 
     <slot />
   </RouterLink>
+
+  <!-- For group navigation (with children) -->
+  <Accordion v-else type="single" collapsible>
+    <AccordionItem value="1" class="border-none">
+      <AccordionTrigger
+        class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline"
+      >
+        <div
+          class="flex items-center gap-3"
+          :class="{ 'text-primary': isChildRouteSelected }"
+        >
+          <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
+          <slot />
+        </div>
+      </AccordionTrigger>
+      <AccordionContent class="ml-2 grid gap-1 rounded-md">
+        <template v-for="child in children" :key="child.name">
+          <RouterLink
+            v-if="child.to"
+            :to="child.to"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            :class="{ 'bg-muted text-primary': $route.name === child.to.name }"
+          >
+            <slot name="icon">
+              <component
+                v-if="child.icon"
+                :is="child.icon"
+                class="h-6 w-6 lg:h-4 lg:w-4"
+              />
+            </slot>
+
+            <span>{{ child.name }}</span>
+          </RouterLink>
+        </template>
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>
 </template>
 
 <style scoped></style>

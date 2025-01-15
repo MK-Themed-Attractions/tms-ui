@@ -29,6 +29,7 @@ export interface LoginResponse {
 export interface BearerTokenPayload {
   access_token: string;
   user_id: string;
+  permissions?: string[];
 }
 export interface BearerTokenResponse {
   access_token: string;
