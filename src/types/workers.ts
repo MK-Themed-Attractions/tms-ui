@@ -15,7 +15,7 @@ export interface WorkerForm {
   given_name: string;
   last_name: string;
   rfid_card: string;
-  department_id:string;
+  department_id: string;
 }
 
 export interface WorkerDepartment {
@@ -32,4 +32,9 @@ export interface WorkerDepartmentForm {
   code: string;
   name: string;
   description?: string;
+}
+
+export interface WorkerQueryParams {
+  page: number;
+  includes: string;
 }

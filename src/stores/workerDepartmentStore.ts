@@ -12,12 +12,10 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
     "",
   );
-  const { errors, get, loading, post } = useAxios({
+  const { errors, get, loading, post, setHeader } = useAxios({
     baseURL: baseUrl,
-    headers: {
-      "Bearer-Token": bearerToken.value,
-    },
   });
+  setHeader("Bearer-Token", bearerToken);
 
   const authStore = useAuthStore();
   const paginatedResponse =
@@ -32,7 +30,10 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
 
   /* ACTIONS */
   async function getDepartments() {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     const res =
       await get<SimplePaginateAPIResource<WorkerDepartment>>("/api/department");
@@ -43,18 +44,15 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   }
 
   async function createDepartment(form: WorkerDepartmentForm) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     await post<
       WorkerDepartmentForm,
       SimplePaginateAPIResource<WorkerDepartment>
     >("/api/department", form);
-  }
-
-  async function checkToken() {
-    if (!bearerToken.value || bearerToken.value === "") {
-      await authStore.checkTokenValidity(`${baseUrl}/api/auth/bearer-token`);
-    }
   }
 
   return {

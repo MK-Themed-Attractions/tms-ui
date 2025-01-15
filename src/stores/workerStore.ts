@@ -10,14 +10,15 @@ import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
   const baseUrl = import.meta.env.VITE_WORKERS_URL;
-  const bearerToken = useStorage("tms-workers-bearer-token", "");
+  const bearerToken = useStorage(
+    import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
+    "",
+  );
 
-  const { errors, get, loading, post, put } = useAxios({
+  const { errors, get, loading, post, put, setHeader } = useAxios({
     baseURL: baseUrl,
-    headers: {
-      "Bearer-Token": bearerToken.value,
-    },
   });
+  setHeader("Bearer-Token", bearerToken);
 
   const authStore = useAuthStore();
 
@@ -37,7 +38,10 @@ export const useWorkerStore = defineStore("workers", () => {
 
   /* ACTIONS */
   async function getWorkers(config?: AxiosRequestConfig) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     const res = await get<SimplePaginateAPIResource<Worker>>(
       "/api/worker",
@@ -50,7 +54,10 @@ export const useWorkerStore = defineStore("workers", () => {
   }
 
   async function createWorker(form: WorkerForm) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     await post<WorkerForm, SimplePaginateAPIResource<Worker>>(
       "/api/worker",
@@ -59,13 +66,19 @@ export const useWorkerStore = defineStore("workers", () => {
   }
 
   async function updateWorker(workerId: string, form: WorkerForm) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     await put(`/api/worker/${workerId}`, form);
   }
 
   async function deactivateWorker(workers: Worker[]) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     const workerIds = workers.reduce<string[]>((acc, cur) => {
       acc.push(cur.id);
@@ -73,14 +86,6 @@ export const useWorkerStore = defineStore("workers", () => {
     }, []);
 
     await put("/api/workers/deactivate", { worker_ids: workerIds });
-  }
-
-  async function checkToken() {
-    if (!bearerToken.value || bearerToken.value === "") {
-      bearerToken.value = await authStore.checkTokenValidity(
-        `${baseUrl}/api/auth/bearer-token`,
-      );
-    }
   }
 
   return {
@@ -92,5 +97,6 @@ export const useWorkerStore = defineStore("workers", () => {
     createWorker,
     updateWorker,
     deactivateWorker,
+    bearerToken,
   };
 });
