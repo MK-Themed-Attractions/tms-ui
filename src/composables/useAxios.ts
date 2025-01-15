@@ -38,18 +38,11 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     switch (errors.value?.status) {
       /* unauthorize response */
       case 401: {
-        clearAuth();
+        localStorage.clear();
         await redirectToLoginPage();
       }
     }
   });
-
-  /**
-   * Clear user storage including access, refresh and bearer-tokens
-   */
-  function clearAuth() {
-    localStorage.clear();
-  }
 
   /**
    * use to set the axios header
@@ -58,7 +51,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
    * @param ref the reactive value to be watched for changes
    */
   function setHeader(headerKey: string, ref: MaybeRefOrGetter) {
-    console.log(ref.value);
     watchEffect(() => {
       axios.defaults.headers[headerKey] = ref.value;
     });
@@ -84,8 +76,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     config?: AxiosRequestConfig,
   ) {
     try {
-      if (errors.value) return;
-
       loading.value = true;
       const res = await axios.post(url, payload, config);
 
@@ -104,8 +94,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     config?: AxiosRequestConfig,
   ) {
     try {
-      if (errors.value) return;
-
       loading.value = true;
       const res = await axios.put(url, payload, config);
 

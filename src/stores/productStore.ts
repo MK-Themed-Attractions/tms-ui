@@ -11,7 +11,10 @@ export const useProductStore = defineStore("products", () => {
   const baseUrl = import.meta.env.VITE_PRODUCT_URL;
   const authStore = useAuthStore();
   const products = ref<Product[] | null>(null);
-  const bearerToken = useStorage(import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY, "");
+  const bearerToken = useStorage(
+    import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY,
+    "",
+  );
 
   /**
    * accumulated products is used to append products on each API request
@@ -19,23 +22,20 @@ export const useProductStore = defineStore("products", () => {
    */
   const accumulatedProducts = ref<Product[]>([]);
 
-  const { errors, loading, get, post } = useAxios({
+  const { errors, loading, get, setHeader } = useAxios({
     baseURL: baseUrl,
   });
+  setHeader("Bearer-Token", bearerToken);
 
   async function getProducts(params?: ProductQueryParameter) {
-    if (!bearerToken.value)
-      bearerToken.value = await authStore.checkTokenValidity(
-        `${baseUrl}/api/auth/bearer-token`,
-      );
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     const res = await get<SimplePaginateAPIResource<Product>>("/api/products", {
       params,
-      headers: {
-        "Bearer-Token": bearerToken.value,
-      },
     });
-    console.log(res);
     accumulatedProducts.value = accumulatedProducts.value.concat(
       res?.data ?? [],
     );

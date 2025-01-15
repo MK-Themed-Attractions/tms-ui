@@ -26,7 +26,6 @@ const emits = defineEmits<{
     <DropdownMenuContent
       side="left"
       align="start"
-      @pointer-down-outside="(e) => console.log(e)"
     >
       <DropdownMenuLabel>Actions</DropdownMenuLabel>
       <DropdownMenuSeparator />

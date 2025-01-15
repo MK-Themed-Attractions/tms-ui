@@ -87,6 +87,19 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function logout() {
+    await post(
+      "api/auth/logout",
+      { id: user.value.id },
+      {
+        headers: {
+          "Access-Token": accessToken.value?.token,
+        },
+      },
+    );
+    user.value = null;
+  }
+
   return {
     login,
     user,
@@ -95,5 +108,6 @@ export const useAuthStore = defineStore("auth", () => {
     errors,
     loading,
     checkTokenValidity,
+    logout,
   };
 });
