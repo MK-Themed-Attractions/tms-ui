@@ -7,8 +7,11 @@ import type { WorkerDepartment, WorkerDepartmentForm } from "@/types/workers";
 import { computed, ref } from "vue";
 
 export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
-  const baseUrl = "http://tms-workers.local";
-  const bearerToken = useStorage("tms-workers-bearer-token", "");
+  const baseUrl = import.meta.env.VITE_WORKERS_URL;
+  const bearerToken = useStorage(
+    import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
+    "",
+  );
   const { errors, get, loading, post } = useAxios({
     baseURL: baseUrl,
     headers: {
@@ -49,7 +52,7 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   }
 
   async function checkToken() {
-    if (!bearerToken.value) {
+    if (!bearerToken.value || bearerToken.value === "") {
       await authStore.checkTokenValidity(`${baseUrl}/api/auth/bearer-token`);
     }
   }

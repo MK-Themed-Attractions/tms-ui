@@ -9,7 +9,7 @@ import { computed } from "@vue/reactivity";
 import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = "http://tms-workers.local";
+  const baseUrl = import.meta.env.VITE_WORKERS_URL;
   const bearerToken = useStorage("tms-workers-bearer-token", "");
 
   const { errors, get, loading, post, put } = useAxios({
@@ -76,7 +76,7 @@ export const useWorkerStore = defineStore("workers", () => {
   }
 
   async function checkToken() {
-    if (!bearerToken.value) {
+    if (!bearerToken.value || bearerToken.value === "") {
       bearerToken.value = await authStore.checkTokenValidity(
         `${baseUrl}/api/auth/bearer-token`,
       );

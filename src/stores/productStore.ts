@@ -8,10 +8,10 @@ import type { Product, ProductQueryParameter } from "@/types/products";
 import { useStorage } from "@vueuse/core";
 
 export const useProductStore = defineStore("products", () => {
-  const baseUrl = "http://tms-products.local";
+  const baseUrl = import.meta.env.VITE_PRODUCT_URL;
   const authStore = useAuthStore();
   const products = ref<Product[] | null>(null);
-  const bearerToken = useStorage("tms-products-bearer-token", "");
+  const bearerToken = useStorage(import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY, "");
 
   /**
    * accumulated products is used to append products on each API request

@@ -34,7 +34,7 @@ export const useAuthStore = defineStore("auth", () => {
   );
 
   const { errors, loading, post } = useAxios({
-    baseURL: "http://tms-users.local",
+    baseURL: import.meta.env.VITE_USERS_URL,
   });
 
   async function login(payload: LoginCredential) {
