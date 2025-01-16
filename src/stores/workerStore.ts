@@ -15,7 +15,7 @@ export const useWorkerStore = defineStore("workers", () => {
     "",
   );
 
-  const { errors, get, loading, post, put, setHeader } = useAxios({
+  const { errors, get, loading, post, put, setHeader, destroy } = useAxios({
     baseURL: baseUrl,
   });
   setHeader("Bearer-Token", bearerToken);
@@ -71,6 +71,8 @@ export const useWorkerStore = defineStore("workers", () => {
       bearerToken,
     );
 
+    //manually set is_active to true this is based on the API requirement
+    form.is_active = true;
     await put(`/api/worker/${workerId}`, form);
   }
 
@@ -80,12 +82,15 @@ export const useWorkerStore = defineStore("workers", () => {
       bearerToken,
     );
 
+    /*collect workers Id */
     const workerIds = workers.reduce<string[]>((acc, cur) => {
       acc.push(cur.id);
       return acc;
     }, []);
 
-    await put("/api/workers/deactivate", { worker_ids: workerIds });
+    await destroy("/api/workers/deactivate", {
+      params: { worker_ids: workerIds },
+    });
   }
 
   return {

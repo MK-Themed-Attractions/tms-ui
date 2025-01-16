@@ -99,17 +99,17 @@ function useDeactivate() {
         </TableCell>
       </template>
 
-      <template #item.status="{ item }">
+      <template #item.is_active="{ item }">
         <TableCell>
-          <Badge class="py-0 flex w-fit items-center" variant="outline">
+          <Badge class="flex w-fit items-center py-0" variant="outline">
             <Dot
               :class="{
-                'stroke-green-500': item.rfid_card,
-                'stroke-destructive': !item.rfid_card,
+                'stroke-green-500': item.is_active,
+                'stroke-destructive': !item.is_active,
               }"
             />
             <span class="text-muted-foreground">{{
-              item.rfid_card ? "active" : "inactive"
+              item.is_active ? "active" : "inactive"
             }}</span>
           </Badge>
         </TableCell>

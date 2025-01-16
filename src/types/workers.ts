@@ -8,6 +8,7 @@ export interface Worker {
   id: string;
   full_name: string;
   department?: WorkerDepartment;
+  is_active: boolean;
 }
 
 export interface WorkerForm {
@@ -16,6 +17,7 @@ export interface WorkerForm {
   last_name: string;
   rfid_card: string;
   department_id: string;
+  is_active?: boolean;
 }
 
 export interface WorkerDepartment {

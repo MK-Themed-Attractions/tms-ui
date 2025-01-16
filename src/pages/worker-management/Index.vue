@@ -4,14 +4,16 @@ import { storeToRefs } from "pinia";
 import WorkerDataTable from "./components/WorkerDataTable.vue";
 
 import WorkerToolbar from "./components/WorkerToolbar.vue";
-import { provide } from "vue";
+import { provide, ref } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useRouterQuery } from "@/composables/useRouterQuery";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 
+
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
 const { departments, fetchWorkerDepartments } = useWorkerDepartment();
+
 
 function useWorkers() {
   const workerStore = useWorkerStore();

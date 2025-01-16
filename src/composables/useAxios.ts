@@ -106,6 +106,20 @@ export const useAxios = (config: CreateAxiosDefaults) => {
       loading.value = false;
     }
   }
+  async function destroy<T>(url: string, config?: AxiosRequestConfig) {
+    try {
+      loading.value = true;
+      const res = await axios.delete(url, config);
+
+      errors.value = null;
+
+      return res.data as T;
+    } catch (err) {
+      errors.value = err as AxiosResponseError;
+    } finally {
+      loading.value = false;
+    }
+  }
 
   return {
     get,
@@ -114,5 +128,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     errors,
     put,
     setHeader,
+    destroy,
   };
 };

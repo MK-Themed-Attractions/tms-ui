@@ -193,7 +193,11 @@ onUpdated(() => {
             <FormItem class="">
               <FormLabel>RFID</FormLabel>
               <FormControl>
-                <Input type="text" v-bind="componentField" />
+                <Input
+                  type="text"
+                  v-bind="componentField"
+                  @keydown.enter="(e: Event) => e.preventDefault()"
+                />
                 <FormMessage />
               </FormControl>
 
