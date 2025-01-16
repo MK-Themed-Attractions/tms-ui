@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
-import {
-  Ellipsis,
-  EllipsisVertical,
-  Plus,
-  Search,
-  Wifi,
-  WifiOff,
-} from "lucide-vue-next";
+import { EllipsisVertical, Plus, WifiOff } from "lucide-vue-next";
 import WorkerAddDialog from "./WorkerDialog.vue";
-import { ref, watch, watchEffect } from "vue";
+import { inject, ref, watch } from "vue";
 import { DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -21,10 +14,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import WorkerBatchDeactivateDialog from "./WorkerBatchDeactivateDialog.vue";
+import {
+  FilterApp,
+  type FilterAppGenericObject,
+} from "@/components/app/filter";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
+import { storeToRefs } from "pinia";
+import type {
+  WorkerDepartment,
+  WorkerFilterQueryParams,
+} from "@/types/workers";
+import { workerOnSuccessKey } from "@/lib/injectionKeys";
 
 const emits = defineEmits<{
   (e: "search", search: string): void;
 }>();
+
 const props = withDefaults(
   defineProps<{
     loading?: boolean;
@@ -36,13 +41,51 @@ const props = withDefaults(
 );
 
 const search = ref(props.searchDefaultValue);
+const workerDepartmentStore = useWorkerDepartmentStore();
+const { departments } = storeToRefs(workerDepartmentStore);
 const batchDeactivateDialog = ref(false);
+const fetchWorkers = inject(workerOnSuccessKey);
+const filters = ref<WorkerFilterQueryParams[]>([
+  {
+    column: "department_id",
+    values: [],
+  },
+  {
+    column: "is_active",
+    values: [],
+  },
+]);
 
 function handleShowDeactivateDialog() {
   search.value = "";
   batchDeactivateDialog.value = true;
 }
 
+async function handleWorkerDepartmentFilter(selected: WorkerDepartment[]) {
+  const workerDepartmentIds = selected.reduce<string[]>((acc, cur) => {
+    acc.push(cur.id);
+    return acc;
+  }, []);
+  filters.value[0].values = workerDepartmentIds;
+
+  if (fetchWorkers)
+    await fetchWorkers({
+      filters: filters.value,
+    });
+}
+
+async function handleWorkerStatusFilter(selected: FilterAppGenericObject[]) {
+  const workerStatusIds = selected.reduce<string[]>((acc, cur) => {
+    acc.push(cur.id);
+    return acc;
+  }, []);
+  filters.value[1].values = workerStatusIds;
+
+  if (fetchWorkers)
+    await fetchWorkers({
+      filters: filters.value,
+    });
+}
 /**
  * emit a search event when search is empty
  * to refetch the list without search parameter
@@ -52,27 +95,44 @@ watch(search, (newValue) => {
     emits("search", newValue);
   }
 });
+
+/* DATA */
+const workerStatuses: FilterAppGenericObject[] = [
+  { id: "true", name: "active" },
+  { id: "false", name: "inactive" },
+];
 </script>
 
 <template>
-  <div class="flex justify-between">
+  <div class="flex items-center justify-between gap-2">
     <form
       @submit.prevent="emits('search', search)"
-      class="flex w-[clamp(20rem,50vw,30rem)] items-center gap-2"
+      class="flex w-[clamp(10rem,50vw,20rem)] items-center gap-2"
     >
       <Input
         placeholder="Search workers..."
         v-model="search"
         :disabled="loading"
+        class="h-9"
       />
-      <ButtonApp
-        variant="secondary"
-        size="icon"
-        :loading="loading"
-        type="submit"
-        ><Search v-if="!loading" />
-      </ButtonApp>
     </form>
+    <div class="mr-auto flex flex-wrap gap-2">
+      <FilterApp
+        v-if="departments"
+        :items="departments"
+        class="max-w-[15rem]"
+        text="Department"
+        @select="handleWorkerDepartmentFilter"
+      >
+      </FilterApp>
+      <FilterApp
+        :items="workerStatuses"
+        class="max-w-[15rem]"
+        text="Status"
+        @select="handleWorkerStatusFilter"
+      >
+      </FilterApp>
+    </div>
 
     <div class="flex items-center gap-2">
       <WorkerAddDialog>

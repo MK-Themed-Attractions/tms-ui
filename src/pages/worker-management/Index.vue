@@ -4,24 +4,25 @@ import { storeToRefs } from "pinia";
 import WorkerDataTable from "./components/WorkerDataTable.vue";
 
 import WorkerToolbar from "./components/WorkerToolbar.vue";
-import { provide, ref } from "vue";
+import { provide } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useRouterQuery } from "@/composables/useRouterQuery";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
-
+import type { WorkerQueryParams } from "@/types/workers";
 
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
 const { departments, fetchWorkerDepartments } = useWorkerDepartment();
 
-
 function useWorkers() {
   const workerStore = useWorkerStore();
   const { workers, loading } = storeToRefs(workerStore);
 
-  async function fetchWorkers() {
+  async function fetchWorkers(params?: Partial<WorkerQueryParams>) {
     await workerStore.getWorkers({
-      params: { q: q.value, includes: "department" },
+      q: q.value?.toString(),
+      includes: "department",
+      ...params,
     });
   }
 
@@ -65,8 +66,8 @@ function useSearch() {
  * use to provide a central fetching function
  * everytime a CRUD happens to any child component
  */
-provide(workerOnSuccessKey, async () => {
-  await fetchWorkers();
+provide(workerOnSuccessKey, async (params?: Partial<WorkerQueryParams>) => {
+  await fetchWorkers(params);
 });
 
 /* INIT */

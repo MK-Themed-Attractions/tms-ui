@@ -3,7 +3,7 @@ import { useAxios } from "@/composables/useAxios";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { useStorage } from "@vueuse/core";
-import type { Worker, WorkerForm } from "@/types/workers";
+import type { Worker, WorkerForm, WorkerQueryParams } from "@/types/workers";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
 import type { AxiosRequestConfig } from "axios";
@@ -37,16 +37,15 @@ export const useWorkerStore = defineStore("workers", () => {
   });
 
   /* ACTIONS */
-  async function getWorkers(config?: AxiosRequestConfig) {
+  async function getWorkers(params?: Partial<WorkerQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
     );
 
-    const res = await get<SimplePaginateAPIResource<Worker>>(
-      "/api/worker",
-      config,
-    );
+    const res = await get<SimplePaginateAPIResource<Worker>>("/api/worker", {
+      params,
+    });
 
     if (res) {
       paginatedResponse.value = res;

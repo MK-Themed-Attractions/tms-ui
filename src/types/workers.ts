@@ -37,6 +37,14 @@ export interface WorkerDepartmentForm {
 }
 
 export interface WorkerQueryParams {
+  q: string;
   page: number;
   includes: string;
+  filters: WorkerFilterQueryParams[];
+}
+
+export interface WorkerFilterQueryParams {
+  column: string;
+  values: string[];
+  operation?: "and" | "or";
 }
