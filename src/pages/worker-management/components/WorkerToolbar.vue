@@ -45,47 +45,87 @@ const workerDepartmentStore = useWorkerDepartmentStore();
 const { departments } = storeToRefs(workerDepartmentStore);
 const batchDeactivateDialog = ref(false);
 const fetchWorkers = inject(workerOnSuccessKey);
-const filters = ref<WorkerFilterQueryParams[]>([
-  {
-    column: "department_id",
-    values: [],
-  },
-  {
-    column: "is_active",
-    values: [],
-  },
-]);
+const {
+  handleWorkerDepartmentFilter,
+  handleWorkerStatusFilter,
+  workerStatuses,
+  handleClearDepartmentFilter,
+  handleClearStatusFilter,
+} = useFilter();
 
 function handleShowDeactivateDialog() {
   search.value = "";
   batchDeactivateDialog.value = true;
 }
 
-async function handleWorkerDepartmentFilter(selected: WorkerDepartment[]) {
-  const workerDepartmentIds = selected.reduce<string[]>((acc, cur) => {
-    acc.push(cur.id);
-    return acc;
-  }, []);
-  filters.value[0].values = workerDepartmentIds;
+function useFilter() {
+  const filters = ref<WorkerFilterQueryParams[]>([
+    {
+      column: "department_id",
+      values: [],
+    },
+    {
+      column: "is_active",
+      values: [],
+    },
+  ]);
 
-  if (fetchWorkers)
-    await fetchWorkers({
-      filters: filters.value,
-    });
+  /* DATA */
+  const workerStatuses: FilterAppGenericObject[] = [
+    { id: "true", name: "active" },
+    { id: "false", name: "inactive" },
+  ];
+
+  async function handleWorkerDepartmentFilter(selected: WorkerDepartment[]) {
+    const workerDepartmentIds = selected.reduce<string[]>((acc, cur) => {
+      acc.push(cur.id);
+      return acc;
+    }, []);
+
+    filters.value[0].values = workerDepartmentIds; //index 0 for department_id
+
+    await fetchWithFilter();
+  }
+
+  async function handleWorkerStatusFilter(selected: FilterAppGenericObject[]) {
+    const workerStatusIds = selected.reduce<string[]>((acc, cur) => {
+      acc.push(cur.id);
+      return acc;
+    }, []);
+
+    filters.value[1].values = workerStatusIds; //index 1 for is_active
+
+    await fetchWithFilter();
+  }
+
+  async function handleClearStatusFilter() {
+    filters.value[1].values = [];
+
+    await fetchWithFilter();
+  }
+
+  async function handleClearDepartmentFilter() {
+    filters.value[0].values = [];
+    await fetchWithFilter();
+  }
+
+  async function fetchWithFilter() {
+    if (fetchWorkers)
+      await fetchWorkers({
+        filters: filters.value,
+      });
+  }
+
+  return {
+    filters,
+    handleWorkerDepartmentFilter,
+    handleWorkerStatusFilter,
+    handleClearDepartmentFilter,
+    handleClearStatusFilter,
+    workerStatuses,
+  };
 }
 
-async function handleWorkerStatusFilter(selected: FilterAppGenericObject[]) {
-  const workerStatusIds = selected.reduce<string[]>((acc, cur) => {
-    acc.push(cur.id);
-    return acc;
-  }, []);
-  filters.value[1].values = workerStatusIds;
-
-  if (fetchWorkers)
-    await fetchWorkers({
-      filters: filters.value,
-    });
-}
 /**
  * emit a search event when search is empty
  * to refetch the list without search parameter
@@ -95,12 +135,6 @@ watch(search, (newValue) => {
     emits("search", newValue);
   }
 });
-
-/* DATA */
-const workerStatuses: FilterAppGenericObject[] = [
-  { id: "true", name: "active" },
-  { id: "false", name: "inactive" },
-];
 </script>
 
 <template>
@@ -123,6 +157,7 @@ const workerStatuses: FilterAppGenericObject[] = [
         class="max-w-[15rem]"
         text="Department"
         @select="handleWorkerDepartmentFilter"
+        @clear-select="handleClearDepartmentFilter"
       >
       </FilterApp>
       <FilterApp
@@ -130,6 +165,7 @@ const workerStatuses: FilterAppGenericObject[] = [
         class="max-w-[15rem]"
         text="Status"
         @select="handleWorkerStatusFilter"
+        @clear-select="handleClearStatusFilter"
       >
       </FilterApp>
     </div>
