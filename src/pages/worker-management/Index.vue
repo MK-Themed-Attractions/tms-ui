@@ -9,10 +9,12 @@ import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useRouterQuery } from "@/composables/useRouterQuery";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import type { WorkerQueryParams } from "@/types/workers";
+import { useRoute } from "vue-router";
 
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
 const { departments, fetchWorkerDepartments } = useWorkerDepartment();
+const route = useRoute();
 
 function useWorkers() {
   const workerStore = useWorkerStore();
@@ -22,6 +24,8 @@ function useWorkers() {
     await workerStore.getWorkers({
       q: q.value?.toString(),
       includes: "department",
+      page: route.query.page ? +route.query.page : 1,
+      per_page: route.query["per-page"] ? +route.query["per-page"] : 30,
       ...params,
     });
   }

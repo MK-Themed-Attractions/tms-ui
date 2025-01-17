@@ -6,7 +6,7 @@ import {
   type PaginationAppProps,
   type PaginationQuery,
 } from ".";
-import { watchEffect } from "vue";
+import { watch, watchEffect } from "vue";
 
 const props = withDefaults(defineProps<PaginationAppProps>(), {
   pageName: "page",
@@ -22,9 +22,15 @@ const page = useRouteQuery(props.pageName, 1, { transform: Number });
 /* watch for route query 
 changes and emit an event */
 
-watchEffect(() => {
+watch(perPage, (newValue) => {
   emits("change:query", {
     page: page.value,
+    perPage: newValue,
+  });
+});
+watch(page, (newValue) => {
+  emits("change:query", {
+    page: newValue,
     perPage: perPage.value,
   });
 });
