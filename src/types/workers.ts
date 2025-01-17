@@ -39,6 +39,7 @@ export interface WorkerDepartmentForm {
 export interface WorkerQueryParams {
   q: string;
   page: number;
+  per_page: number;
   includes: string;
   filters: WorkerFilterQueryParams[];
 }

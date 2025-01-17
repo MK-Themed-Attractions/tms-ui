@@ -16,14 +16,21 @@ import { toast } from "vue-sonner";
 import { storeToRefs } from "pinia";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { Badge } from "@/components/ui/badge";
+import {
+  PaginationApp,
+  type PaginationQuery,
+} from "@/components/app/pagination";
 
 const props = defineProps<{
   workers: Worker[];
 }>();
+const workerStore = useWorkerStore();
 const { handleWorkerUpdate, updateDialog, updateValues } = useUpdate();
 const { deactivateDialog, handleShowDeactivateDialog, handleDeactivateWorker } =
   useDeactivate();
+const { handleQueryChange, hasNextPage, hasPrevPage } = usePaginate();
 const onSuccess = inject(workerOnSuccessKey);
+
 function useUpdate() {
   const updateDialog = ref(false);
   const updateValues = ref<Worker>();
@@ -43,7 +50,6 @@ function useUpdate() {
 function useDeactivate() {
   const deactivateDialog = ref(false);
   const selectedWorkerToDeactivate = ref<Worker>();
-  const workerStore = useWorkerStore();
   const { errors } = storeToRefs(workerStore);
 
   function handleShowDeactivateDialog(worker: Worker) {
@@ -76,6 +82,24 @@ function useDeactivate() {
     deactivateDialog,
     handleShowDeactivateDialog,
     handleDeactivateWorker,
+  };
+}
+
+function usePaginate() {
+  const { hasNextPage, hasPrevPage } = storeToRefs(workerStore);
+  async function handleQueryChange(query: Partial<PaginationQuery>) {
+    if (onSuccess) {
+      await onSuccess({
+        per_page: query.perPage ? +query.perPage : 30,
+        page: query.page,
+      });
+    }
+  }
+
+  return {
+    handleQueryChange,
+    hasNextPage,
+    hasPrevPage,
   };
 }
 </script>
@@ -125,6 +149,15 @@ function useDeactivate() {
           </ButtonApp>
         </WorkerDataTableAction>
       </template>
+
+      <template #footer>
+        <PaginationApp
+          class="col-span-full"
+          @change:query="handleQueryChange"
+          :disable-prev="!hasPrevPage"
+          :disable-next="!hasNextPage"
+        ></PaginationApp>
+      </template>
     </DataTable>
 
     <!-- Dialog for updating the worker -->
@@ -135,14 +168,16 @@ function useDeactivate() {
     </WorkerDialog>
 
     <!-- Dialog for deactivation -->
-    <ConfirmationDialog
-      title="Warning"
-      description="Deactivating a worker means supervisor's can not view this worker in their dashboard anymore"
-      v-model:open="deactivateDialog"
-      @yes="handleDeactivateWorker"
-    >
-      Are you sure you want to deactivate this worker?
-    </ConfirmationDialog>
+    <Teleport to="#overlay">
+      <ConfirmationDialog
+        title="Warning"
+        description="Deactivating a worker means supervisor's can not view this worker in their dashboard anymore"
+        v-model:open="deactivateDialog"
+        @yes="handleDeactivateWorker"
+      >
+        Are you sure you want to deactivate this worker?
+      </ConfirmationDialog>
+    </Teleport>
   </div>
 </template>
 

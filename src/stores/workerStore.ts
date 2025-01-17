@@ -6,7 +6,6 @@ import { useStorage } from "@vueuse/core";
 import type { Worker, WorkerForm, WorkerQueryParams } from "@/types/workers";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
-import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
   const baseUrl = import.meta.env.VITE_WORKERS_URL;
@@ -34,6 +33,14 @@ export const useWorkerStore = defineStore("workers", () => {
     } else {
       return null;
     }
+  });
+
+  const hasNextPage = computed(() => {
+    return paginatedResponse.value?.links.next ? true : false;
+  });
+
+  const hasPrevPage = computed(() => {
+    return paginatedResponse.value?.links.prev ? true : false;
   });
 
   /* ACTIONS */
@@ -102,5 +109,7 @@ export const useWorkerStore = defineStore("workers", () => {
     updateWorker,
     deactivateWorker,
     bearerToken,
+    hasNextPage,
+    hasPrevPage,
   };
 });
