@@ -18,9 +18,6 @@ function closeAddDepartmentDialog() {
         placeholder="Search departments..."
         class="w-[clamp(12rem,20vw,20rem)]"
       />
-      <ButtonApp size="icon" variant="secondary">
-        <Search />
-      </ButtonApp>
     </div>
 
     <div>

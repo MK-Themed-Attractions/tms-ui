@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, ChevronsLeft } from "lucide-vue-next";
 import { ButtonApp } from "../button";
 import type { PaginationButtonsAppProps } from ".";
 
@@ -8,6 +8,9 @@ const page = defineModel({ default: 1 });
 </script>
 <template>
   <div>
+    <ButtonApp size="icon" class="h-8 w-8" variant="outline" @click="page = 1">
+      <ChevronsLeft />
+    </ButtonApp>
     <ButtonApp
       :disabled="disablePrev"
       size="icon"

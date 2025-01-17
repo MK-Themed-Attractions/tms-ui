@@ -32,6 +32,12 @@ const props = defineProps<{
           </ButtonApp>
         </TableCell>
       </template>
+
+      <!-- @vue-ignore -->
+      <template v-for="(_, slotName) in $slots" #[slotName] :key="slotName">
+        <slot :name="slotName"></slot>
+      </template>
+      
     </DataTable>
   </div>
 </template>

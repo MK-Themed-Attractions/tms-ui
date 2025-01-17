@@ -4,14 +4,18 @@ import {
   PaginationButtonsApp,
   PaginationPerPageApp,
   type PaginationAppProps,
+  type PaginationButtonsAppProps,
   type PaginationQuery,
 } from ".";
 import { watch, watchEffect } from "vue";
 
-const props = withDefaults(defineProps<PaginationAppProps>(), {
-  pageName: "page",
-  perPageName: "per-page",
-});
+const props = withDefaults(
+  defineProps<PaginationAppProps>(),
+  {
+    pageName: "page",
+    perPageName: "per-page",
+  },
+);
 const emits = defineEmits<{
   (e: "change:query", query: Partial<PaginationQuery>): void;
 }>();

@@ -3,7 +3,11 @@ import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
-import type { WorkerDepartment, WorkerDepartmentForm } from "@/types/workers";
+import type {
+  WorkerDepartment,
+  WorkerDepartmentForm,
+  WorkerDepartmentQueryParams,
+} from "@/types/workers";
 import { computed, ref } from "vue";
 
 export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
@@ -28,15 +32,26 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     } else return null;
   });
 
+  const hasNextPage = computed(() => {
+    return paginatedResponse.value?.links.next ? true : false;
+  });
+
+  const hasPrevPage = computed(() => {
+    return paginatedResponse.value?.links.prev ? true : false;
+  });
   /* ACTIONS */
-  async function getDepartments() {
+  async function getDepartments(params?: Partial<WorkerDepartmentQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
     );
 
-    const res =
-      await get<SimplePaginateAPIResource<WorkerDepartment>>("/api/department");
+    const res = await get<SimplePaginateAPIResource<WorkerDepartment>>(
+      "/api/department",
+      {
+        params,
+      },
+    );
 
     if (res) {
       paginatedResponse.value = res;
@@ -62,5 +77,7 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     paginatedResponse,
     departments,
     createDepartment,
+    hasNextPage,
+    hasPrevPage,
   };
 });
