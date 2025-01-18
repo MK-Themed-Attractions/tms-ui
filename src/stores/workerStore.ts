@@ -3,21 +3,21 @@ import { useAxios } from "@/composables/useAxios";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { useStorage } from "@vueuse/core";
-import type { Worker, WorkerForm } from "@/types/workers";
+import type { Worker, WorkerForm, WorkerQueryParams } from "@/types/workers";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
-import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = "http://192.168.110.21:9000";
-  const bearerToken = useStorage("tms-workers-bearer-token", "");
+  const baseUrl = import.meta.env.VITE_WORKERS_URL;
+  const bearerToken = useStorage(
+    import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
+    "",
+  );
 
-  const { errors, get, loading, post } = useAxios({
+  const { errors, get, loading, post, put, setHeader, destroy } = useAxios({
     baseURL: baseUrl,
-    headers: {
-      "Bearer-Token": bearerToken.value,
-    },
   });
+  setHeader("Bearer-Token", bearerToken);
 
   const authStore = useAuthStore();
 
@@ -35,14 +35,30 @@ export const useWorkerStore = defineStore("workers", () => {
     }
   });
 
-  /* ACTIONS */
-  async function getWorkers(config?: AxiosRequestConfig) {
-    await checkToken();
+  const hasNextPage = computed(() => {
+    return paginatedResponse.value?.links.next ? true : false;
+  });
 
-    const res = await get<SimplePaginateAPIResource<Worker>>(
-      "/api/worker",
-      config,
+  const hasPrevPage = computed(() => {
+    return paginatedResponse.value?.links.prev ? true : false;
+  });
+
+  /* ACTIONS */
+
+  function invalidate() {
+    paginatedResponse.value = null;
+    bearerToken.value = null;
+  }
+
+  async function getWorkers(params?: Partial<WorkerQueryParams>) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
     );
+
+    const res = await get<SimplePaginateAPIResource<Worker>>("/api/worker", {
+      params,
+    });
 
     if (res) {
       paginatedResponse.value = res;
@@ -50,7 +66,10 @@ export const useWorkerStore = defineStore("workers", () => {
   }
 
   async function createWorker(form: WorkerForm) {
-    await checkToken();
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
 
     await post<WorkerForm, SimplePaginateAPIResource<Worker>>(
       "/api/worker",
@@ -58,12 +77,32 @@ export const useWorkerStore = defineStore("workers", () => {
     );
   }
 
-  async function checkToken() {
-    if (!bearerToken.value) {
-      bearerToken.value = await authStore.checkTokenValidity(
-        `${baseUrl}/api/auth/bearer-token`,
-      );
-    }
+  async function updateWorker(workerId: string, form: WorkerForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    //manually set is_active to true this is based on the API requirement
+    form.is_active = true;
+    await put(`/api/worker/${workerId}`, form);
+  }
+
+  async function deactivateWorker(workers: Worker[]) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    /*collect workers Id */
+    const workerIds = workers.reduce<string[]>((acc, cur) => {
+      acc.push(cur.id);
+      return acc;
+    }, []);
+
+    await destroy("/api/workers/deactivate", {
+      params: { worker_ids: workerIds },
+    });
   }
 
   return {
@@ -73,5 +112,11 @@ export const useWorkerStore = defineStore("workers", () => {
     workers,
     paginatedResponse,
     createWorker,
+    updateWorker,
+    deactivateWorker,
+    bearerToken,
+    hasNextPage,
+    hasPrevPage,
+    invalidate,
   };
 });

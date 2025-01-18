@@ -8,6 +8,7 @@ export interface Worker {
   id: string;
   full_name: string;
   department?: WorkerDepartment;
+  is_active: boolean;
 }
 
 export interface WorkerForm {
@@ -15,7 +16,8 @@ export interface WorkerForm {
   given_name: string;
   last_name: string;
   rfid_card: string;
-  department_id:string;
+  department_id: string;
+  is_active?: boolean;
 }
 
 export interface WorkerDepartment {
@@ -32,4 +34,21 @@ export interface WorkerDepartmentForm {
   code: string;
   name: string;
   description?: string;
+}
+
+export interface WorkerQueryParams extends QueryParams {}
+export interface WorkerDepartmentQueryParams extends QueryParams {}
+
+export interface QueryParams {
+  q: string;
+  page: number;
+  per_page: number;
+  includes: string;
+  filters: FilterQueryParams[];
+}
+
+export interface FilterQueryParams {
+  column: string;
+  values: string[];
+  operation?: "and" | "or";
 }

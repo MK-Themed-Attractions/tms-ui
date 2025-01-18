@@ -8,7 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/stores/authStore";
 import { CircleUser } from "lucide-vue-next";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const authStore = useAuthStore();
+async function handleLogout() {
+  await authStore.logout();
+  await router.push({ name: "login" });
+}
 </script>
 
 <template>
@@ -25,7 +34,9 @@ import { CircleUser } from "lucide-vue-next";
       <DropdownMenuItem>Settings</DropdownMenuItem>
       <DropdownMenuItem>Support</DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem>Logout</DropdownMenuItem>
+      <DropdownMenuItem class="cursor-pointer" @click="handleLogout"
+        >Logout</DropdownMenuItem
+      >
     </DropdownMenuContent>
   </DropdownMenu>
 </template>

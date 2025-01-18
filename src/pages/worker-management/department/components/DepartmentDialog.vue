@@ -18,19 +18,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
-import type { WorkerDepartmentForm } from "@/types/workers";
+import type { WorkerDepartment, WorkerDepartmentForm } from "@/types/workers";
 import { toTypedSchema } from "@vee-validate/zod";
 import { storeToRefs } from "pinia";
 import { useForm } from "vee-validate";
 import * as z from "zod";
 import { toast } from "vue-sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Plus } from "lucide-vue-next";
-import { inject, ref } from "vue";
+import { AlertCircle } from "lucide-vue-next";
+import { computed, inject, onUpdated } from "vue";
 import { workerDepartmentOnSuccessKey } from "@/lib/injectionKeys";
 
-const { createDepartment, loading, errors } = useWorkerDepartment();
-const dialog = ref(false);
+const props = defineProps<{
+  workerDepartment?: WorkerDepartment;
+}>();
+const { createDepartment, loading, errors, updateDepartment } =
+  useWorkerDepartment();
+const dialog = defineModel({ default: false });
 const onSuccess = inject(workerDepartmentOnSuccessKey, null);
 const formSchema = toTypedSchema(
   z.object({
@@ -44,19 +48,24 @@ const {
   handleSubmit,
   resetForm,
   errors: validationError,
+  setFieldValue,
 } = useForm({
   validationSchema: formSchema,
 });
 
 const onSubmit = handleSubmit(async (values) => {
-  await createDepartment(values);
+  if (isUpdating.value) {
+    await updateDepartment(values);
+  } else await createDepartment(values);
 
   /**
    * display a success toaster when response in OK
    */
   if (!errors.value) {
     toast("Success", {
-      description: "A new department has been added.",
+      description: !isUpdating.value
+        ? "A new department has been added."
+        : "Department has been updated.",
     });
 
     /**
@@ -85,16 +94,43 @@ function useWorkerDepartment() {
     await workerDepartmentStore.createDepartment(form);
   }
 
+  async function updateDepartment(form: WorkerDepartmentForm) {
+    if (props.workerDepartment)
+      await workerDepartmentStore.updateDepartment(
+        props.workerDepartment?.id,
+        form,
+      );
+  }
+
   return {
     loading,
     errors,
     createDepartment,
+    updateDepartment,
   };
 }
+
+/* computed properties */
+const isUpdating = computed(() => (props.workerDepartment ? true : false));
+
+onUpdated(() => {
+  if (props.workerDepartment) {
+    setFieldValue("code", props.workerDepartment.code);
+    setFieldValue("description", props.workerDepartment.description);
+    setFieldValue("name", props.workerDepartment.name);
+  }
+});
 </script>
 <template>
   <Dialog v-model:open="dialog">
-    <ButtonApp :prepend-icon="Plus" @click="dialog = true">Add</ButtonApp>
+    <slot
+      :props="{
+        onClick: () => {
+          dialog = true;
+        },
+      }"
+    >
+    </slot>
 
     <DialogContent
       @pointer-down-outside="(e) => e.preventDefault()"
@@ -102,10 +138,15 @@ function useWorkerDepartment() {
     >
       <!-- HEADER -->
       <DialogHeader>
-        <DialogTitle>Add Department</DialogTitle>
-        <DialogDescription
-          >Add new department, Click save when your're done.</DialogDescription
-        >
+        <slot name="header.title">
+          <DialogTitle>Add Department</DialogTitle>
+        </slot>
+        <slot name="header.description">
+          <DialogDescription
+            >Add new department, Click save when your're
+            done.</DialogDescription
+          >
+        </slot>
       </DialogHeader>
 
       <!-- CONTENT -->
