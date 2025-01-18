@@ -26,7 +26,7 @@ import * as z from "zod";
 import { toast } from "vue-sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-vue-next";
-import { computed, inject } from "vue";
+import { computed, inject, onUpdated } from "vue";
 import { workerDepartmentOnSuccessKey } from "@/lib/injectionKeys";
 
 const props = defineProps<{
@@ -48,6 +48,7 @@ const {
   handleSubmit,
   resetForm,
   errors: validationError,
+  setFieldValue,
 } = useForm({
   validationSchema: formSchema,
 });
@@ -111,6 +112,14 @@ function useWorkerDepartment() {
 
 /* computed properties */
 const isUpdating = computed(() => (props.workerDepartment ? true : false));
+
+onUpdated(() => {
+  if (props.workerDepartment) {
+    setFieldValue("code", props.workerDepartment.code);
+    setFieldValue("description", props.workerDepartment.description);
+    setFieldValue("name", props.workerDepartment.name);
+  }
+});
 </script>
 <template>
   <Dialog v-model:open="dialog">
