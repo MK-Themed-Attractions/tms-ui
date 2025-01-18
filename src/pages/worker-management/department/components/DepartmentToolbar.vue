@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-vue-next";
-import AddDepartmentDialog from "./AddDepartmentDialog.vue";
+import DepartmentDialog from "./DepartmentDialog.vue";
 import { ref } from "vue";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { Plus } from "lucide-vue-next";
+import { ButtonApp } from "@/components/app/button";
 
 const addDepartmentDialog = ref(false);
 
@@ -21,7 +22,11 @@ function closeAddDepartmentDialog() {
     </div>
 
     <div>
-      <AddDepartmentDialog> </AddDepartmentDialog>
+      <DepartmentDialog>
+        <DialogTrigger>
+          <ButtonApp :prepend-icon="Plus">Add</ButtonApp>
+        </DialogTrigger>
+      </DepartmentDialog>
     </div>
   </div>
 </template>

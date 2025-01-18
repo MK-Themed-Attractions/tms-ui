@@ -167,8 +167,8 @@ function usePaginate() {
       </template>
     </WorkerDialog>
 
-    <!-- Dialog for deactivation -->
     <Teleport to="#overlay">
+      <!-- Dialog for deactivation -->
       <ConfirmationDialog
         title="Warning"
         description="Deactivating a worker means supervisor's can not view this worker in their dashboard anymore"

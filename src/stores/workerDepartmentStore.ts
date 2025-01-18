@@ -16,7 +16,7 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
     "",
   );
-  const { errors, get, loading, post, setHeader } = useAxios({
+  const { errors, get, loading, post, setHeader, put } = useAxios({
     baseURL: baseUrl,
   });
   setHeader("Bearer-Token", bearerToken);
@@ -39,7 +39,13 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   const hasPrevPage = computed(() => {
     return paginatedResponse.value?.links.prev ? true : false;
   });
+
   /* ACTIONS */
+  function invalidate() {
+    paginatedResponse.value = null;
+    bearerToken.value = null;
+  }
+
   async function getDepartments(params?: Partial<WorkerDepartmentQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -69,6 +75,17 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
       SimplePaginateAPIResource<WorkerDepartment>
     >("/api/department", form);
   }
+  async function updateDepartment(
+    workerDepartmentId: string,
+    form: WorkerDepartmentForm,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await put(`/api/department/${workerDepartmentId}`, form);
+  }
 
   return {
     getDepartments,
@@ -77,7 +94,9 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     paginatedResponse,
     departments,
     createDepartment,
+    updateDepartment,
     hasNextPage,
     hasPrevPage,
+    invalidate,
   };
 });

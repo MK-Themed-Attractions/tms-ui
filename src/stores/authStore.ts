@@ -13,6 +13,9 @@ import {
 } from "@vueuse/core";
 
 import { defineStore } from "pinia";
+import { useProductStore } from "./productStore";
+import { useWorkerDepartmentStore } from "./workerDepartmentStore";
+import { useWorkerStore } from "./workerStore";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = useStorage<User>("user", null, undefined, {
@@ -38,6 +41,12 @@ export const useAuthStore = defineStore("auth", () => {
   const { errors, loading, post } = useAxios({
     baseURL: import.meta.env.VITE_USERS_URL,
   });
+
+  function invalidate() {
+    user.value = null;
+    accessToken.value = null;
+    refreshToken.value = null;
+  }
 
   async function login(payload: LoginCredential) {
     const res = await post<LoginCredential, LoginResponse>(
@@ -97,7 +106,12 @@ export const useAuthStore = defineStore("auth", () => {
         },
       },
     );
-    user.value = null;
+    invalidate();
+
+    /* invalidate other store to clear their bearer tokens and data */
+    useProductStore().invalidate();
+    useWorkerDepartmentStore().invalidate();
+    useWorkerStore().invalidate();
   }
 
   return {
@@ -109,5 +123,6 @@ export const useAuthStore = defineStore("auth", () => {
     loading,
     checkTokenValidity,
     logout,
+    invalidate,
   };
 });

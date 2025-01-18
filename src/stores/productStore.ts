@@ -27,6 +27,11 @@ export const useProductStore = defineStore("products", () => {
   });
   setHeader("Bearer-Token", bearerToken);
 
+  function invalidate() {
+    bearerToken.value = null;
+    products.value = null;
+  }
+
   async function getProducts(params?: ProductQueryParameter) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -50,5 +55,6 @@ export const useProductStore = defineStore("products", () => {
     loading,
     products,
     accumulatedProducts,
+    invalidate,
   };
 });

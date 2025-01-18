@@ -44,6 +44,12 @@ export const useWorkerStore = defineStore("workers", () => {
   });
 
   /* ACTIONS */
+
+  function invalidate() {
+    paginatedResponse.value = null;
+    bearerToken.value = null;
+  }
+
   async function getWorkers(params?: Partial<WorkerQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -111,5 +117,6 @@ export const useWorkerStore = defineStore("workers", () => {
     bearerToken,
     hasNextPage,
     hasPrevPage,
+    invalidate,
   };
 });
