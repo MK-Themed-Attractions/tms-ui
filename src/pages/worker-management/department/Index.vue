@@ -11,7 +11,9 @@ import {
   PaginationApp,
   type PaginationQuery,
 } from "@/components/app/pagination";
+import { useRouteQuery } from "@vueuse/router";
 
+const route = useRoute();
 const {
   fetchDepartments,
   departments,
@@ -19,17 +21,19 @@ const {
   hasNextPage,
   hasPrevPage,
 } = useWorkerDepartment();
-const route = useRoute();
+const { handleSearch, search } = useSearch();
 
 function useWorkerDepartment() {
   const workerDepartmentStore = useWorkerDepartmentStore();
-  const { departments, errors, loading, hasNextPage, hasPrevPage } =
-    storeToRefs(workerDepartmentStore);
+  const { departments, hasNextPage, hasPrevPage } = storeToRefs(
+    workerDepartmentStore,
+  );
 
   async function fetchDepartments(
     params?: Partial<WorkerDepartmentQueryParams>,
   ) {
     await workerDepartmentStore.getDepartments({
+      q: route.query.q ? route.query.q.toString() : "",
       per_page: route.query["per-page"] ? +route.query["per-page"] : 30,
       page: route.query.page ? +route.query.page : 1,
       ...params,
@@ -52,6 +56,20 @@ function useWorkerDepartment() {
   };
 }
 
+function useSearch() {
+  const search = useRouteQuery("q");
+
+  async function handleSearch(searchQuery: string) {
+    await fetchDepartments({
+      q: search.value?.toString(),
+    });
+  }
+
+  return {
+    search,
+    handleSearch,
+  };
+}
 /**
  * use to provide a central fetching function
  * everytime a CRUD happens to any child component
@@ -75,7 +93,11 @@ if (!departments.value) await fetchDepartments();
     </div>
 
     <div>
-      <DepartmentToolbar class="mb-4" />
+      <DepartmentToolbar
+        class="mb-4"
+        v-model:search="search"
+        @search="handleSearch"
+      />
 
       <DepartmentDataTable v-if="departments" :departments="departments">
         <template #footer>
