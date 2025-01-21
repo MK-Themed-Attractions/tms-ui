@@ -1,3 +1,5 @@
+import type { QueryParams } from "./auth";
+
 export interface Product {
   created_at: string;
   updated_at: string;
@@ -51,9 +53,8 @@ export interface ProductRoutingBOM {
 }
 
 /* config for product API get method parameters */
-export interface ProductQueryParameter {
-  page: number;
-  includes: string;
+export interface ProductQueryParameter extends QueryParams {
+ 
 }
 
 export interface ProductShowQueryParams {

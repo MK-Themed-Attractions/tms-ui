@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  computed,
   inject,
   onActivated,
   onBeforeUnmount,
@@ -17,46 +18,62 @@ import { useProductStore } from "@/stores/productStore";
 import { LoaderCircle, Search } from "lucide-vue-next";
 import ProductCard from "./components/ProductCard.vue";
 import { mainScrollerKey } from "@/lib/injectionKeys";
+import { useRouteQuery } from "@vueuse/router";
+import type { ProductQueryParameter } from "@/types/products";
 
-const { fetchProducts, products } = useProduct();
+const { fetchProducts, accumulatedProducts, handleSearch, hasResult } =
+  useProduct();
 const intersectionEl = ref<HTMLDivElement | null>(null);
 const page = ref(1);
+const q = useRouteQuery<string | undefined>("q");
 
 await fetchProducts();
 
 function useProduct() {
   const productStore = useProductStore();
-  const { accumulatedProducts: products } = storeToRefs(productStore);
+  const { accumulatedProducts, products } = storeToRefs(productStore);
 
-  async function fetchProducts() {
+  const hasResult = computed(() => products.value?.length);
+
+  async function fetchProducts(params?: Partial<ProductQueryParameter>) {
     await productStore.getProducts({
       page: page.value,
       includes: "images",
+      q: q.value,
+      ...params,
     });
   }
+
+  async function handleSearch() {
+    /* reset accumulated products since searching always produced specific products */
+    accumulatedProducts.value = [];
+    /* reset page to 1 since search results always starts at page 1 */
+    page.value = 1;
+
+    /* when search query is empty, fetch products without search query */
+    await fetchProducts();
+  }
+
   return {
     fetchProducts,
-    products,
+    accumulatedProducts,
+    handleSearch,
+    hasResult,
   };
 }
 
 /* use for infinite scrolling */
 useIntersectionObserver(
   intersectionEl,
-  ([{ isIntersecting }], observerElement) => {
+  async ([{ isIntersecting }], observerElement) => {
     if (isIntersecting) {
-      /* when user scroll to the bottom of the page, increase the page by 1 */
+      /* when user scroll to the bottom of the page,
+      fetch the next page */
       page.value++;
+      await fetchProducts();
     }
   },
 );
-
-/**
- * refetch the products everytime the reactive page variable changes
- */
-watch(page, async (newValue) => {
-  await fetchProducts();
-});
 
 /**
  * when component is about to unmount
@@ -65,7 +82,7 @@ watch(page, async (newValue) => {
  * navigate to other page and comes back to this component
  */
 onBeforeUnmount(() => {
-  products.value = [];
+  accumulatedProducts.value = [];
 });
 
 /* use for preserving the scroll of the main layout */
@@ -101,12 +118,13 @@ onActivated(() => {
       </p>
     </div>
 
-    <form class="flex items-center gap-2">
+    <form class="flex items-center gap-2" @submit.prevent="handleSearch">
       <Input
         id="email"
         type="search"
         placeholder="Search products..."
         class="max-w-[20rem]"
+        v-model="q"
       />
       <ButtonApp :prepend-icon="Search" variant="secondary" type="submit"
         >Search</ButtonApp
@@ -115,7 +133,7 @@ onActivated(() => {
 
     <div>
       <ul class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-        <li v-for="product in products">
+        <li v-for="product in accumulatedProducts">
           <RouterLink
             :to="{ name: 'productShow', params: { productId: product.sku } }"
           >
@@ -127,6 +145,7 @@ onActivated(() => {
         <div
           class="col-span-full grid h-[10rem] place-content-center"
           ref="intersectionEl"
+          v-if="hasResult"
         >
           <LoaderCircle class="animate-spin" />
         </div>

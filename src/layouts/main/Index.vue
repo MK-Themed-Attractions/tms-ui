@@ -8,11 +8,24 @@ import SearchForm from "./components/SearchForm.vue";
 import UserMenu from "./components/UserMenu.vue";
 import MobileNavigation from "./components/MobileNavigation.vue";
 import { templateRef, useScroll } from "@vueuse/core";
-import { provide } from "vue";
+import { provide, ref } from "vue";
 import { mainScrollerKey } from "@/lib/injectionKeys";
+import { useProductStore } from "@/stores/productStore";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { storeToRefs } from "pinia";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Product } from "@/types/products";
+import { ImageApp } from "@/components/app/image";
+import { PopoverAnchor } from "radix-vue";
 
 const main = templateRef("main");
 const { y } = useScroll(main);
+const productStore = useProductStore();
+const { handleSearch, loading, products, productPopover } = useSearch();
 
 function useMainScroller() {
   function scrollMainTo(yScroll: number) {
@@ -30,6 +43,33 @@ function useMainScroller() {
     scrollMainTo,
   };
 }
+
+function useSearch() {
+  const { loading } = storeToRefs(productStore);
+  const products = ref<Product[]>();
+  const productPopover = ref(false);
+
+  async function handleSearch(search: string) {
+    /* do not fetch when search is empty or is currently loading to prevent 
+    unnecessary fetch */
+    if (!search || loading.value) return;
+    
+    products.value = await productStore.getProducts({
+      q: search,
+      includes: "images",
+    });
+    productPopover.value = true;
+  }
+
+  return {
+    loading,
+    handleSearch,
+    products,
+    productPopover,
+  };
+}
+
+/* INIT */
 
 provide(mainScrollerKey, useMainScroller);
 </script>
@@ -51,7 +91,55 @@ provide(mainScrollerKey, useMainScroller);
           </Button>
         </MobileNavigation>
 
-        <div class="w-full flex-1"><SearchForm /></div>
+        <div class="w-full flex-1">
+          <Popover v-model:open="productPopover">
+            <PopoverAnchor as-child>
+              <SearchForm
+                class="w-[clamp(10rem,50vw,23rem)]"
+                @submit="handleSearch"
+                :loading="loading"
+              />
+            </PopoverAnchor>
+
+            <PopoverContent
+              align="start"
+              class="mt-1 w-[clamp(10rem,50vw,23rem)]"
+            >
+              <ScrollArea class="max-h-[80vh] overflow-auto">
+                <ul class="space-y-2">
+                  <li
+                    v-for="product in products"
+                    :key="product.id"
+                    class="rounded-md p-1 duration-300 focus-within:bg-secondary hover:bg-secondary"
+                  >
+                    <RouterLink
+                      :to="{
+                        name: 'productShow',
+                        params: { productId: product.sku },
+                      }"
+                      class="flex items-center gap-2"
+                    >
+                      <div>
+                        <ImageApp
+                          :image="
+                            product.images ? product.images[0]?.thumbnail : ''
+                          "
+                          class="max-w-[3rem]"
+                        />
+                      </div>
+                      <div class="text-sm">
+                        <p class="font-medium">{{ product.title }}</p>
+                        <span class="text-muted-foreground">{{
+                          product.sku
+                        }}</span>
+                      </div>
+                    </RouterLink>
+                  </li>
+                </ul>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+        </div>
         <UserMenu />
       </header>
 

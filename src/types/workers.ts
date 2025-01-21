@@ -1,3 +1,5 @@
+import type { QueryParams } from "./auth";
+
 export interface Worker {
   worker_number: string;
   given_name: string;
@@ -39,16 +41,3 @@ export interface WorkerDepartmentForm {
 export interface WorkerQueryParams extends QueryParams {}
 export interface WorkerDepartmentQueryParams extends QueryParams {}
 
-export interface QueryParams {
-  q: string;
-  page: number;
-  per_page: number;
-  includes: string;
-  filters: FilterQueryParams[];
-}
-
-export interface FilterQueryParams {
-  column: string;
-  values: string[];
-  operation?: "and" | "or";
-}

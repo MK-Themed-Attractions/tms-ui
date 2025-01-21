@@ -25,7 +25,7 @@ export const useProductStore = defineStore("products", () => {
 
   /**
    * accumulated products is used to append products on each API request
-   * use for infinite scrolling feature b
+   * use for infinite scrolling feature 
    */
   const accumulatedProducts = ref<Product[]>([]);
 
@@ -39,7 +39,7 @@ export const useProductStore = defineStore("products", () => {
     products.value = null;
   }
 
-  async function getProducts(params?: ProductQueryParameter) {
+  async function getProducts(params?: Partial<ProductQueryParameter>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
