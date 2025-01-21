@@ -1,5 +1,5 @@
 import { useAxios } from "@/composables/useAxios";
-import { defineStore, storeToRefs } from "pinia";
+import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { ref } from "vue";
 
@@ -23,12 +23,6 @@ export const useProductStore = defineStore("products", () => {
     "",
   );
 
-  /**
-   * accumulated products is used to append products on each API request
-   * use for infinite scrolling feature 
-   */
-  const accumulatedProducts = ref<Product[]>([]);
-
   const { errors, loading, get, setHeader } = useAxios({
     baseURL: baseUrl,
   });
@@ -48,9 +42,6 @@ export const useProductStore = defineStore("products", () => {
     const res = await get<SimplePaginateAPIResource<Product>>("/api/products", {
       params,
     });
-    accumulatedProducts.value = accumulatedProducts.value.concat(
-      res?.data ?? [],
-    );
     products.value = res?.data ?? null;
 
     return res?.data;
@@ -97,7 +88,6 @@ export const useProductStore = defineStore("products", () => {
     loading,
     products,
     product,
-    accumulatedProducts,
     invalidate,
     getProducts,
     getProduct,

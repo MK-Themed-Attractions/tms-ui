@@ -6,20 +6,17 @@ import {
   onBeforeUnmount,
   onDeactivated,
   ref,
-  watch,
-  watchEffect,
 } from "vue";
-import { storeToRefs } from "pinia";
 import { useIntersectionObserver } from "@vueuse/core";
+import { mainScrollerKey } from "@/lib/injectionKeys";
+import { useRouteQuery } from "@vueuse/router";
+import type { Product, ProductQueryParameter } from "@/types/products";
 
 import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
 import { useProductStore } from "@/stores/productStore";
 import { LoaderCircle, Search } from "lucide-vue-next";
 import ProductCard from "./components/ProductCard.vue";
-import { mainScrollerKey } from "@/lib/injectionKeys";
-import { useRouteQuery } from "@vueuse/router";
-import type { ProductQueryParameter } from "@/types/products";
 
 const { fetchProducts, accumulatedProducts, handleSearch, hasResult } =
   useProduct();
@@ -31,17 +28,27 @@ await fetchProducts();
 
 function useProduct() {
   const productStore = useProductStore();
-  const { accumulatedProducts, products } = storeToRefs(productStore);
+  const products = ref<Product[]>();
+
+  /**
+   * accumulated products is used to append products on each API request
+   * use for infinite scrolling feature
+   */
+  const accumulatedProducts = ref<Product[]>([]);
 
   const hasResult = computed(() => products.value?.length);
 
   async function fetchProducts(params?: Partial<ProductQueryParameter>) {
-    await productStore.getProducts({
+    products.value = await productStore.getProducts({
       page: page.value,
       includes: "images",
       q: q.value,
       ...params,
     });
+
+    accumulatedProducts.value = accumulatedProducts.value?.concat(
+      products.value ?? [],
+    );
   }
 
   async function handleSearch() {
