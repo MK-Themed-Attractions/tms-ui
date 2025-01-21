@@ -7,6 +7,31 @@ import SideNavigation from "./components/SideNavigation.vue";
 import SearchForm from "./components/SearchForm.vue";
 import UserMenu from "./components/UserMenu.vue";
 import MobileNavigation from "./components/MobileNavigation.vue";
+import { templateRef, useScroll } from "@vueuse/core";
+import { provide } from "vue";
+import { mainScrollerKey } from "@/lib/injectionKeys";
+
+const main = templateRef("main");
+const { y } = useScroll(main);
+
+function useMainScroller() {
+  function scrollMainTo(yScroll: number) {
+    main.value.scrollTo({
+      top: yScroll,
+    });
+  }
+
+  function getScrollY() {
+    return y.value;
+  }
+
+  return {
+    getScrollY,
+    scrollMainTo,
+  };
+}
+
+provide(mainScrollerKey, useMainScroller);
 </script>
 
 <template>
@@ -26,14 +51,13 @@ import MobileNavigation from "./components/MobileNavigation.vue";
           </Button>
         </MobileNavigation>
 
-        <div class="w-full flex-1">
-          <SearchForm />
-        </div>
+        <div class="w-full flex-1"><SearchForm /></div>
         <UserMenu />
       </header>
 
       <main
         class="flex max-h-[91vh] flex-1 flex-col gap-4 overflow-auto p-4 lg:gap-6 lg:p-6"
+        ref="main"
       >
         <RouterView v-slot="{ Component }">
           <template v-if="Component">
