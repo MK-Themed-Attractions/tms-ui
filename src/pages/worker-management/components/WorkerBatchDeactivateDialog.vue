@@ -34,12 +34,10 @@ function useDeactivate() {
   const rfidInput = ref("");
   const selectedWorkers = ref<Worker[]>([]);
   const workerStore = useWorkerStore();
-  const { workers, errors, loading } = storeToRefs(workerStore);
+  const { errors, loading } = storeToRefs(workerStore);
 
-  function searchWorkerByRfid() {
-    const foundWorker = workers.value?.find((worker) => {
-      return worker.rfid_card === rfidInput.value;
-    });
+  async function searchWorkerByRfid() {
+    const foundWorker = await workerStore.getWorkerByRfid(rfidInput.value);
 
     if (foundWorker) {
       if (workerExist(foundWorker)) {
