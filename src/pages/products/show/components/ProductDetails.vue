@@ -17,7 +17,10 @@ const props = defineProps<{
   <Card>
     <CardContent>
       <CardHeader>
-        <CardTitle class="text-lg">{{ product.title }}</CardTitle>
+        <CardTitle class="flex items-center justify-between text-lg"
+          ><span>{{ product.title }}</span>
+          <slot name="attachment"> </slot>
+        </CardTitle>
         <CardDescription>{{ product.sku }}</CardDescription>
       </CardHeader>
 
@@ -76,7 +79,9 @@ const props = defineProps<{
         >
           <div class="col-span-full mb-1 flex gap-2">
             <Info :size="18" />
-            <p class="text-sm font-medium text-muted-foreground">General info</p>
+            <p class="text-sm font-medium text-muted-foreground">
+              General info
+            </p>
           </div>
 
           <span> Parent code:</span>

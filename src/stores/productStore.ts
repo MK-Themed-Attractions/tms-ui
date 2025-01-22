@@ -6,6 +6,7 @@ import { ref } from "vue";
 import { type SimplePaginateAPIResource } from "@/types/pagination";
 import type {
   Product,
+  ProductAttachment,
   ProductQueryParameter,
   ProductRoutingBOM,
   ProductRoutingQueryParams,
@@ -83,6 +84,60 @@ export const useProductStore = defineStore("products", () => {
     return res?.data;
   }
 
+  async function getProductTechnicalDrawings(
+    productSku: string,
+    loading: (loading: boolean) => void,
+  ) {
+    loading(true);
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ files: ProductAttachment[] }>(
+      `api/sharepoint/get-technical-drawing/${productSku}`,
+    );
+
+    loading(false);
+    return res?.files;
+  }
+
+  async function getProductPantoneReference(
+    productSku: string,
+    loading: (loading: boolean) => void,
+  ) {
+    loading(true);
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ files: ProductAttachment[] }>(
+      `api/sharepoint/get-pantone/${productSku}`,
+    );
+
+    loading(false);
+    return res?.files;
+  }
+
+  async function getProductAssemblyManual(
+    productSku: string,
+    loading: (loading: boolean) => void,
+  ) {
+    loading(true);
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ files: ProductAttachment[] }>(
+      `api/sharepoint/get-assembly-manual/${productSku}`,
+    );
+
+    loading(false);
+    return res?.files;
+  }
+
   return {
     errors,
     loading,
@@ -92,5 +147,8 @@ export const useProductStore = defineStore("products", () => {
     getProducts,
     getProduct,
     getProductRoutingBom,
+    getProductTechnicalDrawings,
+    getProductPantoneReference,
+    getProductAssemblyManual,
   };
 });

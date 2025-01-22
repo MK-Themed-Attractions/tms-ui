@@ -3,18 +3,29 @@ import { useProductStore } from "@/stores/productStore";
 import type {
   ProductRoutingBOM,
   ProductQueryParameter,
+  ProductAttachment,
 } from "@/types/products";
 import { storeToRefs } from "pinia";
 import ImageCarousel from "./components/ImageCarousel.vue";
 import ProductDetails from "./components/ProductDetails.vue";
 import { Card } from "@/components/ui/card";
 import ProductRouting from "./components/ProductRouting.vue";
-import { computed, inject, onActivated, ref, watch, watchEffect } from "vue";
-import { ImageApp } from "@/components/app/image";
+import { computed, inject, onActivated, ref, watchEffect } from "vue";
 import ProductRoutingBoms from "./components/ProductRoutingBoms.vue";
-import { LoaderCircle, MousePointerClick } from "lucide-vue-next";
+import {
+  Axis3D,
+  LoaderCircle,
+  MousePointerClick,
+  Notebook,
+  PaintBucket,
+  Paperclip,
+} from "lucide-vue-next";
 import ProductRoutingInfo from "./components/ProductRoutingInfo.vue";
 import { mainScrollerKey } from "@/lib/injectionKeys";
+import { ButtonApp } from "@/components/app/button";
+import ProductAttachmentDropdown from "./components/ProductAttachmentDropdown.vue";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import AttachmentDialog from "./components/AttachmentDialog.vue";
 
 const props = defineProps<{
   productId: string;
@@ -24,6 +35,15 @@ const { loading } = storeToRefs(productStore);
 
 const { fetchProduct, product } = useProduct();
 const { selectedRouting, productRoutingBoms, routing } = useRouting();
+const {
+  attachmentDialog,
+  attachmentLoading,
+  attachments,
+  handleSelectAttachment,
+  selectedAttachment,
+  fetchAttachments,
+  selectedAttachmentType,
+} = useAttachments();
 
 function useProduct() {
   const { product } = storeToRefs(productStore);
@@ -74,8 +94,103 @@ function useRouting() {
   };
 }
 
+function useAttachments() {
+  type ProductAttachmentType = "technical" | "pantone" | "assembly";
+  interface DialogData {
+    title?: string;
+    description?: string;
+  }
+
+  type AttachmentRecord = Partial<
+    Record<ProductAttachmentType, ProductAttachment[] | undefined>
+  >;
+
+  const attachmentDialog = ref(false);
+  const attachmentLoading = ref(false);
+  const attachments = ref<AttachmentRecord>({});
+  const selectedAttachment = ref<DialogData>();
+  const selectedAttachmentType = ref<ProductAttachmentType>("technical");
+
+  function fetchAttachments() {
+    productStore
+      .getProductTechnicalDrawings(props.productId, (loading) => {
+        attachmentLoading.value = loading;
+      })
+      .then((result) => {
+        attachments.value.technical = result;
+      });
+
+    productStore
+      .getProductPantoneReference(props.productId, (loading) => {
+        attachmentLoading.value = loading;
+      })
+      .then((result) => {
+        attachments.value.pantone = result;
+      });
+
+    productStore
+      .getProductAssemblyManual(props.productId, (loading) => {
+        attachmentLoading.value = loading;
+      })
+      .then((result) => {
+        attachments.value.assembly = result;
+      });
+  }
+
+  function getAttachmentType(type: ProductAttachmentType): DialogData {
+    switch (type) {
+      case "assembly": {
+        selectedAttachmentType.value = "assembly";
+        return {
+          title: "Assembly manual",
+          description:
+            "Contains all files related to the assembly of this item. Clicking any file will take you to a new tab.",
+        };
+      }
+      case "pantone": {
+        selectedAttachmentType.value = "pantone";
+
+        return {
+          title: "Pantone references",
+          description:
+            "Contains all files related to the pantone reference of this item. Clicking any file will take you to a new tab.",
+        };
+      }
+      case "technical": {
+        selectedAttachmentType.value = "technical";
+
+        return {
+          title: "Technical drawings",
+          description:
+            "Contains all files related to the technical drawings of this item. Clicking any file will take you to a new tab.",
+        };
+      }
+      default: {
+        return {};
+      }
+    }
+  }
+
+  function handleSelectAttachment(type: ProductAttachmentType) {
+    attachmentDialog.value = true;
+    selectedAttachment.value = getAttachmentType(type);
+  }
+
+  return {
+    attachmentDialog,
+    attachmentLoading,
+    attachments,
+    handleSelectAttachment,
+    selectedAttachment,
+    fetchAttachments,
+    selectedAttachmentType,
+  };
+}
+
 /* INIT */
+
 watchEffect(async () => {
+  fetchAttachments();
   await fetchProduct(props.productId);
 });
 
@@ -100,7 +215,28 @@ onActivated(() => {
       ></ImageCarousel>
     </Card>
 
-    <ProductDetails v-if="product" :product="product" />
+    <ProductDetails v-if="product" :product="product">
+      <template #attachment>
+        <ProductAttachmentDropdown>
+          <ButtonApp size="icon" variant="ghost">
+            <Paperclip />
+          </ButtonApp>
+
+          <template #content>
+            <DropdownMenuItem @click="handleSelectAttachment('technical')"
+              ><Axis3D class="mr-2 h-4 w-4" />
+              Technical drawings
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleSelectAttachment('pantone')"
+              ><PaintBucket class="mr-2 h-4 w-4" /> Pantone reference
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleSelectAttachment('assembly')"
+              ><Notebook class="mr-2 h-4 w-4" /> Assembly manual
+            </DropdownMenuItem>
+          </template>
+        </ProductAttachmentDropdown>
+      </template>
+    </ProductDetails>
 
     <ProductRouting
       v-model="selectedRouting"
@@ -133,6 +269,16 @@ onActivated(() => {
         </div>
       </div>
     </ProductRouting>
+
+    <Teleport to="#overlay">
+      <AttachmentDialog
+        v-model="attachmentDialog"
+        :attachments="attachments[selectedAttachmentType]"
+        :loading="attachmentLoading"
+        :title="selectedAttachment?.title"
+        :description="selectedAttachment?.description"
+      ></AttachmentDialog>
+    </Teleport>
   </div>
 </template>
 

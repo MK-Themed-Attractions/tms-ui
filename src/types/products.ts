@@ -52,10 +52,14 @@ export interface ProductRoutingBOM {
   routing_link_code: string;
 }
 
-/* config for product API get method parameters */
-export interface ProductQueryParameter extends QueryParams {
- 
+export interface ProductAttachment {
+  link: string;
+  mime: string;
+  name: string;
 }
+
+/* config for product API get method parameters */
+export interface ProductQueryParameter extends QueryParams {}
 
 export interface ProductShowQueryParams {
   includes: string;
