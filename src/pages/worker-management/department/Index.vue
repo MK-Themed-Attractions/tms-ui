@@ -5,25 +5,71 @@ import DepartmentDataTable from "./components/DepartmentDataTable.vue";
 import DepartmentToolbar from "./components/DepartmentToolbar.vue";
 import { provide } from "vue";
 import { workerDepartmentOnSuccessKey } from "@/lib/injectionKeys";
+import type { WorkerDepartmentQueryParams } from "@/types/workers";
+import { useRoute } from "vue-router";
+import {
+  PaginationApp,
+  type PaginationQuery,
+} from "@/components/app/pagination";
+import { useRouteQuery } from "@vueuse/router";
 
-const { fetchDepartments, departments } = useWorkerDepartment();
-
-if (!departments.value) await fetchDepartments();
+const route = useRoute();
+const {
+  fetchDepartments,
+  departments,
+  handleQueryChange,
+  hasNextPage,
+  hasPrevPage,
+} = useWorkerDepartment();
+const { handleSearch, search } = useSearch();
 
 function useWorkerDepartment() {
   const workerDepartmentStore = useWorkerDepartmentStore();
-  const { departments, errors, loading } = storeToRefs(workerDepartmentStore);
+  const { departments, hasNextPage, hasPrevPage } = storeToRefs(
+    workerDepartmentStore,
+  );
 
-  async function fetchDepartments() {
-    await workerDepartmentStore.getDepartments();
+  async function fetchDepartments(
+    params?: Partial<WorkerDepartmentQueryParams>,
+  ) {
+    await workerDepartmentStore.getDepartments({
+      q: route.query.q ? route.query.q.toString() : "",
+      per_page: route.query["per-page"] ? +route.query["per-page"] : 30,
+      page: route.query.page ? +route.query.page : 1,
+      ...params,
+    });
+  }
+
+  async function handleQueryChange(query: Partial<PaginationQuery>) {
+    await fetchDepartments({
+      page: query.page,
+      per_page: query.perPage ? +query.perPage : 30,
+    });
   }
 
   return {
     fetchDepartments,
     departments,
+    handleQueryChange,
+    hasNextPage,
+    hasPrevPage,
   };
 }
 
+function useSearch() {
+  const search = useRouteQuery("q");
+
+  async function handleSearch(searchQuery: string) {
+    await fetchDepartments({
+      q: search.value?.toString(),
+    });
+  }
+
+  return {
+    search,
+    handleSearch,
+  };
+}
 /**
  * use to provide a central fetching function
  * everytime a CRUD happens to any child component
@@ -31,6 +77,9 @@ function useWorkerDepartment() {
 provide(workerDepartmentOnSuccessKey, async () => {
   await fetchDepartments();
 });
+
+/* INIT */
+if (!departments.value) await fetchDepartments();
 </script>
 
 <template>
@@ -44,9 +93,20 @@ provide(workerDepartmentOnSuccessKey, async () => {
     </div>
 
     <div>
-      <DepartmentToolbar class="mb-4" />
+      <DepartmentToolbar
+        class="mb-4"
+        v-model:search="search"
+        @search="handleSearch"
+      />
 
       <DepartmentDataTable v-if="departments" :departments="departments">
+        <template #footer>
+          <PaginationApp
+            @change:query="handleQueryChange"
+            :disable-next="!hasNextPage"
+            :disable-prev="!hasPrevPage"
+          ></PaginationApp>
+        </template>
       </DepartmentDataTable>
     </div>
   </div>

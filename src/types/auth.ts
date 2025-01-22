@@ -36,3 +36,17 @@ export interface BearerTokenResponse {
   bearer_token: string;
   validity: string;
 }
+
+export interface QueryParams {
+  q: string;
+  page: number;
+  per_page: number;
+  includes: string;
+  filters: FilterQueryParams[];
+}
+
+export interface FilterQueryParams {
+  column: string;
+  values: string[];
+  operation?: "and" | "or";
+}

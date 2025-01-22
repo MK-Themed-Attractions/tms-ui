@@ -3,10 +3,9 @@ import { useAxios } from "@/composables/useAxios";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { useStorage } from "@vueuse/core";
-import type { Worker, WorkerForm } from "@/types/workers";
+import type { Worker, WorkerForm, WorkerQueryParams } from "@/types/workers";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
-import type { AxiosRequestConfig } from "axios";
 
 export const useWorkerStore = defineStore("workers", () => {
   const baseUrl = import.meta.env.VITE_WORKERS_URL;
@@ -15,7 +14,7 @@ export const useWorkerStore = defineStore("workers", () => {
     "",
   );
 
-  const { errors, get, loading, post, put, setHeader } = useAxios({
+  const { errors, get, loading, post, put, setHeader, destroy } = useAxios({
     baseURL: baseUrl,
   });
   setHeader("Bearer-Token", bearerToken);
@@ -36,17 +35,30 @@ export const useWorkerStore = defineStore("workers", () => {
     }
   });
 
+  const hasNextPage = computed(() => {
+    return paginatedResponse.value?.links.next ? true : false;
+  });
+
+  const hasPrevPage = computed(() => {
+    return paginatedResponse.value?.links.prev ? true : false;
+  });
+
   /* ACTIONS */
-  async function getWorkers(config?: AxiosRequestConfig) {
+
+  function invalidate() {
+    paginatedResponse.value = null;
+    bearerToken.value = null;
+  }
+
+  async function getWorkers(params?: Partial<WorkerQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
     );
 
-    const res = await get<SimplePaginateAPIResource<Worker>>(
-      "/api/worker",
-      config,
-    );
+    const res = await get<SimplePaginateAPIResource<Worker>>("/api/worker", {
+      params,
+    });
 
     if (res) {
       paginatedResponse.value = res;
@@ -71,6 +83,8 @@ export const useWorkerStore = defineStore("workers", () => {
       bearerToken,
     );
 
+    //manually set is_active to true this is based on the API requirement
+    form.is_active = true;
     await put(`/api/worker/${workerId}`, form);
   }
 
@@ -80,12 +94,15 @@ export const useWorkerStore = defineStore("workers", () => {
       bearerToken,
     );
 
+    /*collect workers Id */
     const workerIds = workers.reduce<string[]>((acc, cur) => {
       acc.push(cur.id);
       return acc;
     }, []);
 
-    await put("/api/workers/deactivate", { worker_ids: workerIds });
+    await destroy("/api/workers/deactivate", {
+      params: { worker_ids: workerIds },
+    });
   }
 
   return {
@@ -98,5 +115,8 @@ export const useWorkerStore = defineStore("workers", () => {
     updateWorker,
     deactivateWorker,
     bearerToken,
+    hasNextPage,
+    hasPrevPage,
+    invalidate,
   };
 });

@@ -1,3 +1,5 @@
+import type { QueryParams } from "./auth";
+
 export interface Product {
   created_at: string;
   updated_at: string;
@@ -13,6 +15,24 @@ export interface Product {
   parent_code: string;
   sku: string;
   title: string;
+  routings?: ProductRouting[];
+  product_bom_no: string;
+  routing_link_code: string;
+}
+
+export interface ProductRouting {
+  created_at: string;
+  id: string;
+  index: number;
+  is_autocomplete: boolean;
+  manpower: number;
+  next_operation: ProductRoutingOperationLetter[];
+  operation_code: string;
+  operation_number: string;
+  provious_operation: any;
+  routing_no: string;
+  runtime: number;
+  updated_at: string;
 }
 
 export interface Image {
@@ -23,7 +43,56 @@ export interface Image {
   tiny_image: string;
 }
 
-/* config for product API get method parameters */
-export interface ProductQueryParameter {
-  page: number;
+export interface ProductRoutingBOM {
+  production_bom_no: string;
+  no: string;
+  description: string;
+  quantity_per: number;
+  unit_of_measure_code: string;
+  routing_link_code: string;
 }
+
+export interface ProductAttachment {
+  link: string;
+  mime: string;
+  name: string;
+}
+
+/* config for product API get method parameters */
+export interface ProductQueryParameter extends QueryParams {}
+
+export interface ProductShowQueryParams {
+  includes: string;
+}
+
+export interface ProductRoutingQueryParams {
+  routing_link_code: string;
+}
+
+export type ProductRoutingOperationLetter =
+  | "A"
+  | "B"
+  | "C"
+  | "D"
+  | "E"
+  | "F"
+  | "G"
+  | "H"
+  | "I"
+  | "J"
+  | "K"
+  | "L"
+  | "M"
+  | "N"
+  | "O"
+  | "P"
+  | "Q"
+  | "R"
+  | "S"
+  | "T"
+  | "U"
+  | "V"
+  | "W"
+  | "X"
+  | "Y"
+  | "Z";

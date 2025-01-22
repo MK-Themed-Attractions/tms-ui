@@ -5,6 +5,9 @@ import Axios, {
 } from "axios";
 import { ref, watchEffect, type MaybeRefOrGetter } from "vue";
 import { useAxiosErrorRedirects } from "./useAxiosErrorRedirects";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
+import { useWorkerStore } from "@/stores/workerStore";
+import { useAuthStore } from "@/stores/authStore";
 
 /* global error instance */
 const errors = ref<AxiosResponseError | null>(null);
@@ -38,7 +41,10 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     switch (errors.value?.status) {
       /* unauthorize response */
       case 401: {
-        localStorage.clear();
+        /* invalidate all fetched data */
+        await useAuthStore().logout();
+
+        /* redirect to login */
         await redirectToLoginPage();
       }
     }
@@ -106,6 +112,20 @@ export const useAxios = (config: CreateAxiosDefaults) => {
       loading.value = false;
     }
   }
+  async function destroy<T>(url: string, config?: AxiosRequestConfig) {
+    try {
+      loading.value = true;
+      const res = await axios.delete(url, config);
+
+      errors.value = null;
+
+      return res.data as T;
+    } catch (err) {
+      errors.value = err as AxiosResponseError;
+    } finally {
+      loading.value = false;
+    }
+  }
 
   return {
     get,
@@ -114,5 +134,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     errors,
     put,
     setHeader,
+    destroy,
   };
 };

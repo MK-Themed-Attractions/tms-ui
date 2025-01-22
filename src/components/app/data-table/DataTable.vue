@@ -84,8 +84,12 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
       </TableEmpty>
     </TableBody>
 
-    <TableFooter class="bg-background">
-      <slot name="footer" :col-span="selectedColumns.length"></slot>
+    <TableFooter>
+      <TableRow>
+        <TableCell :colspan="selectedColumns.length" class="bg-background">
+          <slot name="footer" :col-span="selectedColumns.length"></slot>
+        </TableCell>
+      </TableRow>
     </TableFooter>
   </Table>
 </template>

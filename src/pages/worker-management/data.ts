@@ -5,6 +5,6 @@ export const displayColumns: DataTableColumns[] = [
   { key: "full_name", title: "Full name" },
   { key: "department.name", title: "Department" },
   { key: "rfid_card", title: "RFID" },
-  { key: "status", title: "Status" },
+  { key: "is_active", title: "Status" },
   { key: "actions", title: "" },
 ];

@@ -1,3 +1,5 @@
+import type { QueryParams } from "./auth";
+
 export interface Worker {
   worker_number: string;
   given_name: string;
@@ -8,6 +10,7 @@ export interface Worker {
   id: string;
   full_name: string;
   department?: WorkerDepartment;
+  is_active: boolean;
 }
 
 export interface WorkerForm {
@@ -16,6 +19,7 @@ export interface WorkerForm {
   last_name: string;
   rfid_card: string;
   department_id: string;
+  is_active?: boolean;
 }
 
 export interface WorkerDepartment {
@@ -34,7 +38,6 @@ export interface WorkerDepartmentForm {
   description?: string;
 }
 
-export interface WorkerQueryParams {
-  page: number;
-  includes: string;
-}
+export interface WorkerQueryParams extends QueryParams {}
+export interface WorkerDepartmentQueryParams extends QueryParams {}
+

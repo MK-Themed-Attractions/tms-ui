@@ -8,18 +8,25 @@ import { provide } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 import { useRouterQuery } from "@/composables/useRouterQuery";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
+import type { WorkerQueryParams } from "@/types/workers";
+import { useRoute } from "vue-router";
 
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
 const { departments, fetchWorkerDepartments } = useWorkerDepartment();
+const route = useRoute();
 
 function useWorkers() {
   const workerStore = useWorkerStore();
   const { workers, loading } = storeToRefs(workerStore);
 
-  async function fetchWorkers() {
+  async function fetchWorkers(params?: Partial<WorkerQueryParams>) {
     await workerStore.getWorkers({
-      params: { q: q.value, includes: "department" },
+      q: q.value?.toString(),
+      includes: "department",
+      page: route.query.page ? +route.query.page : 1,
+      per_page: route.query["per-page"] ? +route.query["per-page"] : 30,
+      ...params,
     });
   }
 
@@ -63,8 +70,8 @@ function useSearch() {
  * use to provide a central fetching function
  * everytime a CRUD happens to any child component
  */
-provide(workerOnSuccessKey, async () => {
-  await fetchWorkers();
+provide(workerOnSuccessKey, async (params?: Partial<WorkerQueryParams>) => {
+  await fetchWorkers(params);
 });
 
 /* INIT */
