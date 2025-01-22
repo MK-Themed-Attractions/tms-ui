@@ -24,10 +24,24 @@ const router = createRouter({
         {
           path: "products",
           name: "products",
+          redirect: { name: "productIndex" },
           component: () => import("@/pages/products/Index.vue"),
           meta: {
             requiresAuth: true,
           },
+          children: [
+            {
+              path: "",
+              name: "productIndex",
+              component: () => import("@/pages/products/Product.vue"),
+            },
+            {
+              path: ":productId",
+              name: "productShow",
+              component: () => import("@/pages/products/show/Index.vue"),
+              props: true,
+            },
+          ],
         },
         {
           path: "worker-management",
