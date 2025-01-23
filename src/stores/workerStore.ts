@@ -65,6 +65,41 @@ export const useWorkerStore = defineStore("workers", () => {
     }
   }
 
+  /**
+   * Get individual worker by his/her RFID and automatically includes relationships
+   * @param rfid_card Employee RFID card
+   * @returns
+   */
+
+  async function getWorkerByRfid(rfid_card: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: Worker }>(`/api/worker/rfid/${rfid_card}`);
+
+    if (res) {
+      return res.data;
+    }
+  }
+  /**
+   * Get individual worker and automatically includes relationships
+   * @param workerId worker UUID rfid_card Employee RFID card
+   * @returns
+   */
+  async function getWorker(workerId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: Worker }>(`/api/worker/${workerId}`);
+
+    if (res) {
+      return res.data;
+    }
+  }
   async function createWorker(form: WorkerForm) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -107,6 +142,8 @@ export const useWorkerStore = defineStore("workers", () => {
 
   return {
     getWorkers,
+    getWorker,
+    getWorkerByRfid,
     errors,
     loading,
     workers,

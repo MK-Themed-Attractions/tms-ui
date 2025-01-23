@@ -20,10 +20,7 @@ import {
 } from "@/components/app/filter";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { storeToRefs } from "pinia";
-import type {
-  WorkerDepartment,
-  WorkerFilterQueryParams,
-} from "@/types/workers";
+import type { WorkerDepartment, FilterQueryParams } from "@/types/workers";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 
 const emits = defineEmits<{
@@ -59,7 +56,7 @@ function handleShowDeactivateDialog() {
 }
 
 function useFilter() {
-  const filters = ref<WorkerFilterQueryParams[]>([
+  const filters = ref<FilterQueryParams[]>([
     {
       column: "department_id",
       values: [],
@@ -113,6 +110,7 @@ function useFilter() {
     if (fetchWorkers)
       await fetchWorkers({
         filters: filters.value,
+        page: 1,
       });
   }
 
