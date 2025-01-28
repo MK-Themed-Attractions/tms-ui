@@ -53,7 +53,7 @@ function useSearch() {
     /* do not fetch when search is empty or is currently loading to prevent 
     unnecessary fetch */
     if (!search || loading.value) return;
-    
+
     products.value = await productStore.getProducts({
       q: search,
       includes: "images",

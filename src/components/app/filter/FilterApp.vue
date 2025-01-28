@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { CheckIcon, CirclePlus } from "lucide-vue-next";
-import { ref, type Component, type Ref } from "vue";
+import { type Component } from "vue";
 import { ButtonApp } from "../button";
 import type { FilterAppGenericObject } from ".";
 
@@ -37,7 +37,7 @@ const emits = defineEmits<{
   (e: "clearSelect", selected: T[]): void;
 }>();
 
-const selected: Ref<T[]> = ref([]);
+const selected = defineModel<T[]>({ default: [] });
 
 function handleSelect(item: T) {
   if (existInSelected(item)) {

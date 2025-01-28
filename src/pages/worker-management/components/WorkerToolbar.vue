@@ -20,7 +20,8 @@ import {
 } from "@/components/app/filter";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { storeToRefs } from "pinia";
-import type { WorkerDepartment, FilterQueryParams } from "@/types/workers";
+import type { WorkerDepartment } from "@/types/workers";
+import type { FilterQueryParams } from "@/types/auth";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
 
 const emits = defineEmits<{

@@ -1,7 +1,6 @@
 import {
   Building,
   Calendar,
-  Calendar1,
   ContactRound,
   HardHat,
   Home,
@@ -11,7 +10,7 @@ import type { NavItem } from "./components/SideNavigation.vue";
 
 export const navItemData: NavItem[] = [
   { name: "Home", to: { name: "home" }, icon: Home },
-  { name: "Products", to: { name: "products" }, icon: Package },
+  { name: "Products", to: { name: "productIndex" }, icon: Package },
   {
     name: "Worker management",
     icon: HardHat,
@@ -30,7 +29,7 @@ export const navItemData: NavItem[] = [
   },
   {
     name: "Planning",
-    to: { name: "home" },
+    to: { name: "planningIndex" },
     icon: Calendar,
   },
 ];
