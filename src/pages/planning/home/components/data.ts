@@ -10,7 +10,7 @@ export const planStatuses = [
 
 export const planDataColumns: DataTableColumns[] = [
   { key: "plan_code", title: "Plan code" },
-  { key: "status_code.status", title: "Status" },
+  { key: "status", title: "Status" },
   { key: "sku", title: "Item code" },
   { key: "sku_title", title: "Item description" },
   { key: "updated_at", title: "Last modified date" },

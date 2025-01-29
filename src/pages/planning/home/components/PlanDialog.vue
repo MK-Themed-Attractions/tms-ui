@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogScrollContent,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -25,7 +26,10 @@ const dialog = defineModel({ default: false });
       >
     </slot>
 
-    <DialogContent @interact-outside="(e) => e.preventDefault()">
+    <DialogScrollContent
+      @interact-outside="(e) => e.preventDefault()"
+      class="min-h-[30rem] max-w-[55rem]"
+    >
       <slot name="header">
         <DialogHeader>
           <DialogTitle>{{ title }}</DialogTitle>
@@ -34,7 +38,7 @@ const dialog = defineModel({ default: false });
       </slot>
 
       <slot />
-    </DialogContent>
+    </DialogScrollContent>
   </Dialog>
 </template>
 

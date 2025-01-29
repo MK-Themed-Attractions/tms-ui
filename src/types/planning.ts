@@ -10,7 +10,7 @@ export interface Plan {
   updated_at: string;
   created_at: string;
   id: string;
-  status_code: PlanStatus;
+  status: PlanStatusCode;
   user_data?: PlanUserData;
 }
 
@@ -25,6 +25,7 @@ export enum PlanStatusCode {
   CANCELED,
   ARCHIVED,
   PROTOTYPE,
+  PENDING,
 }
 export interface PlanUserData {
   full_name: string;

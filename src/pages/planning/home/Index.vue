@@ -9,6 +9,7 @@ import { usePlanStore } from "@/stores/planStore";
 import PlanDataTable from "./components/PlanDataTable.vue";
 import type { Plan } from "@/types/planning";
 import PlanDialog from "./components/PlanDialog.vue";
+import PlanForm from "./components/PlanForm.vue";
 
 const authStore = usePlanStore();
 const { filter, getPlans, plans } = usePlan();
@@ -56,6 +57,7 @@ await getPlans();
             title="Create new plan"
             description="Fill out the form below, please review the plan before saving."
           >
+            <PlanForm></PlanForm>
           </PlanDialog>
         </template>
       </PlanToolbar>

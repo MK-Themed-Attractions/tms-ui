@@ -9,7 +9,6 @@ import {
   LibraryBig,
   ShieldAlert,
   Timer,
-  TrafficCone,
 } from "lucide-vue-next";
 
 const props = defineProps<{
@@ -41,15 +40,15 @@ function getStatusIcon(status: PlanStatusCode) {
         <span class="font-medium">{{ item.plan_code }}</span>
       </TableCell>
     </template>
-    <template #item.status_code.status="{ item }">
+    <template #item.status="{ item }">
       <TableCell>
         <div class="flex items-center gap-2">
           <component
-            :is="getStatusIcon(item.status_code.status)"
+            :is="getStatusIcon(item.status)"
             :size="15"
             class="stroke-muted-foreground"
           />
-          {{ item.status_code.status }}
+          {{ item.status }}
         </div>
       </TableCell>
     </template>
