@@ -36,7 +36,7 @@ const isChildRouteSelected = computed(() => {
   <RouterLink
     v-if="!children?.length && to"
     class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-    :class="{ 'bg-muted text-primary': $route.name === to.name }"
+    active-class="bg-muted text-primary"
     :to="to"
   >
     <slot name="icon">
@@ -66,7 +66,7 @@ const isChildRouteSelected = computed(() => {
             v-if="child.to"
             :to="child.to"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-            :class="{ 'bg-muted text-primary': $route.name === child.to.name }"
+            active-class="bg-muted text-primary"
           >
             <slot name="icon">
               <component

@@ -6,11 +6,14 @@ import { useProductStore } from "@/stores/productStore";
 import type { Product, ProductQueryParameter } from "@/types/products";
 import { AlertCircle, LoaderCircle, RefreshCcw, Search } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
-import { markRaw, ref } from "vue";
+import { ref } from "vue";
 
+defineOptions({
+  inheritAttrs: false,
+});
 const selectedProductId = defineModel({ default: "" });
 
-const { products, fetchProducts, loading } = useProduct();
+const { products, fetchProducts, loading, fetchProduct } = useProduct();
 const { search, searchProduct } = useSearchProduct();
 const { handleClearSelection, handleSelectProduct, selectedProduct } =
   useSelect();
@@ -27,9 +30,20 @@ function useProduct() {
     });
   }
 
+  async function fetchProduct(
+    productId: string,
+    params?: Partial<ProductQueryParameter>,
+  ) {
+    await productStore.getProduct(productId, {
+      includes: "images,routings",
+      ...params,
+    });
+  }
+
   return {
     products,
     fetchProducts,
+    fetchProduct,
     loading,
   };
 }
@@ -50,8 +64,10 @@ function useSearchProduct() {
 function useSelect() {
   const selectedProduct = ref<Product>();
 
-  function handleSelectProduct(product: Product) {
-    const rawProduct = markRaw(product);
+  async function handleSelectProduct(product: Product) {
+    await fetchProduct(product.sku);
+
+    const rawProduct = JSON.parse(JSON.stringify(product));
     selectedProductId.value = rawProduct.sku;
     selectedProduct.value = rawProduct;
   }
@@ -80,7 +96,7 @@ if (!products.value) await fetchProducts();
           class="w-full rounded-tl-md rounded-tr-md p-3 text-sm focus:outline-none"
           placeholder="Search product..."
           v-model="search"
-          @keydown.enter="searchProduct"
+          @keydown.enter.prevent="searchProduct"
         />
         <Search
           class="absolute left-2 top-1/2 -translate-y-1/2 stroke-muted-foreground"
@@ -128,6 +144,7 @@ if (!products.value) await fetchProducts();
           variant="outline"
           size="icon"
           class="absolute right-1 top-1/2 h-8 -translate-y-1/2"
+          type="button"
           @click="handleClearSelection"
         >
           <RefreshCcw />
@@ -136,13 +153,13 @@ if (!products.value) await fetchProducts();
 
       <div class="mt-2 rounded-md border p-3">
         <ImageApp
-          class="mx-auto"
+          class="mx-auto max-w-[14rem]"
           v-if="selectedProduct.images?.length"
           :image="selectedProduct.images[0].thumbnail"
         />
         <div
           v-else
-          class="mb-4 flex min-h-[10rem] items-center justify-center gap-2 rounded-md border border-dashed text-sm"
+          class="mb-4 flex min-h-[13rem] items-center justify-center gap-2 rounded-md border border-dashed text-sm"
         >
           <AlertCircle class="text-muted-foreground" :size="17" /> No Image
           Available

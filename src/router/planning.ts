@@ -15,6 +15,11 @@ export const planning: RouteRecordRaw[] = [
         name: "planningIndex",
         component: () => import("@/pages/planning/home/Index.vue"),
       },
+      {
+        path: "create",
+        name: "planningCreate",
+        component: () => import("@/pages/planning/create/Index.vue"),
+      },
     ],
   },
 ];

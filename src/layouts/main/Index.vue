@@ -75,7 +75,7 @@ provide(mainScrollerKey, useMainScroller);
 </script>
 
 <template>
-  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+  <div class="fixed grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
     <SideNavigation
       class="hidden border-r bg-muted/40 lg:block"
       :items="navItemData"

@@ -16,6 +16,7 @@ import { defineStore } from "pinia";
 import { useProductStore } from "./productStore";
 import { useWorkerDepartmentStore } from "./workerDepartmentStore";
 import { useWorkerStore } from "./workerStore";
+import { usePlanStore } from "./planStore";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = useStorage<User>("user", null, undefined, {
@@ -112,6 +113,7 @@ export const useAuthStore = defineStore("auth", () => {
     useProductStore().invalidate();
     useWorkerDepartmentStore().invalidate();
     useWorkerStore().invalidate();
+    usePlanStore().invalidate();
   }
 
   return {

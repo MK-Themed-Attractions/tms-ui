@@ -13,7 +13,7 @@ const isPrototype = defineModel({ default: false });
     >
       <Menu :size="18" class="mt-1" />
       <div>
-        <p class="font-medium">Normal</p>
+        <p class="font-medium">Regular</p>
         <span class="text-muted-foreground"
           >This plan will consider employee efficiency points.</span
         >

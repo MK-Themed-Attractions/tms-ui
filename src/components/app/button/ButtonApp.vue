@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 const props = defineProps<ButtonProps>();
 </script>
 <template>
-  <Button class="flex items-center gap-2" :disabled="loading">
+  <Button class="flex items-center gap-2" :disabled="loading" type="button">
     <component :is="props.prependIcon" v-if="!props.loading" />
     <LoaderCircle v-if="loading" class="animate-spin" />
 

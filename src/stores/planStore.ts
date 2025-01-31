@@ -22,6 +22,11 @@ export const usePlanStore = defineStore("plans", () => {
   /* GETTERS */
   const plans = computed(() => paginatedResponse.value?.data);
 
+  function invalidate() {
+    paginatedResponse.value = undefined;
+    bearerToken.value = null;
+  }
+
   /* ACTIONS */
   async function getPlans(params?: Partial<PlanQueryParams>) {
     await authStore.checkTokenValidity(
@@ -44,5 +49,6 @@ export const usePlanStore = defineStore("plans", () => {
   return {
     plans,
     getPlans,
+    invalidate,
   };
 });
