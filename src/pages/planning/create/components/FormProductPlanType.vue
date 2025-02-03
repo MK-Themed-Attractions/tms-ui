@@ -11,7 +11,7 @@ const isPrototype = defineModel({ default: false });
       role="checkbox"
       @click="isPrototype = false"
     >
-      <Menu :size="18" class="mt-1" />
+      <Menu />
       <div>
         <p class="font-medium">Regular</p>
         <span class="text-muted-foreground"
@@ -25,7 +25,7 @@ const isPrototype = defineModel({ default: false });
       role="checkbox"
       @click="isPrototype = true"
     >
-      <Settings :size="18" class="mt-1" />
+      <Settings />
       <div>
         <p class="font-medium">Prototype</p>
         <span class="text-muted-foreground"

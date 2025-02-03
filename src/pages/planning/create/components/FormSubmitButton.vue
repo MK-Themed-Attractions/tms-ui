@@ -29,7 +29,7 @@ import { ArrowRight, ChevronDown } from "lucide-vue-next";
           <ChevronDown class="h-4 w-4 text-primary-foreground" />
         </ButtonApp>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="top" :side-offset="2">
+      <DropdownMenuContent align="end" side="top" :side-offset="5" class="min-w-[10rem]">
         <DropdownMenuLabel>Options</DropdownMenuLabel>
         <DropdownMenuSeparator></DropdownMenuSeparator>
         <DropdownMenuGroup>

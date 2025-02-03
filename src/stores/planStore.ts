@@ -1,5 +1,5 @@
 import { useAxios } from "@/composables/useAxios";
-import type { Plan, PlanQueryParams } from "@/types/planning";
+import type { Plan, PlanForm, PlanQueryParams } from "@/types/planning";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
@@ -12,7 +12,7 @@ export const usePlanStore = defineStore("plans", () => {
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader } = useAxios({
+  const { get, errors, loading, setHeader, post } = useAxios({
     baseURL: baseUrl,
   });
   const paginatedResponse = ref<SimplePaginateAPIResource<Plan>>();
@@ -46,9 +46,14 @@ export const usePlanStore = defineStore("plans", () => {
     return null;
   }
 
+  async function createPlan(form: PlanForm) {
+    const res = await post("api/plan", form);
+  }
+
   return {
     plans,
     getPlans,
     invalidate,
+    createPlan,
   };
 });

@@ -8,28 +8,23 @@ import {
 } from "@/components/ui/form";
 import FormItem from "@/components/ui/form/FormItem.vue";
 import { Input } from "@/components/ui/input";
-import type { Plan } from "@/types/planning";
+import type { Plan, PlanForm } from "@/types/planning";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
 import FormProductInput from "./components/FormProductInput.vue";
 import FormProductPlanType from "./components/FormProductPlanType.vue";
 import { useFieldArray, useForm } from "vee-validate";
 import { ButtonApp } from "@/components/app/button";
-import {
-  ArrowBigDown,
-  ArrowBigUp,
-  Info,
-  Plus,
-  Trash,
-  TriangleAlert,
-} from "lucide-vue-next";
+import { Info, Plus, Trash, TriangleAlert } from "lucide-vue-next";
 
 import { useProductStore } from "@/stores/productStore";
 import { storeToRefs } from "pinia";
-import { watchEffect } from "vue";
+import { markRaw, watchEffect } from "vue";
 import { Textarea } from "@/components/ui/textarea";
 import FormRoutingSelectInput from "./components/FormRoutingSelectInput.vue";
 import FormSubmitButton from "./components/FormSubmitButton.vue";
+import { Label } from "@/components/ui/label";
+import { usePlanStore } from "@/stores/planStore";
 
 const props = defineProps<{
   plan?: Plan;
@@ -57,11 +52,15 @@ const formSchema = toTypedSchema(
 
 const { handleSubmit, errors, controlledValues } = useForm({
   validationSchema: formSchema,
+  initialValues: {
+    batches: [],
+  },
 });
-const { handleAddBatch, handleRemoveBatch, batchFields } = useBatch();
+const { handleAddBatch, batchFields, handleRemoveBatch } = useBatch();
+const { handleCreatePlan } = usePlan();
 
-const submit = handleSubmit((values) => {
-  console.log(values);
+const submit = handleSubmit(async (values) => {
+  await handleCreatePlan(<PlanForm>values);
 });
 
 function useBatch() {
@@ -72,7 +71,7 @@ function useBatch() {
   } = useFieldArray("batches");
 
   /* reset the batch fields whenever the SKU becomes blank,
-  means the user reset the button */
+  means the user press the switch button */
 
   watchEffect(() => {
     if (!controlledValues.value.sku) {
@@ -88,19 +87,31 @@ function useBatch() {
     });
   }
 
-  function handleRemoveBatch(key: number | string) {
-    batchFields.value = batchFields.value.filter((e) => e.key !== key);
+  function handleRemoveBatch(index: number) {
+    removeBatch(index);
   }
 
   return {
     handleAddBatch,
-    handleRemoveBatch,
     batchFields,
+    handleRemoveBatch,
+  };
+}
+
+function usePlan() {
+  const planStore = usePlanStore();
+
+  async function handleCreatePlan(form: PlanForm) {
+    await planStore.createPlan(form);
+  }
+
+  return {
+    handleCreatePlan,
   };
 }
 </script>
 <template>
-  <div class="container">
+  <div class="container max-w-[50rem]">
     <form
       class="grid gap-4 lg:grid-cols-[minmax(10rem,25rem),1fr]"
       @submit.prevent="submit"
@@ -153,111 +164,103 @@ function useBatch() {
       </div>
 
       <div class="col-span-full">
-        <FormField v-slot="{ componentField }" name="batches">
-          <FormItem>
-            <FormLabel>Task creation</FormLabel>
-            <FormDescription
-              >Create a batch of tasks. You can change the priority of a batch,
-              and you can modify the schedule of either the entire batch or each
-              individual task.
-            </FormDescription>
+        <Label for="batches">Task creation</Label>
+        <p class="text-sm text-muted-foreground">
+          Create a batch of tasks. You can change the priority of a batch, and
+          you can modify the schedule of either the entire batch or each
+          individual task.
+        </p>
 
-            <div
-              class="space-y-4 rounded-md border p-4 text-sm shadow"
-              v-if="controlledValues.sku"
+        <div
+          class="space-y-4 rounded-md border p-4 text-sm shadow"
+          v-if="controlledValues.sku"
+        >
+          <ButtonApp variant="secondary" @click="handleAddBatch" class="w-fit"
+            ><Plus /> Add batch</ButtonApp
+          >
+
+          <ul class="space-y-1">
+            <li
+              v-for="(batch, index) in batchFields"
+              :key="batch.key"
+              class="flex flex-wrap items-start gap-3 rounded-md border p-2"
             >
-              <ButtonApp
-                variant="secondary"
-                @click="handleAddBatch"
-                class="w-fit"
-                ><Plus /> Add batch</ButtonApp
+              <FormField
+                :name="`batches[${index}].qty`"
+                v-slot="{ componentField }"
               >
+                <FormItem class="shrink">
+                  <FormLabel>Quantity</FormLabel>
+                  <FormControl>
+                    <Input type="number" v-bind="componentField" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+              <FormField
+                :name="`batches[${index}].start_date`"
+                v-slot="{ componentField }"
+              >
+                <FormItem class="shrink">
+                  <FormLabel>Access Date</FormLabel>
 
-              <ul class="space-y-1">
-                <li
-                  v-for="(batch, index) in batchFields"
-                  :key="batch.key"
-                  class="flex flex-wrap items-start gap-3 rounded-md border p-2"
-                >
-                  <FormField
-                    :name="`batches.${index}.qty`"
-                    v-slot="{ componentField }"
+                  <FormControl>
+                    <Input type="date" v-bind="componentField" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+              <FormField
+                :name="`batches[${index}].start_operation`"
+                v-slot="{ componentField }"
+              >
+                <FormItem class="grow">
+                  <FormLabel>Start route</FormLabel>
+                  <template
+                    v-if="product?.routings && product?.routings.length"
                   >
-                    <FormItem class="shrink">
-                      <FormLabel>Quantity</FormLabel>
-                      <FormControl>
-                        <Input type="number" v-bind="componentField" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </FormField>
-                  <FormField
-                    :name="`batches.${index}.start_date`"
-                    v-slot="{ componentField }"
+                    <FormControl>
+                      <FormRoutingSelectInput
+                        v-bind="componentField"
+                        :routings="product.routings"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </template>
+                  <div
+                    v-else
+                    class="flex w-fit items-center gap-2 rounded-md border p-2"
                   >
-                    <FormItem class="shrink">
-                      <FormLabel>Access Date</FormLabel>
-
-                      <FormControl>
-                        <Input type="date" v-bind="componentField" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </FormField>
-                  <FormField
-                    :name="`batches.${index}.start_operation`"
-                    v-slot="{ componentField }"
-                  >
-                    <FormItem class="grow">
-                      <FormLabel>Start route</FormLabel>
-                      <template
-                        v-if="product?.routings && product?.routings.length"
-                      >
-                        <FormControl>
-                          <FormRoutingSelectInput
-                            v-bind="componentField"
-                            :routings="product.routings"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </template>
-                      <div
-                        v-else
-                        class="flex w-fit items-center gap-2 rounded-md border p-2"
-                      >
-                        <TriangleAlert :size="17" />
-                        <p>
-                          No Routing available for
-                          <span class="font-medium">{{
-                            controlledValues.sku
-                          }}</span>
-                        </p>
-                      </div>
-                    </FormItem>
-                  </FormField>
-                  <div class="flex max-w-[50rem] flex-col gap-1">
-                    <ButtonApp
-                      size="icon"
-                      variant="ghost"
-                      class="h-6 w-6"
-                      @click="handleRemoveBatch(batch.key)"
-                    >
-                      <Trash class="stroke-destructive" />
-                    </ButtonApp>
+                    <TriangleAlert :size="17" />
+                    <p>
+                      No Routing available for
+                      <span class="font-medium">{{
+                        controlledValues.sku
+                      }}</span>
+                    </p>
                   </div>
-                </li>
-              </ul>
-            </div>
-            <div
-              v-else
-              class="rounded-md border border-dashed p-4 text-center text-xs"
-            >
-              <Info :size="15" class="mx-auto" />
-              <p>Select a product to start adding tasks.</p>
-            </div>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+                </FormItem>
+              </FormField>
+              <div class="flex max-w-[50rem] flex-col gap-1">
+                <ButtonApp
+                  size="icon"
+                  variant="ghost"
+                  class="h-6 w-6"
+                  @click.stop="handleRemoveBatch(index)"
+                >
+                  <Trash class="stroke-destructive" />
+                </ButtonApp>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div
+          v-else
+          class="rounded-md border border-dashed p-4 text-center text-xs"
+        >
+          <Info :size="15" class="mx-auto" />
+          <p>Select a product to start adding tasks.</p>
+        </div>
       </div>
       <div class="col-span-full text-end">
         <FormSubmitButton :disabled="Object.keys(errors).length">

@@ -1,4 +1,5 @@
 import type { QueryParams } from "./auth";
+import type { ProductRoutingOperationLetter } from "./products";
 
 export interface Plan {
   sku: string;
@@ -30,6 +31,20 @@ export enum PlanStatusCode {
 export interface PlanUserData {
   full_name: string;
   id: string;
+}
+
+export interface PlanForm {
+  sku: string;
+  plan_data: {
+    code: string;
+    description?: string;
+    is_prototype: boolean;
+  };
+  batches: {
+    qty: number;
+    start_date: Date;
+    start_operation: ProductRoutingOperationLetter;
+  }[];
 }
 
 export interface PlanQueryParams extends QueryParams {}
