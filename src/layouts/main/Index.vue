@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Product } from "@/types/products";
 import { ImageApp } from "@/components/app/image";
 import { PopoverAnchor } from "radix-vue";
+import { useAuthStore } from "@/stores/authStore";
 
 const main = templateRef("main");
 const { y } = useScroll(main);

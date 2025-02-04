@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_PRODUCT_BEARER_TOKEN_KEY: string;
   readonly VITE_WORKER_BEARER_TOKEN_KEY: string;
   readonly VITE_PLANNING_BEARER_TOKEN_KEY: string;
+  readonly VITE_ABLY_PUBLIC_KEY: string;
 }
 
 interface ImportMeta {
