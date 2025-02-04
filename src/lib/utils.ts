@@ -20,3 +20,12 @@ export function formatReadableDate(isoDateString: string) {
   // Format the date to a readable string
   return date.toLocaleString("en-US", options);
 }
+
+/**
+ * transform raw link into s3
+ * @param link raw link without s3
+ * @return string;
+ */
+export function getS3Link(link: string) {
+  return `${import.meta.env.VITE_S3_ENDPOINT}${link}`;
+}

@@ -3,13 +3,10 @@ import { FilterApp } from "@/components/app/filter";
 import PlanToolbar from "./components/PlanToolbar.vue";
 import { planStatuses, planDataColumns } from "./components/data";
 import { ref } from "vue";
-import { ButtonApp } from "@/components/app/button";
 import { Plus } from "lucide-vue-next";
 import { usePlanStore } from "@/stores/planStore";
 import PlanDataTable from "./components/PlanDataTable.vue";
 import type { Plan } from "@/types/planning";
-import PlanDialog from "./components/PlanDialog.vue";
-import PlanForm from "./components/PlanForm.vue";
 import { Button } from "@/components/ui/button";
 
 const authStore = usePlanStore();

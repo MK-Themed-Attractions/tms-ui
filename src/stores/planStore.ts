@@ -19,6 +19,8 @@ export const usePlanStore = defineStore("plans", () => {
   const authStore = useAuthStore();
   setHeader("Bearer-Token", bearerToken);
 
+  const plan = ref<Plan>();
+
   /* GETTERS */
   const plans = computed(() => paginatedResponse.value?.data);
 
@@ -45,14 +47,35 @@ export const usePlanStore = defineStore("plans", () => {
 
     return null;
   }
+  async function getPlan(planId: string, params?: Partial<PlanQueryParams>) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: Plan }>(`/api/plan/${planId}`, { params });
+
+    if (res) {
+      plan.value = res.data;
+    }
+
+    return res?.data;
+  }
 
   async function createPlan(form: PlanForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
     const res = await post("api/plan", form);
   }
 
   return {
     plans,
+    plan,
     getPlans,
+    getPlan,
     invalidate,
     createPlan,
   };
