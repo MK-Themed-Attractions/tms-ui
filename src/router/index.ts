@@ -7,6 +7,7 @@ import MainLayout from "@/layouts/main/Index.vue";
 import { auth } from "./auth";
 import { useAuthStore } from "@/stores/authStore";
 import { storeToRefs } from "pinia";
+import { planning } from "./planning";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -60,6 +61,7 @@ const router = createRouter({
             requiresAuth: true,
           },
         },
+        ...planning,
       ],
     },
     ...auth,

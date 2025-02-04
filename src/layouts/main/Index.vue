@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Product } from "@/types/products";
 import { ImageApp } from "@/components/app/image";
 import { PopoverAnchor } from "radix-vue";
+import { useAuthStore } from "@/stores/authStore";
 
 const main = templateRef("main");
 const { y } = useScroll(main);
@@ -53,7 +54,7 @@ function useSearch() {
     /* do not fetch when search is empty or is currently loading to prevent 
     unnecessary fetch */
     if (!search || loading.value) return;
-    
+
     products.value = await productStore.getProducts({
       q: search,
       includes: "images",
@@ -75,7 +76,7 @@ provide(mainScrollerKey, useMainScroller);
 </script>
 
 <template>
-  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+  <div class="fixed grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
     <SideNavigation
       class="hidden border-r bg-muted/40 lg:block"
       :items="navItemData"
