@@ -29,7 +29,7 @@ export interface ProductRouting {
   next_operation: ProductRoutingOperationLetter[];
   operation_code: string;
   operation_number: string;
-  provious_operation: any;
+  previous_operation: any;
   routing_no: string;
   runtime: number;
   updated_at: string;

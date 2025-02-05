@@ -6,19 +6,18 @@ import { ref } from "vue";
 import { Plus } from "lucide-vue-next";
 import { usePlanStore } from "@/stores/planStore";
 import PlanDataTable from "./components/PlanDataTable.vue";
-import type { Plan } from "@/types/planning";
 import { Button } from "@/components/ui/button";
+import { storeToRefs } from "pinia";
 
-const authStore = usePlanStore();
+const planStore = usePlanStore();
 const { filter, getPlans, plans } = usePlan();
 
 function usePlan() {
   const filter = ref([]);
-  const plans = ref<Plan[]>();
+  const { plans } = storeToRefs(planStore);
 
   async function getPlans() {
-    const res = await authStore.getPlans();
-    plans.value = res?.data;
+    const res = await planStore.getPlans();
   }
 
   return {

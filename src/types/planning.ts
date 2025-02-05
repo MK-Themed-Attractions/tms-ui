@@ -1,5 +1,9 @@
 import type { QueryParams, User } from "./auth";
-import type { Product, ProductRoutingOperationLetter } from "./products";
+import type {
+  Product,
+  ProductRouting,
+  ProductRoutingOperationLetter,
+} from "./products";
 
 export interface Plan {
   plan_data: {
@@ -25,6 +29,20 @@ export interface PlanBatch {
   task_qty: number;
   updated_at: string;
   user_data?: User;
+  tasks?: BatchTask[];
+}
+
+export interface BatchTask {
+  plan_id: string;
+  batch_id: string;
+  task_index: number;
+  user_data?: User;
+  current_operation_data: ProductRouting;
+  start_date: string;
+  status_code: any;
+  updated_at: string;
+  created_at: string;
+  id: string;
 }
 
 export interface PlanStatus {

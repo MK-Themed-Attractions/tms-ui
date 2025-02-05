@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useIntersectionObserver } from "@vueuse/core";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch, watchEffect } from "vue";
 import type { ImageProps } from ".";
 const noPhotoImagePath = "/no_photo.png";
 const props = withDefaults(defineProps<ImageProps>(), {
@@ -30,6 +30,10 @@ onMounted(() => {
       image.setAttribute("src", noPhotoImagePath);
     });
   }
+});
+
+watchEffect(() => {
+  imageRef.value?.setAttribute("src", props.image);
 });
 </script>
 

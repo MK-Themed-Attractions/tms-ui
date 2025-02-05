@@ -1,5 +1,10 @@
 import { useAxios } from "@/composables/useAxios";
-import type { Plan, PlanForm, PlanQueryParams } from "@/types/planning";
+import type {
+  Plan,
+  PlanBatch,
+  PlanForm,
+  PlanQueryParams,
+} from "@/types/planning";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
@@ -26,6 +31,7 @@ export const usePlanStore = defineStore("plans", () => {
 
   function invalidate() {
     paginatedResponse.value = undefined;
+    plan.value = undefined;
     bearerToken.value = null;
   }
 
@@ -71,12 +77,36 @@ export const usePlanStore = defineStore("plans", () => {
     const res = await post("api/plan", form);
   }
 
+  async function getTasks(
+    planId: string,
+    batchId: string,
+    params?: Partial<PlanQueryParams>,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: PlanBatch }>(
+      `/api/plan/${planId}/batch/${batchId}`,
+      { params },
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
+    paginatedResponse,
     plans,
     plan,
     getPlans,
     getPlan,
+    getTasks,
     invalidate,
     createPlan,
+    errors,
+    loading,
   };
 });

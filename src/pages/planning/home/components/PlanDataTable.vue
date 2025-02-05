@@ -85,12 +85,6 @@ function gotoShow(plan: Plan, router: Router) {
     <template #item.actions="{ item }">
       <TableCell>
         <PlanDataTableDropdown>
-          <template #activator>
-            <ButtonApp variant="ghost" size="icon" class="h-6 w-6">
-              <EllipsisVertical />
-            </ButtonApp>
-          </template>
-
           <DropdownMenuItem>Add batch</DropdownMenuItem>
           <DropdownMenuItem>Update plan</DropdownMenuItem>
           <DropdownMenuItem>Delete plan</DropdownMenuItem>

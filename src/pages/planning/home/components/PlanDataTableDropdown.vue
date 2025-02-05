@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ButtonApp } from "@/components/app/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,11 +8,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EllipsisVertical } from "lucide-vue-next";
 </script>
 <template>
   <DropdownMenu>
-    <DropdownMenuTrigger>
-      <slot name="activator" />
+    <DropdownMenuTrigger as-child>
+      <ButtonApp variant="ghost" size="icon" class="h-6 w-6" @click.stop="">
+        <EllipsisVertical />
+      </ButtonApp>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
       <DropdownMenuGroup>
