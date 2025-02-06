@@ -26,14 +26,14 @@ function useFilter() {
   const routingsWithFilter = computed(() => {
     if (!viewHidden.value) {
       return props.routings.filter((routing) => {
-        return routing.is_autocomplete;
+        return !routing.is_autocomplete;
       });
     } else return props.routings;
   });
 
   const hiddenCount = computed(() => {
     return !viewHidden.value
-      ? props.routings.filter((r) => !r.is_autocomplete).length
+      ? props.routings.filter((r) => r.is_autocomplete).length
       : 0;
   });
 
