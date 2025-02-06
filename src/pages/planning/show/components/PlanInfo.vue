@@ -6,13 +6,18 @@ import { Pencil } from "lucide-vue-next";
 const props = defineProps<{
   plan: Plan;
 }>();
+const emits = defineEmits<{
+  (e: "edit"): void;
+}>();
 </script>
 
 <template>
   <div class="text-sm">
     <div class="flex items-center justify-between border-b pb-2">
       <h3 class="font-medium">Plan details:</h3>
-      <ButtonApp size="icon" variant="ghost"><Pencil /> </ButtonApp>
+      <ButtonApp size="icon" variant="ghost" @click="$emit('edit')"
+        ><Pencil />
+      </ButtonApp>
     </div>
 
     <div class="mt-2 flex flex-wrap gap-4">

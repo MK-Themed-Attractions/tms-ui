@@ -8,7 +8,7 @@ const isPrototype = defineModel({ default: false });
     <li
       class="flex cursor-pointer gap-4 rounded-md p-2 hover:bg-muted"
       :class="{ 'bg-muted': !isPrototype }"
-      role="checkbox"
+      role="button"
       @click="isPrototype = false"
     >
       <Menu />
@@ -22,7 +22,7 @@ const isPrototype = defineModel({ default: false });
     <li
       class="flex cursor-pointer gap-4 rounded-md p-2 hover:bg-muted"
       :class="{ 'bg-muted': isPrototype }"
-      role="checkbox"
+      role="button"
       @click="isPrototype = true"
     >
       <Settings />

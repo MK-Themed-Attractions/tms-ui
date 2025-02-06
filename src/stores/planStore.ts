@@ -2,6 +2,7 @@ import { useAxios } from "@/composables/useAxios";
 import type {
   Plan,
   PlanBatch,
+  PlanDataForm,
   PlanForm,
   PlanQueryParams,
 } from "@/types/planning";
@@ -17,7 +18,7 @@ export const usePlanStore = defineStore("plans", () => {
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post } = useAxios({
+  const { get, errors, loading, setHeader, post, put } = useAxios({
     baseURL: baseUrl,
   });
   const paginatedResponse = ref<SimplePaginateAPIResource<Plan>>();
@@ -77,6 +78,15 @@ export const usePlanStore = defineStore("plans", () => {
     const res = await post("api/plan", form);
   }
 
+  async function updatePlanData(planId: string, form: PlanDataForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await put(`/api/plan/${planId}`, form);
+  }
+
   async function getTasks(
     planId: string,
     batchId: string,
@@ -106,6 +116,7 @@ export const usePlanStore = defineStore("plans", () => {
     getTasks,
     invalidate,
     createPlan,
+    updatePlanData,
     errors,
     loading,
   };

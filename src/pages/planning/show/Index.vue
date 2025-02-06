@@ -12,12 +12,7 @@ import { Separator } from "@/components/ui/separator";
 
 import TaskDataTable from "./components/TaskDataTable.vue";
 import { ButtonApp } from "@/components/app/button";
-import {
-  ArrowUpDown,
-  ArrowUpWideNarrow,
-  EllipsisVertical,
-  Plus,
-} from "lucide-vue-next";
+import { ArrowUpWideNarrow, EllipsisVertical, Plus } from "lucide-vue-next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,9 +22,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import PlanEditDialog from "./components/PlanEditDialog.vue";
 
 const planStore = usePlanStore();
 const { plan } = storeToRefs(planStore);
+const openEditDialog = ref(false);
 
 const productData = computed(() => plan.value?.product_data);
 const { selectedBatchId, batch, batchLoading } = useBatch();
@@ -67,7 +64,11 @@ function useBatch() {
   <div class="container">
     <div class="grid gap-4 lg:grid-cols-2">
       <ProductImage v-if="productData" :product="productData" class="mx-auto" />
-      <PlanInfo v-if="plan" :plan="plan" />
+      <PlanInfo
+        v-if="plan"
+        :plan="plan"
+        @edit="() => (openEditDialog = true)"
+      />
 
       <div class="col-span-full text-sm">
         <h3 class="font-medium">Batches:</h3>
@@ -119,6 +120,13 @@ function useBatch() {
         </div>
       </div>
     </div>
+
+    <PlanEditDialog
+      v-model="openEditDialog"
+      v-if="plan"
+      :plan="plan"
+      :key="plan.id"
+    />
   </div>
 </template>
 

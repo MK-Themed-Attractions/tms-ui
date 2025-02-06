@@ -63,7 +63,7 @@ export interface PlanForm {
   sku: string;
   plan_data: {
     code: string;
-    description?: string;
+    description?: string | null;
     is_prototype: boolean;
   };
 
@@ -73,5 +73,7 @@ export interface PlanForm {
     start_operation: ProductRoutingOperationLetter;
   }[];
 }
+
+export type PlanDataForm = Pick<PlanForm, "plan_data">;
 
 export interface PlanQueryParams extends QueryParams {}
