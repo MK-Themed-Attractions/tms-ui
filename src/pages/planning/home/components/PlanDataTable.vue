@@ -10,6 +10,8 @@ import {
   Clock8,
   EllipsisVertical,
   LibraryBig,
+  Menu,
+  Settings,
   ShieldAlert,
   Timer,
 } from "lucide-vue-next";
@@ -40,6 +42,15 @@ function getStatusIcon(status: string) {
   }
 }
 
+function getPlanTypeIcon(status: "regular" | "prototype") {
+  switch (status) {
+    case "regular":
+      return Menu;
+    case "prototype":
+      return Settings;
+  }
+}
+
 function gotoShow(plan: Plan, router: Router) {
   router.push({ name: "planningShow", params: { planId: plan.id } });
 }
@@ -66,18 +77,25 @@ function gotoShow(plan: Plan, router: Router) {
         </div>
       </TableCell>
     </template>
+    <template #item.plan_data.is_prototype="{ item }">
+      <TableCell>
+        <div
+          class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium"
+        >
+          <component
+            :is="getPlanTypeIcon(item.plan_data.is_prototype ? 'prototype': 'regular')"
+            :size="15"
+            class="stroke-muted-foreground"
+          />
+          {{ item.plan_data.is_prototype ? "Prototype" : "Regular" }}
+        </div>
+      </TableCell>
+    </template>
 
     <template #item.updated_at="{ item }">
       <TableCell>
         <span class="text-muted-foreground">
           {{ formatReadableDate(item.updated_at) }}
-        </span>
-      </TableCell>
-    </template>
-    <template #item.user_data.given_name="{ item }">
-      <TableCell v-if="item.user_data">
-        <span class="text-muted-foreground">
-          {{ item.user_data.given_name }}
         </span>
       </TableCell>
     </template>
