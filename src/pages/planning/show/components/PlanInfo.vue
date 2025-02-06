@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { Plan, PlanStatusCode } from "@/types/planning";
+import { ButtonApp } from "@/components/app/button";
+import type { Plan } from "@/types/planning";
+import { Pencil } from "lucide-vue-next";
 
 const props = defineProps<{
   plan: Plan;
@@ -8,7 +10,10 @@ const props = defineProps<{
 
 <template>
   <div class="text-sm">
-    <h3 class="border-b pb-2 font-medium">Plan details:</h3>
+    <div class="flex items-center justify-between border-b pb-2">
+      <h3 class="font-medium">Plan details:</h3>
+      <ButtonApp size="icon" variant="ghost"><Pencil /> </ButtonApp>
+    </div>
 
     <div class="mt-2 flex flex-wrap gap-4">
       <div class="flex flex-1 flex-col">

@@ -7,21 +7,26 @@ import PlanInfo from "./components/PlanInfo.vue";
 import PlanBatchTabs from "./components/PlanBatchTabs.vue";
 import type { PlanBatch } from "@/types/planning";
 import BatchInfo from "./components/BatchInfo.vue";
-import TaskInfo from "./components/TaskInfo.vue";
+
 import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import TableCell from "@/components/ui/table/TableCell.vue";
-import { DataTable } from "@/components/app/data-table";
-import { taskColumns } from "./components/data";
-import { formatReadableDate } from "@/lib/utils";
+
+import TaskDataTable from "./components/TaskDataTable.vue";
 import { ButtonApp } from "@/components/app/button";
-import { EllipsisVertical } from "lucide-vue-next";
+import {
+  ArrowUpDown,
+  ArrowUpWideNarrow,
+  EllipsisVertical,
+  Plus,
+} from "lucide-vue-next";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const planStore = usePlanStore();
 const { plan } = storeToRefs(planStore);
@@ -65,7 +70,10 @@ function useBatch() {
       <PlanInfo v-if="plan" :plan="plan" />
 
       <div class="col-span-full text-sm">
-        <h3 class="border-b pb-2 font-medium">Batches:</h3>
+        <h3 class="font-medium">Batches:</h3>
+        <p class="border-b pb-2 text-muted-foreground">
+          Batches on the left most are processed first.
+        </p>
 
         <div v-if="plan?.batches?.length" class="mt-2">
           <PlanBatchTabs
@@ -73,6 +81,29 @@ function useBatch() {
             :batches="plan.batches"
             :loading="batchLoading"
           >
+            <template #append>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <ButtonApp size="icon" variant="ghost">
+                    <EllipsisVertical />
+                  </ButtonApp>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Plus />
+                      Add batch</DropdownMenuItem
+                    >
+                    <DropdownMenuItem>
+                      <ArrowUpWideNarrow />
+                      Change batch priority</DropdownMenuItem
+                    >
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </template>
             <div class="space-y-4">
               <BatchInfo :batch="batch" v-if="batch" />
               <Separator />
@@ -80,29 +111,7 @@ function useBatch() {
                 <h3 class="mb-2 font-medium">Task information</h3>
 
                 <div class="rounded-md border shadow">
-                  <DataTable :items="batch.tasks" :columns="taskColumns">
-                    <template #item.start_date="{ item }">
-                      <TableCell>
-                        {{ formatReadableDate(item.start_date) }}
-                      </TableCell>
-                    </template>
-                    <template #item.current_operation_data.runtime="{ item }">
-                      <TableCell>
-                        {{
-                          item.current_operation_data.runtime.toLocaleString()
-                        }}
-                        <span class="text-muted-foreground"> min(s)</span>
-                      </TableCell>
-                    </template>
-
-                    <template #item.actions="{ item }">
-                      <TableCell>
-                        <ButtonApp size="icon" variant="ghost" class="h-6 w-6">
-                          <EllipsisVertical />
-                        </ButtonApp>
-                      </TableCell>
-                    </template>
-                  </DataTable>
+                  <TaskDataTable :tasks="batch.tasks" />
                 </div>
               </div>
             </div>
