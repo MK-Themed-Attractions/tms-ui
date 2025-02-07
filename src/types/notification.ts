@@ -8,4 +8,4 @@ export interface Notification<T = unknown> {
   };
 }
 
-export type NotificationType = "Task Create" | "Batch Create" | "Plan Create";
+export type NotificationType = "task create" | "batch create" | "plan create";

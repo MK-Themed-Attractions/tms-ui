@@ -23,10 +23,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import PlanEditDialog from "./components/PlanEditDialog.vue";
+import BatchAddDialog from "./components/BatchAddDialog.vue";
 
 const planStore = usePlanStore();
 const { plan } = storeToRefs(planStore);
 const openEditDialog = ref(false);
+const openAddBatchDialog = ref(false);
 
 const productData = computed(() => plan.value?.product_data);
 const { selectedBatchId, batch, batchLoading } = useBatch();
@@ -93,7 +95,7 @@ function useBatch() {
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>Options</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem @click="openAddBatchDialog = true">
                       <Plus />
                       Add batch</DropdownMenuItem
                     >
@@ -126,6 +128,13 @@ function useBatch() {
       v-if="plan"
       :plan="plan"
       :key="plan.id"
+    />
+
+    <BatchAddDialog
+      v-if="plan"
+      v-model="openAddBatchDialog"
+      :key="plan.id"
+      :plan="plan"
     />
   </div>
 </template>

@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/stores/authStore";
 import { usePlanStore } from "@/stores/planStore";
 import type { Notification } from "@/types/notification";
-import type { Plan } from "@/types/planning";
+import type { Plan, PlanBatch } from "@/types/planning";
 import { storeToRefs } from "pinia";
 import { h } from "vue";
 import { toast } from "vue-sonner";
@@ -25,24 +25,52 @@ export const useWebsocket = () => {
     const channel = realtime.channels.get(`notifications.${user.value.id}`);
 
     await channel.subscribe("planning", (message: Notification<Plan>) => {
-      handlePlanReceived(message);
+      handlePlanningEvent(message);
     });
   }
 
-  function handlePlanReceived(message: Notification<Plan>) {
+  function handlePlanningEvent(message: Notification<Plan>) {
     const planStore = usePlanStore();
-    const { paginatedResponse } = storeToRefs(planStore);
+    const { paginatedResponse, plan } = storeToRefs(planStore);
+
+    switch (message.data.type) {
+      case "plan create":
+        planStore.getPlans().then((value) => {
+          if (value) paginatedResponse.value = value;
+
+          notifyPlanCreate(message);
+        });
+
+        break;
+      case "batch create":
+        if (message.data.data)
+          planStore
+            .getPlan(message.data.data?.id, { includes: "batches" })
+            .then((value) => {
+              plan.value = value;
+
+              notifyBatchCreate(message);
+            });
+
+        break;
+      default:
+        break;
+    }
+  }
+
+  function notifyPlanCreate(message: Notification<Plan>) {
     toast(message.data.message, {
       description: h("p", null, [
         "Plan with code ",
         h("span", { class: "font-medium" }, message.data.data?.plan_data.code),
         " has been created.",
       ]),
-      duration: 5000,
     });
+  }
 
-    planStore.getPlans().then((value) => {
-      if (value) paginatedResponse.value = value;
+  function notifyBatchCreate(message: Notification<Plan>) {
+    toast(message.data.message, {
+      description: "A new batch has been created",
     });
   }
 

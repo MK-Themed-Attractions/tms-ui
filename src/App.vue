@@ -21,7 +21,7 @@ watch(
 </script>
 
 <template>
-  <Toaster></Toaster>
+  <Toaster :duration="5000"></Toaster>
   <RouterView v-slot="{ Component }">
     <template v-if="Component">
       <Suspense timeout="0">

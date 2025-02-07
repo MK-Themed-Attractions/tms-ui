@@ -2,6 +2,7 @@ import { useAxios } from "@/composables/useAxios";
 import type {
   Plan,
   PlanBatch,
+  PlanBatchForm,
   PlanDataForm,
   PlanForm,
   PlanQueryParams,
@@ -107,6 +108,15 @@ export const usePlanStore = defineStore("plans", () => {
     }
   }
 
+  async function appendBatch(planId: string, form: PlanBatchForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post(`api/plan/${planId}/batch/append`, form);
+  }
+
   return {
     paginatedResponse,
     plans,
@@ -117,6 +127,7 @@ export const usePlanStore = defineStore("plans", () => {
     invalidate,
     createPlan,
     updatePlanData,
+    appendBatch,
     errors,
     loading,
   };

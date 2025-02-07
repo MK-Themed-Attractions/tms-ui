@@ -70,10 +70,11 @@ export interface PlanForm {
   batches: {
     qty: number;
     start_date: Date;
-    start_operation: ProductRoutingOperationLetter;
+    start_operation: string;
   }[];
 }
 
 export type PlanDataForm = Pick<PlanForm, "plan_data">;
+export type PlanBatchForm = Pick<PlanForm, "batches">;
 
 export interface PlanQueryParams extends QueryParams {}
