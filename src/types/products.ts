@@ -33,6 +33,17 @@ export interface ProductRouting {
   routing_no: string;
   runtime: number;
   updated_at: string;
+  workcenters: ProductRoutingWorkcenter;
+}
+
+export interface ProductRoutingWorkcenter {
+  no: string;
+  name: string;
+  group_code: string;
+  search_name: string;
+  created_at: string;
+  updated_at: string;
+  id: string;
 }
 
 export interface Image {

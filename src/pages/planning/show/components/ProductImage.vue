@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ImageApp } from "@/components/app/image";
-import { getS3Link } from "@/lib/utils";
 import type { Product } from "@/types/products";
 import { AlertCircle } from "lucide-vue-next";
 import { computed } from "vue";
@@ -17,7 +16,7 @@ const productImage = computed(() => {
   <div class="grid aspect-square max-w-[25rem] rounded-md border p-4 shadow">
     <ImageApp
       v-if="productImage"
-      :image="getS3Link(productImage)"
+      :image="productImage"
       class="mx-auto"
     />
 

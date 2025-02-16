@@ -24,11 +24,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import PlanEditDialog from "./components/PlanEditDialog.vue";
 import BatchAddDialog from "./components/BatchAddDialog.vue";
+import BatchChangePriorityDialog from "./components/BatchChangePriorityDialog.vue";
 
 const planStore = usePlanStore();
 const { plan } = storeToRefs(planStore);
 const openEditDialog = ref(false);
 const openAddBatchDialog = ref(false);
+const openBatchChangePriorityDialog = ref(false);
 
 const productData = computed(() => plan.value?.product_data);
 const { selectedBatchId, batch, batchLoading } = useBatch();
@@ -99,7 +101,9 @@ function useBatch() {
                       <Plus />
                       Add batch</DropdownMenuItem
                     >
-                    <DropdownMenuItem>
+                    <DropdownMenuItem
+                      @click="openBatchChangePriorityDialog = true"
+                    >
                       <ArrowUpWideNarrow />
                       Change batch priority</DropdownMenuItem
                     >
@@ -135,6 +139,12 @@ function useBatch() {
       v-model="openAddBatchDialog"
       :key="plan.id"
       :plan="plan"
+    />
+    <BatchChangePriorityDialog
+      v-if="plan"
+      v-model="openBatchChangePriorityDialog"
+      :plan="plan"
+      :key="plan.id"
     />
   </div>
 </template>
