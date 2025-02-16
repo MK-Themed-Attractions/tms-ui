@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogScrollContent,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -26,14 +27,14 @@ const dialog = defineModel({ default: false });
       <slot name="activator" />
     </DialogTrigger>
 
-    <DialogContent class="max-w-[30rem]">
+    <DialogScrollContent class="max-w-[40rem]">
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
         <DialogDescription>{{ description }}</DialogDescription>
       </DialogHeader>
 
       <div v-if="!loading" class="rounded-md border border-dashed">
-        <ul class="grid p-3 text-sm" v-if="attachments?.length">
+        <ul class="grid gap-2 p-3 text-sm" v-if="attachments?.length">
           <li
             v-for="attachment in attachments"
             :key="attachment.link"
@@ -43,7 +44,7 @@ const dialog = defineModel({ default: false });
             <ButtonApp
               as="a"
               variant="link"
-              class="p-0"
+              class="whitespace-break-spaces p-0"
               :href="attachment.link"
               target="_blank"
               >{{ attachment.name }}</ButtonApp
@@ -63,7 +64,7 @@ const dialog = defineModel({ default: false });
           Please wait, this may take some time.
         </p>
       </div>
-    </DialogContent>
+    </DialogScrollContent>
   </Dialog>
 </template>
 
