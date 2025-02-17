@@ -10,6 +10,7 @@ import {
   Clock8,
   EllipsisVertical,
   LibraryBig,
+  LoaderCircle,
   Menu,
   Settings,
   ShieldAlert,
@@ -83,7 +84,11 @@ function gotoShow(plan: Plan, router: Router) {
           class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium"
         >
           <component
-            :is="getPlanTypeIcon(item.plan_data.is_prototype ? 'prototype': 'regular')"
+            :is="
+              getPlanTypeIcon(
+                item.plan_data.is_prototype ? 'prototype' : 'regular',
+              )
+            "
             :size="15"
             class="stroke-muted-foreground"
           />
@@ -97,6 +102,23 @@ function gotoShow(plan: Plan, router: Router) {
         <span class="text-muted-foreground">
           {{ formatReadableDate(item.updated_at) }}
         </span>
+      </TableCell>
+    </template>
+
+    <template #item.product_data.sku="{ item }">
+      <TableCell v-if="!Object.keys(item.product_data).length">
+        <LoaderCircle
+          class="mx-auto animate-spin stroke-muted-foreground"
+          :size="15"
+        />
+      </TableCell>
+    </template>
+    <template #item.product_data.title="{ item }">
+      <TableCell v-if="!Object.keys(item.product_data).length">
+        <LoaderCircle
+          class="mx-auto animate-spin stroke-muted-foreground"
+          :size="15"
+        />
       </TableCell>
     </template>
 
