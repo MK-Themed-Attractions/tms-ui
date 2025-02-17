@@ -28,11 +28,14 @@ import FormRoutingSelectInput from "../../create/components/FormRoutingSelectInp
 import { usePlanStore } from "@/stores/planStore";
 import type { Plan } from "@/types/planning";
 import { toast } from "vue-sonner";
+import { useAuthStore } from "@/stores/authStore";
 
 const props = defineProps<{
   plan: Plan;
 }>();
 const dialog = defineModel({ default: false });
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 
 const formSchema = toTypedSchema(
   z.object({
@@ -43,6 +46,7 @@ const formSchema = toTypedSchema(
         start_operation: z.string().nonempty("Required"),
       }),
     ),
+    user_id: z.string().default(user.value.id),
   }),
 );
 

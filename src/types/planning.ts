@@ -72,6 +72,7 @@ export interface PlanForm {
     start_date: Date;
     start_operation: string;
   }[];
+  user_id: string;
 }
 
 export type PlanDataForm = Pick<PlanForm, "plan_data">;

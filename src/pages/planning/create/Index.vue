@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { usePlanStore } from "@/stores/planStore";
 import { toast } from "vue-sonner";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 
 const props = defineProps<{
   plan?: Plan;
@@ -34,6 +35,8 @@ const props = defineProps<{
 const productStore = useProductStore();
 const { product } = storeToRefs(productStore);
 const router = useRouter();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 
 const formSchema = toTypedSchema(
   z.object({
@@ -50,6 +53,7 @@ const formSchema = toTypedSchema(
         start_operation: z.string().nonempty("Required"),
       }),
     ),
+    user_id: z.string().default(user.value.id),
   }),
 );
 
