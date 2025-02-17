@@ -106,7 +106,7 @@ function gotoShow(plan: Plan, router: Router) {
     </template>
 
     <template #item.product_data.sku="{ item }">
-      <TableCell v-if="!Object.keys(item.product_data).length">
+      <TableCell v-if="!item.product_data">
         <LoaderCircle
           class="mx-auto animate-spin stroke-muted-foreground"
           :size="15"
@@ -114,7 +114,7 @@ function gotoShow(plan: Plan, router: Router) {
       </TableCell>
     </template>
     <template #item.product_data.title="{ item }">
-      <TableCell v-if="!Object.keys(item.product_data).length">
+      <TableCell v-if="!item.product_data">
         <LoaderCircle
           class="mx-auto animate-spin stroke-muted-foreground"
           :size="15"
