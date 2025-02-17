@@ -59,18 +59,14 @@ export const useWebsocket = () => {
   }
 
   function notifyPlanCreate(message: Notification<Plan>) {
-    toast(message.data.message, {
-      description: h("p", null, [
-        "Plan with code ",
-        h("span", { class: "font-medium" }, message.data.data?.plan_data.code),
-        " has been created.",
-      ]),
+    toast("Plan Info", {
+      description: h("p", null, message.data.message),
     });
   }
 
   function notifyBatchCreate(message: Notification<Plan>) {
-    toast(message.data.message, {
-      description: "A new batch has been created",
+    toast("Batch Info", {
+      description: message.data.message,
     });
   }
 
