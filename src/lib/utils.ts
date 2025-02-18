@@ -20,3 +20,28 @@ export function formatReadableDate(isoDateString: string) {
   // Format the date to a readable string
   return date.toLocaleString("en-US", options);
 }
+
+/**
+ * transform raw link into s3
+ * @param link raw link without s3
+ * @return string;
+ */
+export function getS3Link(link: string) {
+  return `${import.meta.env.VITE_S3_ENDPOINT}${link}`;
+}
+
+/**
+ * Transform the number input to ordinal string e.g. 1st 2nd 3rd
+ * @param n number to be converted
+ * @returns number transformed in an ordinal form
+ */
+export function toOrdinal(n: number) {
+  if (typeof n !== "number" || !Number.isInteger(n)) {
+    throw new Error("Input must be an integer.");
+  }
+
+  const suffixes = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+
+  return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+}

@@ -29,10 +29,21 @@ export interface ProductRouting {
   next_operation: ProductRoutingOperationLetter[];
   operation_code: string;
   operation_number: string;
-  provious_operation: any;
+  previous_operation: any;
   routing_no: string;
   runtime: number;
   updated_at: string;
+  workcenters: ProductRoutingWorkcenter;
+}
+
+export interface ProductRoutingWorkcenter {
+  no: string;
+  name: string;
+  group_code: string;
+  search_name: string;
+  created_at: string;
+  updated_at: string;
+  id: string;
 }
 
 export interface Image {

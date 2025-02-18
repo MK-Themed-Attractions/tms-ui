@@ -1,9 +1,6 @@
 export interface Notification<T = unknown> {
   data: {
-    data: {
-      payload?: T;
-      title: string;
-    };
+    data?: T;
     message: string;
     status: boolean;
     type: NotificationType;
@@ -11,4 +8,4 @@ export interface Notification<T = unknown> {
   };
 }
 
-export type NotificationType = "Task Create";
+export type NotificationType = "task create" | "batch create" | "plan create";

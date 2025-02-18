@@ -25,12 +25,18 @@ import FormRoutingSelectInput from "./components/FormRoutingSelectInput.vue";
 import FormSubmitButton from "./components/FormSubmitButton.vue";
 import { Label } from "@/components/ui/label";
 import { usePlanStore } from "@/stores/planStore";
+import { toast } from "vue-sonner";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 
 const props = defineProps<{
   plan?: Plan;
 }>();
 const productStore = useProductStore();
 const { product } = storeToRefs(productStore);
+const router = useRouter();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 
 const formSchema = toTypedSchema(
   z.object({
@@ -47,6 +53,7 @@ const formSchema = toTypedSchema(
         start_operation: z.string().nonempty("Required"),
       }),
     ),
+    user_id: z.string().default(user.value.id),
   }),
 );
 
@@ -100,13 +107,25 @@ function useBatch() {
 
 function usePlan() {
   const planStore = usePlanStore();
+  const { errors: planErrors, loading: planLoading } = storeToRefs(planStore);
 
   async function handleCreatePlan(form: PlanForm) {
     await planStore.createPlan(form);
+
+    if (!planErrors.value) {
+      toast("Processing", {
+        description:
+          "The plan is being processed. We will notify you once it is complete.",
+      });
+
+      router.push({ name: "planningIndex" });
+    }
   }
 
   return {
     handleCreatePlan,
+    planErrors,
+    planLoading,
   };
 }
 </script>

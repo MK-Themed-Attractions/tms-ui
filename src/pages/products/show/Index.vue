@@ -190,8 +190,8 @@ function useAttachments() {
 /* INIT */
 
 watchEffect(async () => {
-  fetchAttachments();
   await fetchProduct(props.productId);
+  fetchAttachments();
 });
 
 /**

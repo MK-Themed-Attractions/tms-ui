@@ -1,18 +1,48 @@
-import type { QueryParams } from "./auth";
-import type { ProductRoutingOperationLetter } from "./products";
+import type { QueryParams, User } from "./auth";
+import type {
+  Product,
+  ProductRouting,
+  ProductRoutingOperationLetter,
+} from "./products";
 
 export interface Plan {
-  sku: string;
-  sku_title: string;
-  routing_link_code: string;
-  plan_code: string;
-  plan_description: string;
-  user_id: string;
+  plan_data: {
+    code: string;
+    is_prototype: boolean;
+    description: string;
+  };
+  product_data: Product;
   updated_at: string;
   created_at: string;
   id: string;
-  status: PlanStatusCode;
-  user_data?: PlanUserData;
+  status_code: PlanStatusCode;
+  user_data?: User;
+  batches?: PlanBatch[];
+}
+export interface PlanBatch {
+  batch_index: number;
+  created_at: string;
+  id: string;
+  plan_id: string;
+  start_date: string;
+  status_code: PlanStatusCode;
+  task_qty: number;
+  updated_at: string;
+  user_data?: User;
+  tasks?: BatchTask[];
+}
+
+export interface BatchTask {
+  plan_id: string;
+  batch_id: string;
+  task_index: number;
+  user_data?: User;
+  current_operation_data: ProductRouting;
+  start_date: string;
+  status_code: any;
+  updated_at: string;
+  created_at: string;
+  id: string;
 }
 
 export interface PlanStatus {
@@ -28,23 +58,24 @@ export enum PlanStatusCode {
   PROTOTYPE,
   PENDING,
 }
-export interface PlanUserData {
-  full_name: string;
-  id: string;
-}
 
 export interface PlanForm {
   sku: string;
   plan_data: {
     code: string;
-    description?: string;
+    description?: string | null;
     is_prototype: boolean;
   };
+
   batches: {
     qty: number;
     start_date: Date;
-    start_operation: ProductRoutingOperationLetter;
+    start_operation: string;
   }[];
+  user_id: string;
 }
+
+export type PlanDataForm = Pick<PlanForm, "plan_data">;
+export type PlanBatchForm = Pick<PlanForm, "batches">;
 
 export interface PlanQueryParams extends QueryParams {}

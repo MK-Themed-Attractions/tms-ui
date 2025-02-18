@@ -5,8 +5,6 @@ import Axios, {
 } from "axios";
 import { ref, watchEffect, type MaybeRefOrGetter } from "vue";
 import { useAxiosErrorRedirects } from "./useAxiosErrorRedirects";
-import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
-import { useWorkerStore } from "@/stores/workerStore";
 import { useAuthStore } from "@/stores/authStore";
 
 /* global error instance */
@@ -46,6 +44,14 @@ export const useAxios = (config: CreateAxiosDefaults) => {
 
         /* redirect to login */
         await redirectToLoginPage();
+
+        /* manually set the error to session expired */
+        errors.value = {
+          data: {
+            message: "Session Expired! Please login again.",
+          },
+          status: 401,
+        };
       }
     }
   });
