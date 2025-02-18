@@ -88,6 +88,15 @@ export const usePlanStore = defineStore("plans", () => {
     const res = await put(`/api/plan/${planId}`, form);
   }
 
+  async function updatePlanBatches(planId: string, form: PlanBatchForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await put(`/api/plan/${planId}/batch/update`, form);
+  }
+
   async function getTasks(
     planId: string,
     batchId: string,
@@ -127,6 +136,7 @@ export const usePlanStore = defineStore("plans", () => {
     invalidate,
     createPlan,
     updatePlanData,
+    updatePlanBatches,
     appendBatch,
     errors,
     loading,

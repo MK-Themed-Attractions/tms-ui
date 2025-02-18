@@ -76,6 +76,8 @@ export interface PlanForm {
 }
 
 export type PlanDataForm = Pick<PlanForm, "plan_data">;
-export type PlanBatchForm = Pick<PlanForm, "batches">;
+export interface PlanBatchForm {
+  batches: PlanBatch[];
+}
 
 export interface PlanQueryParams extends QueryParams {}
