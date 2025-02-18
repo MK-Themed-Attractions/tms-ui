@@ -38,7 +38,8 @@ export const useWebsocket = () => {
         planStore.getPlans().then((value) => {
           if (value) paginatedResponse.value = value;
 
-          notifyPlanCreate(message);
+          if (message.data.status) notifyPlanCreate(message);
+          else notifyPlanCreateFailed(message);
         });
 
         break;
@@ -59,13 +60,19 @@ export const useWebsocket = () => {
   }
 
   function notifyPlanCreate(message: Notification<Plan>) {
-    toast("Plan Info", {
-      description: h("p", null, message.data.message),
+    toast.info("Plan notice", {
+      description: message.data.message,
+    });
+  }
+
+  function notifyPlanCreateFailed(message: Notification<Plan>) {
+    toast.error("Plan failed notice", {
+      description: message.data.message,
     });
   }
 
   function notifyBatchCreate(message: Notification<Plan>) {
-    toast("Batch Info", {
+    toast.info("Batch notice", {
       description: message.data.message,
     });
   }
