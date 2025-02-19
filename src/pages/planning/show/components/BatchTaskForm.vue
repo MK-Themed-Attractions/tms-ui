@@ -30,7 +30,7 @@ const emits = defineEmits<{
 const planStore = usePlanStore();
 const { errors } = storeToRefs(planStore);
 const productStore = useProductStore();
-const { product } = storeToRefs(productStore);
+const { product, filteredRoutings } = storeToRefs(productStore);
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -86,9 +86,9 @@ const submit = handleSubmit(async (values) => {
         <FormLabel>Start route</FormLabel>
         <FormControl>
           <FormRoutingSelectInput
-            v-if="product && product.routings"
+            v-if="filteredRoutings && filteredRoutings.length"
             v-bind="componentField"
-            :routings="product.routings"
+            :routings="filteredRoutings"
           />
         </FormControl>
         <FormDescription

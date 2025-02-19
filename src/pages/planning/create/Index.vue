@@ -34,7 +34,7 @@ const props = defineProps<{
   plan?: Plan;
 }>();
 const productStore = useProductStore();
-const { product } = storeToRefs(productStore);
+const { product, filteredRoutings } = storeToRefs(productStore);
 const router = useRouter();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -167,12 +167,6 @@ function useReviewAndAdd() {
     handlePlanReviewConfirmed,
   };
 }
-
-const filteredRoutings = computed(() => {
-  return product.value?.routings?.filter((route) => {
-    return !route.is_autocomplete;
-  });
-});
 </script>
 <template>
   <div class="container max-w-[50rem]">
