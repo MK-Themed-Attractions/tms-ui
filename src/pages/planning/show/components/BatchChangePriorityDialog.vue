@@ -14,13 +14,14 @@ import type { Plan, PlanBatch } from "@/types/planning";
 import { ArrowBigDown, ArrowBigUp } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import { computed, ref, watchEffect } from "vue";
+import { toast } from "vue-sonner";
 
 const props = defineProps<{
   plan: Plan;
 }>();
 const dialog = defineModel({ default: false });
 const planStore = usePlanStore();
-const { loading } = storeToRefs(planStore);
+const { loading, errors } = storeToRefs(planStore);
 const {
   batchesForm,
   batchMoveUp,
@@ -115,6 +116,19 @@ async function handleUpdate() {
   await planStore.updatePlanBatches(props.plan.id, {
     batches: batchesForm.value,
   });
+
+  if (!errors.value) {
+    /* refetch the plan to get updated values */
+    await planStore.getPlan(props.plan.id, { includes: "batches" });
+
+    /* close the dialog */
+    dialog.value = false;
+
+    /* display a toast message */
+    toast("Batch notice", {
+      description: "Batch priority successfully changed.",
+    });
+  }
 }
 </script>
 <template>
