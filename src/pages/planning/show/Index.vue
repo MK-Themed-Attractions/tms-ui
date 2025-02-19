@@ -37,20 +37,16 @@ const { selectedBatchId, batch, batchLoading } = useBatch();
 
 function useBatch() {
   const selectedBatchId = ref<string>();
-  const batch = ref<PlanBatch>();
+  const { batch } = storeToRefs(planStore);
   const batchLoading = ref(false);
 
   watchEffect(async () => {
     if (!plan.value || !selectedBatchId.value) return;
 
     batchLoading.value = true;
-    batch.value = await planStore.getTasks(
-      plan.value?.id,
-      selectedBatchId.value,
-      {
-        includes: "tasks",
-      },
-    );
+    await planStore.getBatch(plan.value?.id, selectedBatchId.value, {
+      includes: "tasks",
+    });
     batchLoading.value = false;
   });
 

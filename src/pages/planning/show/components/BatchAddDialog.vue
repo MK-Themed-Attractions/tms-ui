@@ -61,7 +61,6 @@ const { loading: planLoading, errors: planErrors } = storeToRefs(planStore);
 
 const submit = handleSubmit(async (values) => {
   await planStore.appendBatch(props.plan.id, values);
-  await planStore.getPlans();
   if (!planErrors.value) {
     toast("Processing", {
       description:

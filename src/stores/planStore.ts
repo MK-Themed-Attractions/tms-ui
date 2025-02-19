@@ -2,13 +2,14 @@ import { useAxios } from "@/composables/useAxios";
 import type {
   Plan,
   PlanBatch,
+  PlanBatchesForm,
   PlanBatchForm,
   PlanDataForm,
   PlanForm,
   PlanQueryParams,
 } from "@/types/planning";
 import { useStorage } from "@vueuse/core";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed, ref } from "vue";
@@ -27,6 +28,7 @@ export const usePlanStore = defineStore("plans", () => {
   setHeader("Bearer-Token", bearerToken);
 
   const plan = ref<Plan>();
+  const batch = ref<PlanBatch>();
 
   /* GETTERS */
   const plans = computed(() => paginatedResponse.value?.data);
@@ -88,6 +90,19 @@ export const usePlanStore = defineStore("plans", () => {
     const res = await put(`/api/plan/${planId}`, form);
   }
 
+  async function updatePlanBatch(
+    planId: string,
+    batchId: string,
+    form: Partial<PlanBatch>,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await put(`/api/plan/${planId}/batch/${batchId}`, form);
+  }
+
   async function updatePlanBatches(planId: string, form: PlanBatchForm) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -97,7 +112,7 @@ export const usePlanStore = defineStore("plans", () => {
     await put(`/api/plan/${planId}/batch/update`, form);
   }
 
-  async function getTasks(
+  async function getBatch(
     planId: string,
     batchId: string,
     params?: Partial<PlanQueryParams>,
@@ -113,11 +128,12 @@ export const usePlanStore = defineStore("plans", () => {
     );
 
     if (res) {
+      batch.value = res?.data;
       return res.data;
     }
   }
 
-  async function appendBatch(planId: string, form: PlanBatchForm) {
+  async function appendBatch(planId: string, form: PlanBatchesForm) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
@@ -125,19 +141,36 @@ export const usePlanStore = defineStore("plans", () => {
 
     const res = await post(`api/plan/${planId}/batch/append`, form);
   }
+  async function appendTask(
+    planId: string,
+    batchId: string,
+    form: Partial<{ qty: number; user_id: string; start_operation: string }>,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+    const res = await post(
+      `api/plan/${planId}/batch/${batchId}/task/append`,
+      form,
+    );
+  }
 
   return {
     paginatedResponse,
     plans,
     plan,
+    batch,
     getPlans,
     getPlan,
-    getTasks,
+    getBatch,
     invalidate,
     createPlan,
     updatePlanData,
     updatePlanBatches,
+    updatePlanBatch,
     appendBatch,
+    appendTask,
     errors,
     loading,
   };

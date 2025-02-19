@@ -7,6 +7,9 @@ import { h } from "vue";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
+  const planStore = usePlanStore();
+  const { paginatedResponse, plan } = storeToRefs(planStore);
+
   async function init() {
     const authStore = useAuthStore();
     const { user } = storeToRefs(authStore);
@@ -24,15 +27,12 @@ export const useWebsocket = () => {
     // Create a channel called 'get-started' and register a listener to subscribe to all messages with the name 'first'
     const channel = realtime.channels.get(`notifications.${user.value.id}`);
 
-    await channel.subscribe("planning", (message: Notification<Plan>) => {
+    await channel.subscribe("planning", (message: Notification<any>) => {
       handlePlanningEvent(message);
     });
   }
 
-  function handlePlanningEvent(message: Notification<Plan>) {
-    const planStore = usePlanStore();
-    const { paginatedResponse, plan } = storeToRefs(planStore);
-
+  function handlePlanningEvent(message: Notification<any>) {
     switch (message.data.type) {
       case "plan create":
         planStore.getPlans().then((value) => {
@@ -44,16 +44,11 @@ export const useWebsocket = () => {
 
         break;
       case "batch create":
-        if (message.data.data)
-          planStore
-            .getPlan(message.data.data?.id, { includes: "batches" })
-            .then((value) => {
-              plan.value = value;
-
-              notifyBatchCreate(message);
-            });
-
+        notifyBatchCreate(message);
         break;
+
+      case "task create":
+        notifyTaskCreate(message);
       default:
         break;
     }
@@ -72,7 +67,25 @@ export const useWebsocket = () => {
   }
 
   function notifyBatchCreate(message: Notification<Plan>) {
+    if (message.data.data)
+      planStore
+        .getPlan(message.data.data?.id, { includes: "batches" })
+        .then((value) => {
+          plan.value = value;
+        });
+
     toast.info("Batch notice", {
+      description: message.data.message,
+    });
+  }
+
+  function notifyTaskCreate(message: Notification<PlanBatch>) {
+    if (message.data.data)
+      planStore.getBatch(message.data.data?.plan_id, message.data.data.id, {
+        includes: "tasks",
+      });
+
+    toast.info("Task notice", {
       description: message.data.message,
     });
   }
