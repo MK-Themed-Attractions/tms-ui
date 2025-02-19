@@ -3,8 +3,8 @@ import {
   Dialog,
   DialogClose,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogScrollContent,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -29,7 +29,7 @@ const emits = defineEmits<{
       <slot name="activator" />
     </DialogTrigger>
 
-    <DialogContent>
+    <DialogScrollContent>
       <DialogHeader>
         <slot name="title">
           <DialogTitle>{{ title }}</DialogTitle>
@@ -54,7 +54,7 @@ const emits = defineEmits<{
           </DialogClose>
         </div>
       </div>
-    </DialogContent>
+    </DialogScrollContent>
   </Dialog>
 </template>
 
