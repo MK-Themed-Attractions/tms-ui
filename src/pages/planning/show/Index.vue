@@ -5,7 +5,6 @@ import { storeToRefs } from "pinia";
 import { computed, onDeactivated, ref, watchEffect } from "vue";
 import PlanInfo from "./components/PlanInfo.vue";
 import PlanBatchTabs from "./components/PlanBatchTabs.vue";
-import type { PlanBatch } from "@/types/planning";
 import BatchInfo from "./components/BatchInfo.vue";
 
 import { Separator } from "@/components/ui/separator";
@@ -37,20 +36,16 @@ const { selectedBatchId, batch, batchLoading } = useBatch();
 
 function useBatch() {
   const selectedBatchId = ref<string>();
-  const batch = ref<PlanBatch>();
+  const { batch } = storeToRefs(planStore);
   const batchLoading = ref(false);
 
   watchEffect(async () => {
     if (!plan.value || !selectedBatchId.value) return;
 
     batchLoading.value = true;
-    batch.value = await planStore.getTasks(
-      plan.value?.id,
-      selectedBatchId.value,
-      {
-        includes: "tasks",
-      },
-    );
+    await planStore.getBatch(plan.value?.id, selectedBatchId.value, {
+      includes: "tasks",
+    });
     batchLoading.value = false;
   });
 

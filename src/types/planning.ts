@@ -64,7 +64,7 @@ export interface PlanForm {
   plan_data: {
     code: string;
     description?: string | null;
-    is_prototype: boolean;
+    is_prototype?: boolean;
   };
 
   batches: {
@@ -76,6 +76,9 @@ export interface PlanForm {
 }
 
 export type PlanDataForm = Pick<PlanForm, "plan_data">;
-export type PlanBatchForm = Pick<PlanForm, "batches">;
+export type PlanBatchesForm = Pick<PlanForm, "batches">;
+export interface PlanBatchForm {
+  batches: PlanBatch[];
+}
 
 export interface PlanQueryParams extends QueryParams {}

@@ -1,7 +1,7 @@
 import type { DataTableColumns } from "@/components/app/data-table";
 
 export const taskColumns: DataTableColumns[] = [
-  { key: "current_operation_data.operation_code", title: "Current routing" },
+  { key: "current_operation_data.workcenters.name", title: "Current routing" },
   { key: "status_code", title: "Status" },
   { key: "start_date", title: "Access date" },
   { key: "current_operation_data.runtime", title: "Runtime" },

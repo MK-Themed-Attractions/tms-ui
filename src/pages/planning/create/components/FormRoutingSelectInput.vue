@@ -27,7 +27,7 @@ const props = defineProps<{
           v-for="routing in routings"
           :key="routing.id"
           :value="routing.operation_number"
-          >{{ routing.operation_code }}</SelectItem
+          >{{ routing.workcenters.name }}</SelectItem
         >
       </SelectGroup>
     </SelectContent>

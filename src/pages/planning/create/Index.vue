@@ -19,7 +19,7 @@ import { Info, Plus, Trash, TriangleAlert } from "lucide-vue-next";
 
 import { useProductStore } from "@/stores/productStore";
 import { storeToRefs } from "pinia";
-import { markRaw, watchEffect } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { Textarea } from "@/components/ui/textarea";
 import FormRoutingSelectInput from "./components/FormRoutingSelectInput.vue";
 import FormSubmitButton from "./components/FormSubmitButton.vue";
@@ -28,43 +28,52 @@ import { usePlanStore } from "@/stores/planStore";
 import { toast } from "vue-sonner";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
+import PlanFormReviewDialog from "./components/PlanFormReviewDialog.vue";
 
 const props = defineProps<{
   plan?: Plan;
 }>();
 const productStore = useProductStore();
-const { product } = storeToRefs(productStore);
+const { product, filteredRoutings } = storeToRefs(productStore);
 const router = useRouter();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
+const showConfirmationDialog = ref(false);
 
 const formSchema = toTypedSchema(
   z.object({
-    sku: z.string().nonempty("Required"),
+    sku: z.string().nonempty("Required").default(""),
     plan_data: z.object({
-      code: z.string().nonempty("Required"),
+      code: z.string().nonempty("Required").default(""),
       description: z.string().optional(),
       is_prototype: z.boolean().default(false),
     }),
-    batches: z.array(
-      z.object({
-        qty: z.number().int().positive(),
-        start_date: z.coerce.date(),
-        start_operation: z.string().nonempty("Required"),
-      }),
-    ),
-    user_id: z.string().default(user.value.id),
+    batches: z
+      .array(
+        z.object({
+          qty: z.number().int().positive(),
+          start_date: z.coerce.date(),
+          start_operation: z.string().nonempty("Required").default(""),
+        }),
+      )
+      .nonempty("Must have atleast 1 batch"),
+    user_id: z.string().default(user.value.id || ""),
   }),
 );
 
-const { handleSubmit, errors, controlledValues } = useForm({
+const {
+  handleSubmit,
+  errors,
+  controlledValues,
+  validate,
+  values: planFormValues,
+  handleReset,
+} = useForm({
   validationSchema: formSchema,
-  initialValues: {
-    batches: [],
-  },
 });
 const { handleAddBatch, batchFields, handleRemoveBatch } = useBatch();
-const { handleCreatePlan } = usePlan();
+const { handleCreatePlan, planLoading } = usePlan();
+const { handlePlanReviewConfirmed, handleReviewAndAdd } = useReviewAndAdd();
 
 const submit = handleSubmit(async (values) => {
   await handleCreatePlan(<PlanForm>values);
@@ -117,15 +126,45 @@ function usePlan() {
         description:
           "The plan is being processed. We will notify you once it is complete.",
       });
-
-      router.push({ name: "planningIndex" });
+    } else {
+      toast("Plan failed notice", {
+        description: "There's a problem creating plan. Please try again.",
+      });
     }
+
+    router.push({ name: "planningIndex" });
   }
 
   return {
     handleCreatePlan,
     planErrors,
     planLoading,
+  };
+}
+
+function useReviewAndAdd() {
+  async function handleReviewAndAdd() {
+    const isValid = await validate();
+
+    if (isValid.valid) {
+      showConfirmationDialog.value = true;
+    }
+  }
+
+  async function handlePlanReviewConfirmed() {
+    /* hide the confirmation dialog */
+    showConfirmationDialog.value = false;
+
+    /* submit the form */
+    await submit();
+
+    /* clear the form fields */
+    handleReset();
+  }
+
+  return {
+    handleReviewAndAdd,
+    handlePlanReviewConfirmed,
   };
 }
 </script>
@@ -235,13 +274,11 @@ function usePlan() {
               >
                 <FormItem class="grow">
                   <FormLabel>Start route</FormLabel>
-                  <template
-                    v-if="product?.routings && product?.routings.length"
-                  >
+                  <template v-if="filteredRoutings && filteredRoutings.length">
                     <FormControl>
                       <FormRoutingSelectInput
                         v-bind="componentField"
-                        :routings="product.routings"
+                        :routings="filteredRoutings"
                       />
                     </FormControl>
                     <FormMessage />
@@ -282,16 +319,29 @@ function usePlan() {
         </div>
       </div>
       <div class="col-span-full text-end">
-        <FormSubmitButton :disabled="Object.keys(errors).length">
+        <FormSubmitButton
+          :disabled="Object.keys(errors).length"
+          @add="submit"
+          :loading="planLoading"
+        >
           <ButtonApp
             class="px-3 shadow-none"
-            :disabled="Object.keys(errors).length"
-            type="submit"
+            :disabled="Object.keys(errors).length || planLoading"
+            @click="handleReviewAndAdd"
+            :loading="planLoading"
             >Review & Add
           </ButtonApp>
         </FormSubmitButton>
       </div>
     </form>
+
+    <PlanFormReviewDialog
+      @yes="handlePlanReviewConfirmed"
+      v-if="product?.routings"
+      v-model:open="showConfirmationDialog"
+      :routings="product.routings"
+      :plan-form-values="planFormValues as PlanForm"
+    />
   </div>
 </template>
 

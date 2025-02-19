@@ -1,7 +1,7 @@
 import { useAxios } from "@/composables/useAxios";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { type SimplePaginateAPIResource } from "@/types/pagination";
 import type {
@@ -34,6 +34,13 @@ export const useProductStore = defineStore("products", () => {
     products.value = null;
   }
 
+  /* GETTERS */
+  const filteredRoutings = computed(() => {
+    return product.value?.routings?.filter((route) => {
+      return !route.is_autocomplete;
+    });
+  });
+  /* ACTIONS */
   async function getProducts(params?: Partial<ProductQueryParameter>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -143,6 +150,7 @@ export const useProductStore = defineStore("products", () => {
     loading,
     products,
     product,
+    filteredRoutings,
     invalidate,
     getProducts,
     getProduct,
