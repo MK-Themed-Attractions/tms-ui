@@ -15,7 +15,11 @@ const emits = defineEmits<{
   <div class="text-sm">
     <div class="flex items-center justify-between border-b pb-2">
       <h3 class="font-medium">Plan details:</h3>
-      <ButtonApp size="icon" variant="ghost" @click="$emit('edit')"
+      <ButtonApp
+        size="icon"
+        variant="secondary"
+        @click="$emit('edit')"
+        class="h-6 w-6"
         ><Pencil />
       </ButtonApp>
     </div>

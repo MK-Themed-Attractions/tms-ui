@@ -19,10 +19,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useProductStore } from "@/stores/productStore";
 import { toTypedSchema } from "@vee-validate/zod";
-import { ArrowBigRight, Plus, Trash } from "lucide-vue-next";
+import { Plus, Trash } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import { useFieldArray, useForm } from "vee-validate";
-import { onMounted, watchEffect } from "vue";
+import { watchEffect } from "vue";
 import { z } from "zod";
 import FormRoutingSelectInput from "../../create/components/FormRoutingSelectInput.vue";
 import { usePlanStore } from "@/stores/planStore";
@@ -50,11 +50,11 @@ const formSchema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, values } = useForm({
+const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 const productStore = useProductStore();
-const { product } = storeToRefs(productStore);
+const { filteredRoutings } = storeToRefs(productStore);
 const { batches, handleAddBatch, handleRemoveBatch } = useBatch();
 const planStore = usePlanStore();
 const { loading: planLoading, errors: planErrors } = storeToRefs(planStore);
@@ -160,8 +160,8 @@ watchEffect(async () => {
                   <FormLabel>Start route</FormLabel>
                   <FormControl>
                     <FormRoutingSelectInput
-                      v-if="product?.routings"
-                      :routings="product?.routings"
+                      v-if="filteredRoutings && filteredRoutings.length"
+                      :routings="filteredRoutings"
                       v-bind="componentField"
                     />
                   </FormControl>

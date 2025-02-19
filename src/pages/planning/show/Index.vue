@@ -5,7 +5,6 @@ import { storeToRefs } from "pinia";
 import { computed, onDeactivated, ref, watchEffect } from "vue";
 import PlanInfo from "./components/PlanInfo.vue";
 import PlanBatchTabs from "./components/PlanBatchTabs.vue";
-import type { PlanBatch } from "@/types/planning";
 import BatchInfo from "./components/BatchInfo.vue";
 
 import { Separator } from "@/components/ui/separator";

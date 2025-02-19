@@ -55,7 +55,11 @@ const submit = handleSubmit(async (values) => {
   await planStore.updatePlanData(props.plan.id, values);
 
   if (!planErrors.value) {
-    /* refetch the plan to get updated values */
+    /* refetch the plan show to get udpated values */
+    await planStore.getPlan(props.plan.id, { includes: "batches" });
+
+    /* refetch the plan list to get updated values
+     */
     await planStore.getPlans();
 
     /* display a toast message */
