@@ -64,7 +64,7 @@ export interface PlanForm {
   plan_data: {
     code: string;
     description?: string | null;
-    is_prototype: boolean;
+    is_prototype?: boolean;
   };
 
   batches: {

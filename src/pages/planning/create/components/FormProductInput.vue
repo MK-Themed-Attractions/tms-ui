@@ -6,7 +6,7 @@ import { useProductStore } from "@/stores/productStore";
 import type { Product, ProductQueryParameter } from "@/types/products";
 import { AlertCircle, LoaderCircle, RefreshCcw, Search } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { ref, watchEffect } from "vue";
 
 defineOptions({
   inheritAttrs: false,
@@ -75,6 +75,7 @@ function useSelect() {
   function handleClearSelection() {
     selectedProduct.value = undefined;
     selectedProductId.value = "";
+    search.value = "";
   }
 
   return {
@@ -86,6 +87,13 @@ function useSelect() {
 /* INIT */
 
 if (!products.value) await fetchProducts();
+
+/* When form or cleared or the productId is empty, clear the selection */
+watchEffect(() => {
+  if (!selectedProductId.value) {
+    handleClearSelection();
+  }
+});
 </script>
 
 <template>

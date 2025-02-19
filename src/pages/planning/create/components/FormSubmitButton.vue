@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, ChevronDown } from "lucide-vue-next";
+
+const props = defineProps<{
+  loading?: boolean;
+}>();
+const emits = defineEmits<{
+  (e: "add"): void;
+}>();
 </script>
 <template>
   <div
@@ -22,18 +29,22 @@ import { ArrowRight, ChevronDown } from "lucide-vue-next";
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
         <ButtonApp
-          @click.prevent="console.log('hehe')"
-          :disabled="$attrs['disabled']"
+          :disabled="$attrs['disabled'] || loading"
           class="px-2 shadow-none"
         >
           <ChevronDown class="h-4 w-4 text-primary-foreground" />
         </ButtonApp>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="top" :side-offset="5" class="min-w-[10rem]">
+      <DropdownMenuContent
+        align="end"
+        side="top"
+        :side-offset="5"
+        class="min-w-[10rem]"
+      >
         <DropdownMenuLabel>Options</DropdownMenuLabel>
         <DropdownMenuSeparator></DropdownMenuSeparator>
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem @click="$emit('add')">
             <ArrowRight />
             Proceed add</DropdownMenuItem
           >
