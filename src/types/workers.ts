@@ -30,14 +30,15 @@ export interface WorkerDepartment {
   created_at: string;
   id: string;
   worker_count: number;
+  work_centers: string[];
 }
 
 export interface WorkerDepartmentForm {
   code: string;
   name: string;
   description?: string;
+  work_centers: string[];
 }
 
 export interface WorkerQueryParams extends QueryParams {}
 export interface WorkerDepartmentQueryParams extends QueryParams {}
-

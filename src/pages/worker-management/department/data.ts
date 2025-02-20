@@ -14,6 +14,10 @@ export const displayColumns: DataTableColumns[] = [
     title: "Description",
   },
   {
+    key: "work_centers",
+    title: "Work centers",
+  },
+  {
     key: "actions",
     title: "",
   },
