@@ -62,7 +62,11 @@ function useFilter() {
               :key="routing.id"
               :value="routing.operation_code"
             >
-              {{ routing.operation_code }}
+              {{
+                routing.workcenters
+                  ? routing.workcenters.name
+                  : routing.operation_code
+              }}
             </TabsTrigger>
             <div v-else class="flex items-center gap-2 px-2 text-sm">
               <Info :size="15" />
