@@ -3,13 +3,17 @@ import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { computed, ref } from "vue";
 
-import { type SimplePaginateAPIResource } from "@/types/pagination";
+import {
+  type SimplePaginate,
+  type SimplePaginateAPIResource,
+} from "@/types/pagination";
 import type {
   Product,
   ProductAttachment,
   ProductQueryParameter,
   ProductRoutingBOM,
   ProductRoutingQueryParams,
+  ProductRoutingWorkcenter,
   ProductShowQueryParams,
 } from "@/types/products";
 import { useStorage } from "@vueuse/core";
@@ -19,6 +23,7 @@ export const useProductStore = defineStore("products", () => {
   const authStore = useAuthStore();
   const products = ref<Product[] | null>(null);
   const product = ref<Product>();
+  const workCenters = ref<ProductRoutingWorkcenter[]>();
   const bearerToken = useStorage(
     import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY,
     "",
@@ -40,6 +45,7 @@ export const useProductStore = defineStore("products", () => {
       return !route.is_autocomplete;
     });
   });
+
   /* ACTIONS */
   async function getProducts(params?: Partial<ProductQueryParameter>) {
     await authStore.checkTokenValidity(
@@ -145,11 +151,24 @@ export const useProductStore = defineStore("products", () => {
     return res?.files;
   }
 
+  async function getWorkCenters() {
+    const res = await get<{ data: SimplePaginate<ProductRoutingWorkcenter> }>(
+      "/api/work-centers",
+    );
+
+    if (res) {
+      workCenters.value = res.data.data;
+
+      return res.data;
+    }
+  }
+
   return {
     errors,
     loading,
     products,
     product,
+    workCenters,
     filteredRoutings,
     invalidate,
     getProducts,
@@ -158,5 +177,6 @@ export const useProductStore = defineStore("products", () => {
     getProductTechnicalDrawings,
     getProductPantoneReference,
     getProductAssemblyManual,
+    getWorkCenters,
   };
 });
