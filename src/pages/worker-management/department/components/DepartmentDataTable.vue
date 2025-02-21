@@ -47,6 +47,16 @@ function useUpdate() {
           </span>
         </TableCell>
       </template>
+      <template #item.work_centers="{ item }">
+        <TableCell class="flex gap-1">
+          <span
+            class="rounded-md border px-2 text-xs font-medium uppercase"
+            v-for="wc in item.work_centers"
+          >
+            {{ wc }}
+          </span>
+        </TableCell>
+      </template>
 
       <template #item.actions="{ item }">
         <TableCell>
