@@ -8,32 +8,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProductStore } from "@/stores/productStore";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
+import { Building, LoaderCircle } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
+import { watch, watchEffect } from "vue";
 
-const selectedWorkCenterId = defineModel({ default: "" });
+const props = defineProps<{
+  loading?: boolean;
+}>();
+const selectedDepartmentId = defineModel({ default: "" });
+const emits = defineEmits<{
+  (e: "change", workCenters: string[]): void;
+}>();
 
-const productStore = useProductStore();
-const { workCenters } = storeToRefs(productStore);
+const workerDepartmentStore = useWorkerDepartmentStore();
+const { departments } = storeToRefs(workerDepartmentStore);
 
-if (!workCenters.value) {
-  await productStore.getWorkCenters();
+if (!departments.value) {
+  await workerDepartmentStore.getDepartments();
 }
+
+watch(selectedDepartmentId, (newValue) => {
+  const workCenters = workerDepartmentStore.getWorkCentersByDeptId(newValue);
+
+  if (workCenters) emits("change", workCenters);
+});
 </script>
 <template>
   <div class="rounded-md border p-4 shadow-sm">
-    <Select v-model="selectedWorkCenterId">
-      <SelectTrigger>
-        <SelectValue placeholder="Select a work center..."></SelectValue>
+    <Select v-model="selectedDepartmentId">
+      <SelectTrigger class="gap-2" :disabled="loading">
+        <Building :size="18" />
+        <SelectValue
+          placeholder="Select a department..."
+          class="mr-auto"
+        ></SelectValue>
+        <LoaderCircle v-if="loading" :size="18" class="animate-spin" />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>Work Centers</SelectLabel>
+          <SelectLabel>Departments</SelectLabel>
           <SelectItem
-            v-for="workCenter in workCenters"
-            :key="workCenter.no"
-            :value="workCenter.no"
-            >{{ workCenter.name }}</SelectItem
+            v-for="department in departments"
+            :key="department.id"
+            :value="department.id"
+            >{{ department.name }}</SelectItem
           >
         </SelectGroup>
       </SelectContent>

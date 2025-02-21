@@ -46,6 +46,10 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     bearerToken.value = null;
   }
 
+  function getWorkCentersByDeptId(deptId: string) {
+    return departments.value?.find((d) => d.id === deptId)?.work_centers;
+  }
+
   async function getDepartments(params?: Partial<WorkerDepartmentQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -88,6 +92,7 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   }
 
   return {
+    getWorkCentersByDeptId,
     getDepartments,
     errors,
     loading,

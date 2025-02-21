@@ -9,7 +9,7 @@ import type {
   PlanQueryParams,
 } from "@/types/planning";
 import { useStorage } from "@vueuse/core";
-import { defineStore, storeToRefs } from "pinia";
+import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed, ref } from "vue";
@@ -57,6 +57,7 @@ export const usePlanStore = defineStore("plans", () => {
 
     return null;
   }
+  
   async function getPlan(planId: string, params?: Partial<PlanQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
