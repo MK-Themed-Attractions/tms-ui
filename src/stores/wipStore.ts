@@ -15,12 +15,52 @@ export const useWipStore = defineStore("wips", () => {
   const { get, errors, loading, setHeader, post, put } = useAxios({
     baseURL: baseUrl,
   });
-  const paginatedResponse = ref<SimplePaginateObject<WipTaskGrouped>>();
+
+  const paginatedResponse = ref<SimplePaginate<WipTask>>();
+
   const authStore = useAuthStore();
   setHeader("Bearer-Token", bearerToken);
 
   /* GETTERS */
   const wipTasks = computed(() => paginatedResponse.value?.data);
+
+  /* grouped wiptask according to their parent_sku > sku > plan > batch */
+  const wipTasksGrouped = computed(() => {
+    /* return when wipTasks is empty */
+    if (!wipTasks?.value) return;
+
+    let grouped: WipTaskGrouped = {};
+
+    /* group by parent_sku > sku > plan_id > batch_id */
+    grouped = wipTasks.value.reduce<WipTaskGrouped>((acc, task) => {
+      const { parent_code, sku, plan_id, batch_id } = task;
+
+      /* initilize an empty object on each grouped key */
+      if (!acc[parent_code]) acc[parent_code] = {};
+      if (!acc[parent_code][sku]) acc[parent_code][sku] = {};
+      if (!acc[parent_code][sku][plan_id]) acc[parent_code][sku][plan_id] = {};
+      if (!acc[parent_code][sku][plan_id][batch_id])
+        acc[parent_code][sku][plan_id][batch_id] = []; //this is array since we will be pushing WipTasks here
+
+      /* push each task to their corresponding groups */
+      acc[parent_code][sku][plan_id][batch_id].push(task);
+
+      return acc;
+    }, {});
+
+    /* sort by task_index*/
+    Object.values(grouped).forEach((skuGroup) => {
+      Object.values(skuGroup).forEach((planGroup) => {
+        Object.values(planGroup).forEach((batchGroup) => {
+          Object.values(batchGroup).forEach((tasks) => {
+            tasks.sort((a, b) => a.task_index - b.task_index);
+          });
+        });
+      });
+    });
+
+    return grouped;
+  });
 
   /* ACTIONS */
   function invalidate() {
@@ -33,7 +73,7 @@ export const useWipStore = defineStore("wips", () => {
       bearerToken,
     );
 
-    const res = await get<{ data: SimplePaginateObject<WipTaskGrouped> }>(
+    const res = await get<{ data: SimplePaginate<WipTask> }>(
       "/api/tasks/get-task/bulk-parent-code",
       {
         params,
@@ -53,5 +93,6 @@ export const useWipStore = defineStore("wips", () => {
     paginatedResponse,
     getTasksByWorkCenters,
     wipTasks,
+    wipTasksGrouped,
   };
 });

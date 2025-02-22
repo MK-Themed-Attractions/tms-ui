@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import { ButtonApp } from "@/components/app/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import DropdownMenuLabel from "@/components/ui/dropdown-menu/DropdownMenuLabel.vue";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -8,8 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
-import { Building, LoaderCircle } from "lucide-vue-next";
+import {
+  AlarmClock,
+  Building,
+  ChevronDown,
+  CircleHelp,
+  Clock,
+  LoaderCircle,
+  PlayCircle,
+  RefreshCcw,
+  Search,
+  XCircle,
+} from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import { watch, watchEffect } from "vue";
 
@@ -36,27 +58,82 @@ watch(selectedDepartmentId, (newValue) => {
 </script>
 <template>
   <div class="rounded-md border p-4 shadow-sm">
-    <Select v-model="selectedDepartmentId">
-      <SelectTrigger class="gap-2" :disabled="loading">
-        <Building :size="18" />
-        <SelectValue
-          placeholder="Select a department..."
-          class="mr-auto"
-        ></SelectValue>
-        <LoaderCircle v-if="loading" :size="18" class="animate-spin" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>Departments</SelectLabel>
-          <SelectItem
-            v-for="department in departments"
-            :key="department.id"
-            :value="department.id"
-            >{{ department.name }}</SelectItem
+    <div class="flex flex-wrap gap-4">
+      <Select v-model="selectedDepartmentId">
+        <SelectTrigger class="flex-1 basis-[20rem] gap-2" :disabled="loading">
+          <Building class="size-5" />
+          <SelectValue
+            placeholder="Select a department..."
+            class="mr-auto"
+          ></SelectValue>
+          <LoaderCircle v-if="loading" class="size-5 animate-spin" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Departments</SelectLabel>
+            <SelectItem
+              v-for="department in departments"
+              :key="department.id"
+              :value="department.id"
+              >{{ department.name }}</SelectItem
+            >
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      <div class="relative grow items-center">
+        <Input
+          id="search"
+          type="text"
+          placeholder="Search..."
+          class="pl-10 pr-[9rem]"
+        />
+        <span
+          class="absolute inset-y-0 start-0 flex items-center justify-center px-2"
+        >
+          <Search class="size-5 text-muted-foreground" />
+        </span>
+
+        <div
+          class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1"
+        >
+          <Separator orientation="vertical" class="h-5" />
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <ButtonApp size="sm" variant="ghost">
+                Product SKU
+                <ChevronDown class="size-5" />
+              </ButtonApp>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Search by</DropdownMenuLabel>
+                <DropdownMenuItem>Product SKU</DropdownMenuItem>
+                <DropdownMenuItem>Plan code</DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <div class="basis-full">
+        <div class="flex gap-2">
+          <ButtonApp size="sm" variant="secondary" :prepend-icon="CircleHelp"
+            >Unassigned</ButtonApp
           >
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+          <ButtonApp size="sm" variant="secondary" :prepend-icon="Clock"
+            >Pending</ButtonApp
+          >
+          <ButtonApp size="sm" variant="secondary" :prepend-icon="RefreshCcw"
+            >Ongoing</ButtonApp
+          >
+          <ButtonApp size="sm" variant="secondary" :prepend-icon="XCircle"
+            >QC failed</ButtonApp
+          >
+        </div>
+
+        <div></div>
+      </div>
+    </div>
   </div>
 </template>
 

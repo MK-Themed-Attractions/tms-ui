@@ -2,74 +2,22 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { WipTask, WipTaskQueryParams } from "@/types/wip";
-import { computed } from "vue";
+import type { WipTaskQueryParams } from "@/types/wip";
+
 import { formatReadableDate } from "@/lib/utils";
 
-const { fetchWipTasks, wipLoading, wipTaskGrouped } = useWip();
+const { fetchWipTasks, wipLoading, wipTasksGrouped } = useWip();
 
 function useWip() {
   const wipStore = useWipStore();
-  const { wipTasks, loading: wipLoading } = storeToRefs(wipStore);
+  const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
 
   async function fetchWipTasks(params?: Partial<WipTaskQueryParams>) {
     await wipStore.getTasksByWorkCenters(params);
   }
 
-  type WipGroup = {
-    [parentCode: string]: {
-      [sku: string]: {
-        [planId: string]: {
-          [batchId: string]: WipTask[];
-        };
-      };
-    };
-  };
-
-  const wipTaskGrouped = computed(() => {
-    const grouped: WipGroup = {};
-
-    if (wipTasks.value) {
-      // Loop through each parentCode
-      Object.keys(wipTasks.value).forEach((parentCode) => {
-        // Initialize parentCode if not present
-        if (!grouped[parentCode]) {
-          grouped[parentCode] = {};
-        }
-
-        // Reduce with correct type for the accumulator
-        grouped[parentCode] = wipTasks.value![parentCode].reduce<
-          Record<string, Record<string, Record<string, WipTask[]>>>
-        >(
-          (acc, task) => {
-            const { sku, plan_id, batch_id } = task;
-
-            // Initialize groups if not already
-            if (!acc[sku]) {
-              acc[sku] = {};
-            }
-            if (!acc[sku][plan_id]) {
-              acc[sku][plan_id] = {};
-            }
-            if (!acc[sku][plan_id][batch_id]) {
-              acc[sku][plan_id][batch_id] = [];
-            }
-
-            // Push the task into the correct group
-            acc[sku][plan_id][batch_id].push(task);
-
-            return acc;
-          },
-          {} as Record<string, Record<string, Record<string, WipTask[]>>>, // Correct initial value type
-        );
-      });
-    }
-
-    return grouped;
-  });
-
   return {
-    wipTaskGrouped,
+    wipTasksGrouped,
     fetchWipTasks,
     wipLoading,
   };
@@ -101,7 +49,7 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
     <section>
       <div class="space-y-10">
         <div
-          v-for="(product, parentCode) in wipTaskGrouped"
+          v-for="(product, parentCode) in wipTasksGrouped"
           :key="parentCode"
           class="border bg-blue-50 p-4"
         >

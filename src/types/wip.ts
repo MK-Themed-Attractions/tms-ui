@@ -27,7 +27,13 @@ export interface WipTask {
 }
 
 export interface WipTaskGrouped {
-  [key: string]: WipTask[];
+  [parentSku: string]: {
+    [sku: string]: {
+      [planId: string]: {
+        [batchId: string]: WipTask[];
+      };
+    };
+  };
 }
 
 export interface WipTaskQueryParams {
