@@ -94,4 +94,6 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
   </div>
 </template>
 
+
+
 <style scoped></style>

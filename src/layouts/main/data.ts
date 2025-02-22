@@ -5,12 +5,14 @@ import {
   HardHat,
   Home,
   Package,
+  Wrench,
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
 
 export const navItemData: NavItem[] = [
   { name: "Home", to: { name: "home" }, icon: Home },
   { name: "Products", to: { name: "productIndex" }, icon: Package },
+  { name: "Work in progress", to: { name: "wipIndex" }, icon: Wrench },
   {
     name: "Worker management",
     icon: HardHat,
