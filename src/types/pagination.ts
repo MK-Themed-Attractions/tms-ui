@@ -9,9 +9,11 @@ export interface SimplePaginate<T> {
   prev_page_url: string;
   to: number;
 }
+
 export type SimplePaginateObject<T> = Omit<SimplePaginate<T>, "data"> & {
   data: T;
 };
+
 /**
  * For responses that uses Laravel API Resources
  */
