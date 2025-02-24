@@ -62,40 +62,24 @@ watch(selectedDepartmentId, (newValue) => {
       <Select v-model="selectedDepartmentId">
         <SelectTrigger class="flex-1 basis-[20rem] gap-2" :disabled="loading">
           <Building class="size-5" />
-          <SelectValue
-            placeholder="Select a department..."
-            class="mr-auto"
-          ></SelectValue>
+          <SelectValue placeholder="Select a department..." class="mr-auto"></SelectValue>
           <LoaderCircle v-if="loading" class="size-5 animate-spin" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Departments</SelectLabel>
-            <SelectItem
-              v-for="department in departments"
-              :key="department.id"
-              :value="department.id"
-              >{{ department.name }}</SelectItem
-            >
+            <SelectItem v-for="department in departments" :key="department.id" :value="department.id">{{ department.name
+            }}</SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>
       <div class="relative grow items-center">
-        <Input
-          id="search"
-          type="text"
-          placeholder="Search..."
-          class="pl-10 pr-[9rem]"
-        />
-        <span
-          class="absolute inset-y-0 start-0 flex items-center justify-center px-2"
-        >
+        <Input id="search" type="text" placeholder="Search..." class="pl-10 pr-[9rem]" />
+        <span class="absolute inset-y-0 start-0 flex items-center justify-center px-2">
           <Search class="size-5 text-muted-foreground" />
         </span>
 
-        <div
-          class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1"
-        >
+        <div class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1">
           <Separator orientation="vertical" class="h-5" />
           <DropdownMenu>
             <DropdownMenuTrigger>
@@ -115,24 +99,22 @@ watch(selectedDepartmentId, (newValue) => {
         </div>
       </div>
 
-      <div class="basis-full">
-        <div class="flex gap-2">
-          <ButtonApp size="sm" variant="secondary" :prepend-icon="CircleHelp"
-            >Unassigned</ButtonApp
-          >
-          <ButtonApp size="sm" variant="secondary" :prepend-icon="Clock"
-            >Pending</ButtonApp
-          >
-          <ButtonApp size="sm" variant="secondary" :prepend-icon="RefreshCcw"
-            >Ongoing</ButtonApp
-          >
-          <ButtonApp size="sm" variant="secondary" :prepend-icon="XCircle"
-            >QC failed</ButtonApp
-          >
-        </div>
-
-        <div></div>
+      <div class="flex border w-fit rounded-md overflow-hidden">
+        <ButtonApp size="sm" variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted">
+          Unassigned
+        </ButtonApp>
+        <ButtonApp size="sm" variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted">
+          Pending
+        </ButtonApp>
+        <ButtonApp size="sm" variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted">
+          Ongoing
+        </ButtonApp>
+        <ButtonApp size="sm" variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted">
+          QC failed
+        </ButtonApp>
       </div>
+
+      <div></div>
     </div>
   </div>
 </template>

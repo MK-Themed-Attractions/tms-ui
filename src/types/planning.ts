@@ -11,7 +11,7 @@ export interface Plan {
     is_prototype: boolean;
     description: string;
   };
-  product_data: Product;
+  product_data: PlanProductData;
   updated_at: string;
   created_at: string;
   id: string;
@@ -19,6 +19,12 @@ export interface Plan {
   user_data?: User;
   batches?: PlanBatch[];
 }
+
+export type PlanProductData = Pick<Product, "routings" | "sku" | "title"> & {
+  image: {
+    filename: string;
+  };
+};
 export interface PlanBatch {
   batch_index: number;
   created_at: string;
@@ -50,14 +56,13 @@ export interface PlanStatus {
   status: PlanStatusCode;
   description: string;
 }
-export enum PlanStatusCode {
-  INITIALIZED,
-  STARTED,
-  CANCELED,
-  ARCHIVED,
-  PROTOTYPE,
-  PENDING,
-}
+export type PlanStatusCode =
+  | "pending"
+  | "ongoing"
+  | "cancelled"
+  | "finished"
+  | "archived"
+  | "undefined";
 
 export interface PlanForm {
   sku: string;

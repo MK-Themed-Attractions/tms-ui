@@ -15,7 +15,9 @@ export const useWipStore = defineStore("wips", () => {
   const { get, errors, loading, setHeader, post, put } = useAxios({
     baseURL: baseUrl,
   });
+
   const paginatedResponse = ref<SimplePaginate<WipTask>>();
+
   const authStore = useAuthStore();
   setHeader("Bearer-Token", bearerToken);
 
@@ -38,10 +40,13 @@ export const useWipStore = defineStore("wips", () => {
       if (!acc[parent_code][sku]) acc[parent_code][sku] = {};
       if (!acc[parent_code][sku][plan_id]) acc[parent_code][sku][plan_id] = {};
       if (!acc[parent_code][sku][plan_id][batch_id])
-        acc[parent_code][sku][plan_id][batch_id] = []; //this is array since we will be pushing WipTasks here
+        acc[parent_code][sku][plan_id][batch_id] = {
+          batchIndex: task.batch_index,
+          tasks: [],
+        }; //this is array since we will be pushing WipTasks here
 
       /* push each task to their corresponding groups */
-      acc[parent_code][sku][plan_id][batch_id].push(task);
+      acc[parent_code][sku][plan_id][batch_id].tasks.push(task);
 
       return acc;
     }, {});
@@ -50,8 +55,8 @@ export const useWipStore = defineStore("wips", () => {
     Object.values(grouped).forEach((skuGroup) => {
       Object.values(skuGroup).forEach((planGroup) => {
         Object.values(planGroup).forEach((batchGroup) => {
-          Object.values(batchGroup).forEach((tasks) => {
-            tasks.sort((a, b) => a.task_index - b.task_index);
+          Object.values(batchGroup).forEach((batch) => {
+            batch.tasks.sort((a, b) => a.task_index - b.task_index);
           });
         });
       });

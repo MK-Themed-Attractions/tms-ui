@@ -152,6 +152,11 @@ export const useProductStore = defineStore("products", () => {
   }
 
   async function getWorkCenters() {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
     const res = await get<{ data: SimplePaginate<ProductRoutingWorkcenter> }>(
       "/api/work-centers",
     );

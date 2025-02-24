@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import { ButtonApp } from "@/components/app/button";
 import { DataTable } from "@/components/app/data-table";
 import { TableCell } from "@/components/ui/table";
-import { formatReadableDate } from "@/lib/utils";
-import { PlanStatusCode, type Plan } from "@/types/planning";
+import { formatReadableDate, getIconByPlanStatus } from "@/lib/utils";
+import { type Plan } from "@/types/planning";
 import {
-  Ban,
-  Circle,
-  Clock8,
-  EllipsisVertical,
-  LibraryBig,
   LoaderCircle,
   Menu,
   Settings,
-  ShieldAlert,
-  Timer,
 } from "lucide-vue-next";
 import PlanDataTableDropdown from "./PlanDataTableDropdown.vue";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -24,24 +16,6 @@ const props = defineProps<{
   plans: Plan[];
 }>();
 
-function getStatusIcon(status: string) {
-  switch (status) {
-    case PlanStatusCode[1]:
-      return Timer;
-    case PlanStatusCode[0]:
-      return Circle;
-    case PlanStatusCode[3]:
-      return LibraryBig;
-    case PlanStatusCode[2]:
-      return Ban;
-    case PlanStatusCode[4]:
-      return ShieldAlert;
-    case PlanStatusCode[5]:
-      return Clock8;
-    default:
-      return ShieldAlert;
-  }
-}
 
 function getPlanTypeIcon(status: "regular" | "prototype") {
   switch (status) {
@@ -66,32 +40,19 @@ function gotoShow(plan: Plan, router: Router) {
     </template>
     <template #item.status_code="{ item }">
       <TableCell>
-        <div
-          class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium"
-        >
-          <component
-            :is="getStatusIcon(item.status_code.toString())"
-            :size="15"
-            class="stroke-muted-foreground"
-          />
+        <div class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium">
+          <component :is="getIconByPlanStatus(item.status_code)" :size="15" class="stroke-muted-foreground" />
           {{ item.status_code }}
         </div>
       </TableCell>
     </template>
     <template #item.plan_data.is_prototype="{ item }">
       <TableCell>
-        <div
-          class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium"
-        >
-          <component
-            :is="
-              getPlanTypeIcon(
-                item.plan_data.is_prototype ? 'prototype' : 'regular',
-              )
-            "
-            :size="15"
-            class="stroke-muted-foreground"
-          />
+        <div class="flex w-fit items-center gap-2 rounded-md border p-1 text-xs font-medium">
+          <component :is="getPlanTypeIcon(
+            item.plan_data.is_prototype ? 'prototype' : 'regular',
+          )
+            " :size="15" class="stroke-muted-foreground" />
           {{ item.plan_data.is_prototype ? "Prototype" : "Regular" }}
         </div>
       </TableCell>
@@ -107,18 +68,12 @@ function gotoShow(plan: Plan, router: Router) {
 
     <template #item.product_data.sku="{ item }">
       <TableCell v-if="!item.product_data">
-        <LoaderCircle
-          class="mx-auto animate-spin stroke-muted-foreground"
-          :size="15"
-        />
+        <LoaderCircle class="mx-auto animate-spin stroke-muted-foreground" :size="15" />
       </TableCell>
     </template>
     <template #item.product_data.title="{ item }">
       <TableCell v-if="!item.product_data">
-        <LoaderCircle
-          class="mx-auto animate-spin stroke-muted-foreground"
-          :size="15"
-        />
+        <LoaderCircle class="mx-auto animate-spin stroke-muted-foreground" :size="15" />
       </TableCell>
     </template>
 

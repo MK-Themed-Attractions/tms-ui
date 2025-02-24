@@ -22,6 +22,7 @@ export interface WipTask {
   };
   plan_id: string;
   batch_id: string;
+  batch_index: number;
   id: string;
   status: string;
 }
@@ -30,7 +31,10 @@ export interface WipTaskGrouped {
   [parentSku: string]: {
     [sku: string]: {
       [planId: string]: {
-        [batchId: string]: WipTask[];
+        [batchId: string]: {
+          batchIndex: number;
+          tasks: WipTask[];
+        };
       };
     };
   };
