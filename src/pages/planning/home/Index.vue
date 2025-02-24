@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { FilterApp } from "@/components/app/filter";
 import PlanToolbar from "./components/PlanToolbar.vue";
-import { planStatuses, planDataColumns } from "./components/data";
+import { planDataColumns } from "./components/data";
 import { ref } from "vue";
 import { Plus } from "lucide-vue-next";
 import { usePlanStore } from "@/stores/planStore";
@@ -43,11 +43,7 @@ await getPlans();
     <div>
       <PlanToolbar>
         <template #prepend>
-          <FilterApp
-            v-model="filter"
-            text="Status"
-            :items="planStatuses"
-          ></FilterApp>
+          <!-- <FilterApp v-model="filter" text="Status" :items="planStatuses"></FilterApp> -->
         </template>
         <template #append>
           <Button as-child>

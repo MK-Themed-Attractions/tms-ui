@@ -1,4 +1,13 @@
+import type { PlanStatusCode } from "@/types/planning";
 import { type ClassValue, clsx } from "clsx";
+import {
+  AlertCircle,
+  Archive,
+  Clock,
+  Flag,
+  RefreshCcw,
+  Slash,
+} from "lucide-vue-next";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,4 +53,26 @@ export function toOrdinal(n: number) {
   const v = n % 100;
 
   return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+}
+
+/**
+ * Get icon component based on plan status
+ * @param status plan status code
+ * @returns Icon component
+ */
+export function getIconByPlanStatus(status: PlanStatusCode) {
+  switch (status) {
+    case "pending":
+      return Clock;
+    case "ongoing":
+      return RefreshCcw;
+    case "finished":
+      return Flag;
+    case "archived":
+      return Archive;
+    case "cancelled":
+      return Slash;
+    case "undefined":
+      return AlertCircle;
+  }
 }

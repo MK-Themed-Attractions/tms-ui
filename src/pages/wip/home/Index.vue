@@ -49,29 +49,36 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
     <section>
       <div class="space-y-10">
-        <div v-for="(product, parentCode) in wipTasksGrouped" :key="parentCode" class="border rounded-md p-4 shadow-sm">
-          <div class="flex items-center gap-4 mb-4">
-            <div class="size-16 bg-muted rounded-md">
-            </div>
-            <div>
-              <p class="font-medium">{{ parentCode }}</p>
-              <span class="text-sm text-muted-foreground">Parent code</span>
-            </div>
-          </div>
-          <div v-for="(plan, sku) in product" :key="sku" class="border rounded-md p-4">
-            <div class="flex items-center gap-4 mb-4">
-              <div class="size-16 bg-muted rounded-md">
+        <template v-for="(product, parentCode) in wipTasksGrouped" :key="parentCode">
+          <template v-for="(plan, sku) in product" :key="sku">
+            <div v-for="(batches, planId) in plan" :key="planId"
+              class="border rounded-md p-4 flex flex-wrap gap-4 shadow-sm">
+              <div class="flex flex-wrap items-center  gap-4 mb-4 grow">
+                <div class="flex items-center gap-4">
+                  <div class="size-16 bg-muted rounded-md">
+                  </div>
+                  <div>
+                    <p class="font-medium">{{ parentCode }}</p>
+                    <span class="text-sm text-muted-foreground">Product SKU</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="size-16 bg-muted rounded-md">
+                  </div>
+                  <div>
+                    <p class="font-medium">{{ parentCode }}</p>
+                    <span class="text-sm text-muted-foreground">Product SKU</span>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-medium">{{ planId }}</p>
+                  <span class="text-sm text-muted-foreground">Plan code</span>
+                </div>
+                <div class="lg:ml-auto self-start">
+                  <Badge>PENDING</Badge>
+                </div>
               </div>
-              <div>
-                <p class="font-medium">{{ sku }}</p>
-                <span class="text-sm text-muted-foreground">Product SKU</span>
-              </div>
-            </div>
-            <div v-for="(batches, planId) in plan" :key="planId" class="border rounded-md p-4 flex flex-wrap gap-4">
-              <div class="basis-full">
-                <p class="font-medium">{{ planId }}</p>
-                <span class="text-sm text-muted-foreground">Plan code</span>
-              </div>
+
               <div v-for="(batch, batchId) in batches" :key="batchId" class="border rounded-md">
                 <div class="flex justify-between p-4 text-sm  items-center">
                   <div>
@@ -117,8 +124,8 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
                 </Table>
               </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </template>
       </div>
     </section>
   </div>

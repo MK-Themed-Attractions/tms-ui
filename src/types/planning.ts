@@ -19,6 +19,7 @@ export interface Plan {
   user_data?: User;
   batches?: PlanBatch[];
 }
+
 export interface PlanBatch {
   batch_index: number;
   created_at: string;
@@ -50,14 +51,13 @@ export interface PlanStatus {
   status: PlanStatusCode;
   description: string;
 }
-export enum PlanStatusCode {
-  INITIALIZED,
-  STARTED,
-  CANCELED,
-  ARCHIVED,
-  PROTOTYPE,
-  PENDING,
-}
+export type PlanStatusCode =
+  | "pending"
+  | "ongoing"
+  | "cancelled"
+  | "finished"
+  | "archived"
+  | "undefined";
 
 export interface PlanForm {
   sku: string;
