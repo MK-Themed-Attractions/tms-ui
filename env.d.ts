@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_PLANNING_BEARER_TOKEN_KEY: string;
   readonly VITE_COMMON_BEARER_TOKEN_KEY: string;
   readonly VITE_ABLY_PUBLIC_KEY: string;
+  readonly VITE_S3_ENDPOINT: string;
 }
 
 interface ImportMeta {
