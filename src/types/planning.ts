@@ -11,7 +11,7 @@ export interface Plan {
     is_prototype: boolean;
     description: string;
   };
-  product_data: Product;
+  product_data: PlanProductData;
   updated_at: string;
   created_at: string;
   id: string;
@@ -20,6 +20,11 @@ export interface Plan {
   batches?: PlanBatch[];
 }
 
+export type PlanProductData = Pick<Product, "routings" | "sku" | "title"> & {
+  image: {
+    filename: string;
+  };
+};
 export interface PlanBatch {
   batch_index: number;
   created_at: string;

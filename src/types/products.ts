@@ -47,7 +47,11 @@ export interface ProductRoutingWorkcenter {
 }
 
 export interface Image {
-  filename: string;
+  image_link: string;
+  large_image: string;
+  small_image: string;
+  thumbnail: string;
+  tiny_image: string;
 }
 
 export interface ProductRoutingBOM {

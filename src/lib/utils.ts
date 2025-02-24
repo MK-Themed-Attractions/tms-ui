@@ -36,7 +36,10 @@ export function formatReadableDate(isoDateString: string) {
  * @return string;
  */
 export function getS3Link(link: string) {
-  return `${import.meta.env.VITE_S3_ENDPOINT}${link}`;
+  const endpoint = import.meta.env.VITE_S3_ENDPOINT;
+
+  // Ensure exactly one slash between endpoint and link
+  return `${endpoint.replace(/\/+$/, "")}/${link.replace(/^\/+/, "")}`;
 }
 
 /**
