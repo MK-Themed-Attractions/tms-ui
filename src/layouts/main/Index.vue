@@ -22,6 +22,7 @@ import type { Product } from "@/types/products";
 import { ImageApp } from "@/components/app/image";
 import { PopoverAnchor } from "radix-vue";
 import { useAuthStore } from "@/stores/authStore";
+import { getS3Link } from "@/lib/utils";
 
 const main = templateRef("main");
 const { y } = useScroll(main);
@@ -77,14 +78,9 @@ provide(mainScrollerKey, useMainScroller);
 
 <template>
   <div class="fixed grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-    <SideNavigation
-      class="hidden border-r bg-muted/40 lg:block"
-      :items="navItemData"
-    />
+    <SideNavigation class="hidden border-r bg-muted/40 lg:block" :items="navItemData" />
     <div class="flex flex-col">
-      <header
-        class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6"
-      >
+      <header class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
         <MobileNavigation>
           <Button variant="outline" size="icon" class="shrink-0 lg:hidden">
             <Menu class="h-5 w-5" />
@@ -95,38 +91,22 @@ provide(mainScrollerKey, useMainScroller);
         <div class="w-full flex-1">
           <Popover v-model:open="productPopover">
             <PopoverAnchor as-child>
-              <SearchForm
-                class="w-[clamp(10rem,50vw,23rem)]"
-                @submit="handleSearch"
-                :loading="loading"
-              />
+              <SearchForm class="w-[clamp(10rem,50vw,23rem)]" @submit="handleSearch" :loading="loading" />
             </PopoverAnchor>
 
-            <PopoverContent
-              align="start"
-              class="mt-1 w-[clamp(10rem,50vw,23rem)]"
-            >
+            <PopoverContent align="start" class="mt-1 w-[clamp(10rem,50vw,23rem)]">
               <ScrollArea class="max-h-[80vh] overflow-auto">
                 <ul class="space-y-2">
-                  <li
-                    v-for="product in products"
-                    :key="product.id"
-                    class="rounded-md p-1 duration-300 focus-within:bg-secondary hover:bg-secondary"
-                  >
-                    <RouterLink
-                      :to="{
-                        name: 'productShow',
-                        params: { productId: product.sku },
-                      }"
-                      class="flex items-center gap-2"
-                    >
+                  <li v-for="product in products" :key="product.id"
+                    class="rounded-md p-1 duration-300 focus-within:bg-secondary hover:bg-secondary">
+                    <RouterLink :to="{
+                      name: 'productShow',
+                      params: { productId: product.sku },
+                    }" class="flex items-center gap-2">
                       <div>
                         <ImageApp
-                          :image="
-                            product.images ? product.images[0]?.thumbnail : ''
-                          "
-                          class="max-w-[3rem]"
-                        />
+                          :image="product.images?.length ? getS3Link(product.images[0].filename, 'thumbnail') : ''"
+                          class="max-w-[3rem]" />
                       </div>
                       <div class="text-sm">
                         <p class="font-medium">{{ product.title }}</p>
@@ -144,10 +124,7 @@ provide(mainScrollerKey, useMainScroller);
         <UserMenu />
       </header>
 
-      <main
-        class="flex max-h-[91vh] flex-1 flex-col gap-4 overflow-auto p-4 lg:gap-6 lg:p-6"
-        ref="main"
-      >
+      <main class="flex max-h-[91vh] flex-1 flex-col gap-4 overflow-auto p-4 lg:gap-6 lg:p-6" ref="main">
         <RouterView v-slot="{ Component }">
           <template v-if="Component">
             <Suspense timeout="0">

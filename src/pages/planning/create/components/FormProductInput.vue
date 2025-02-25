@@ -2,6 +2,7 @@
 import { ButtonApp } from "@/components/app/button";
 import { ImageApp } from "@/components/app/image";
 import { Input } from "@/components/ui/input";
+import { getS3Link } from "@/lib/utils";
 import { useProductStore } from "@/stores/productStore";
 import type { Product, ProductQueryParameter } from "@/types/products";
 import { AlertCircle, LoaderCircle, RefreshCcw, Search } from "lucide-vue-next";
@@ -100,38 +101,21 @@ watchEffect(() => {
   <div>
     <div class="rounded-lg border text-sm shadow-md" v-if="!selectedProduct">
       <div class="relative border-b pl-6">
-        <input
-          class="w-full rounded-tl-md rounded-tr-md p-3 text-sm focus:outline-none"
-          placeholder="Search product..."
-          v-model="search"
-          @keydown.enter.prevent="searchProduct"
-        />
-        <Search
-          class="absolute left-2 top-1/2 -translate-y-1/2 stroke-muted-foreground"
-          :size="17"
-        />
+        <input class="w-full rounded-tl-md rounded-tr-md p-3 text-sm focus:outline-none" placeholder="Search product..."
+          v-model="search" @keydown.enter.prevent="searchProduct" />
+        <Search class="absolute left-2 top-1/2 -translate-y-1/2 stroke-muted-foreground" :size="17" />
       </div>
 
       <div class="grid min-h-[5rem] p-3">
-        <ul
-          class="max-h-[20rem] overflow-auto"
-          v-if="products?.length && !loading"
-        >
-          <li
-            v-for="product in products"
-            :key="product.id"
-            class="cursor-default rounded p-2 hover:bg-muted"
-            @click="handleSelectProduct(product)"
-          >
+        <ul class="max-h-[20rem] overflow-auto" v-if="products?.length && !loading">
+          <li v-for="product in products" :key="product.id" class="cursor-default rounded p-2 hover:bg-muted"
+            @click="handleSelectProduct(product)">
             <span class="font-medium">{{ product.sku }} -</span>
             {{ product.title }}
           </li>
         </ul>
 
-        <div
-          class="place-content-center text-center font-medium"
-          v-else-if="!loading"
-        >
+        <div class="place-content-center text-center font-medium" v-else-if="!loading">
           No search result.
         </div>
 
@@ -142,33 +126,18 @@ watchEffect(() => {
     </div>
     <div v-else>
       <div class="relative">
-        <Input
-          readonly
-          disabled
-          :model-value="selectedProductId"
-          v-bind="$attrs"
-        />
-        <ButtonApp
-          variant="outline"
-          size="icon"
-          class="absolute right-1 top-1/2 h-8 -translate-y-1/2"
-          type="button"
-          @click="handleClearSelection"
-        >
+        <Input readonly disabled :model-value="selectedProductId" v-bind="$attrs" />
+        <ButtonApp variant="outline" size="icon" class="absolute right-1 top-1/2 h-8 -translate-y-1/2" type="button"
+          @click="handleClearSelection">
           <RefreshCcw />
         </ButtonApp>
       </div>
 
       <div class="mt-2 rounded-md border p-3">
-        <ImageApp
-          class="mx-auto max-w-[14rem]"
-          v-if="selectedProduct.images?.length"
-          :image="selectedProduct.images[0].thumbnail"
-        />
-        <div
-          v-else
-          class="mb-4 flex min-h-[13rem] items-center justify-center gap-2 rounded-md border border-dashed text-sm"
-        >
+        <ImageApp class="mx-auto max-w-[14rem]" v-if="selectedProduct.images?.length"
+          :image="getS3Link(selectedProduct.images[0].filename, 'medium')" />
+        <div v-else
+          class="mb-4 flex min-h-[13rem] items-center justify-center gap-2 rounded-md border border-dashed text-sm">
           <AlertCircle class="text-muted-foreground" :size="17" /> No Image
           Available
         </div>
