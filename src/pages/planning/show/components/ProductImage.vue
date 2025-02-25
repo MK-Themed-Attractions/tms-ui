@@ -15,7 +15,7 @@ const productImage = computed(() => {
 </script>
 <template>
   <div class="rounded-md border p-4 shadow">
-    <ImageApp v-if="productImage" :image="getS3Link(productImage)" class="max-h-full max-w-full" />
+    <ImageApp v-if="productImage" :image="getS3Link(productImage, 'medium')" class="max-h-full max-w-full" />
 
     <div v-else class="flex w-full aspect-square items-center justify-center gap-2">
       <AlertCircle /> <span>No image available!</span>

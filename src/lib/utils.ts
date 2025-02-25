@@ -35,11 +35,27 @@ export function formatReadableDate(isoDateString: string) {
  * @param link raw link without s3
  * @return string;
  */
-export function getS3Link(link: string) {
+type S3ImageType = "thumbnail" | "small" | "medium" | "large" | "full";
+
+export function getS3Link(link: string, type: S3ImageType = "full") {
   const endpoint = import.meta.env.VITE_S3_ENDPOINT;
 
   // Ensure exactly one slash between endpoint and link
-  return `${endpoint.replace(/\/+$/, "")}/${link.replace(/^\/+/, "")}`;
+  const trimedEnpoint = endpoint.replace(/\/+$/, "");
+  const trimedLink = link.replace(/^\/+/, "");
+
+  switch (type) {
+    case "full":
+      return `${trimedEnpoint}/${trimedLink}`;
+    case "large":
+      return `${trimedEnpoint}/thumbs/600x600/${trimedLink}`;
+    case "medium":
+      return `${trimedEnpoint}/thumbs/300x300/${trimedLink}`;
+    case "small":
+      return `${trimedEnpoint}/thumbs/150x150/${trimedLink}`;
+    case "thumbnail":
+      return `${trimedEnpoint}/thumbs/${trimedLink}`;
+  }
 }
 
 /**
@@ -63,6 +79,7 @@ export function toOrdinal(n: number) {
  * @param status plan status code
  * @returns Icon component
  */
+
 export function getIconByPlanStatus(status: PlanStatusCode) {
   switch (status) {
     case "pending":
