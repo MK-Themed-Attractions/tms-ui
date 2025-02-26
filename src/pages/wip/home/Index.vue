@@ -79,10 +79,9 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
                 </div>
               </div>
 
-              <div v-for="(batch, batchId) in batches" :key="batchId" class="border rounded-md">
+              <div v-for="(tasks, batchId) in batches" :key="batchId" class="border rounded-md">
                 <div class="flex justify-between p-4 text-sm  items-center">
                   <div>
-                    <p class="font-medium"> {{ toOrdinal(batch.batchIndex + 1) }} Batch</p>
                     <span class="text-muted-foreground">Jan 15, 2024</span>
                   </div>
                   <Badge variant="secondary">
@@ -101,16 +100,16 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow v-for="task in batch.tasks" :key="task.id" class="border-none group">
-                      <TableCell>{{ task.sku }}</TableCell>
-                      <TableCell>{{ task.plan_id }}</TableCell>
+                    <TableRow v-for="task in tasks" :key="task.id" class="border-none group">
+                      <TableCell>sku</TableCell>
+                      <TableCell>plan code</TableCell>
 
                       <TableCell>
                         <Badge variant="secondary" class="gap-2">
                           <CircleHelp class="size-4" /> {{ task.status }}
                         </Badge>
                       </TableCell>
-                      <TableCell class="text-muted-foreground">{{ formatReadableDate(task.can_accessed_at) }}
+                      <TableCell class="text-muted-foreground">{{ formatReadableDate(task.can_access_at) }}
                       </TableCell>
                       <TableCell class="flex justify-center ">
                         <Check v-if="task.is_startable" class="size-4 " />

@@ -1,40 +1,26 @@
-import type { ProductRoutingWorkcenter } from "./products";
+import type { Plan, PlanBatch } from "./planning";
+import type { Product, ProductRoutingWorkcenter } from "./products";
 
 export interface WipTask {
-  task_plan_id: string;
-  task_index: number;
-  sku: string;
-  parent_code: string;
-  operation_code: string;
-  operation_number: string;
-  previous_operation: string[];
-  next_operation: string[];
-  is_autocomplete: false;
-  routing_no: string;
-  manpower: number;
-  runtime: number;
-  workcenters: ProductRoutingWorkcenter;
-  can_accessed_at: string;
-  is_startable: boolean;
-  plan_data: {
-    code: string;
-    is_prototype: boolean;
+  plan: Pick<Plan["plan_data"], "code"> & Pick<Plan, "id" | "status_code">;
+  product: Pick<Product, "sku" | "title"> & {
+    thumbnail: string;
   };
-  plan_id: string;
-  batch_id: string;
-  batch_index: number;
+  batch: Pick<PlanBatch, "start_date" | "id" | "batch_index" | "status_code">;
+  can_access_at: string;
   id: string;
-  status: string;
+  is_startable: boolean;
+  parent_sku: string;
+  parent_thumbnail: string;
+  status: "unassigned";
+  task_index: number;
 }
 
 export interface WipTaskGrouped {
   [parentSku: string]: {
     [sku: string]: {
       [planId: string]: {
-        [batchId: string]: {
-          batchIndex: number;
-          tasks: WipTask[];
-        };
+        [batchId: string]: WipTask[]
       };
     };
   };

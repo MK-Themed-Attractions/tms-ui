@@ -101,16 +101,16 @@ watch(selectedDepartmentId, (newValue) => {
 
       <div class="basis-full">
         <div class="flex border rounded-md w-fit">
-          <ButtonApp size="sm" variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted">
+          <ButtonApp variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted text-xs">
             Unassigned
           </ButtonApp>
-          <ButtonApp size="sm" variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted">
+          <ButtonApp variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted text-xs">
             Pending
           </ButtonApp>
-          <ButtonApp size="sm" variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted">
+          <ButtonApp variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted text-xs">
             Ongoing
           </ButtonApp>
-          <ButtonApp size="sm" variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted">
+          <ButtonApp variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted text-xs">
             QC failed
           </ButtonApp>
         </div>
