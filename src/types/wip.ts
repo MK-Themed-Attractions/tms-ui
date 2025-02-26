@@ -7,21 +7,19 @@ export interface WipTask {
     thumbnail: string;
   };
   batch: Pick<PlanBatch, "start_date" | "id" | "batch_index" | "status_code">;
-  can_access_at: string;
+  can_accessed_at: string;
   id: string;
   is_startable: boolean;
-  parent_sku: string;
+  parent_code: string;
   parent_thumbnail: string;
   status: "unassigned";
   task_index: number;
 }
 
 export interface WipTaskGrouped {
-  [parentSku: string]: {
-    [sku: string]: {
-      [planId: string]: {
-        [batchId: string]: WipTask[]
-      };
+  [sku: string]: {
+    [planId: string]: {
+      [batchId: string]: WipTask[];
     };
   };
 }

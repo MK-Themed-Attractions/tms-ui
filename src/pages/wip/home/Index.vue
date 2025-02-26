@@ -4,11 +4,12 @@ import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
 import type { WipTaskQueryParams } from "@/types/wip";
 
-import { formatReadableDate, toOrdinal } from "@/lib/utils";
+import { formatReadableDate, getS3Link, toOrdinal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, CircleHelp, Ellipsis, EllipsisVertical, X } from "lucide-vue-next";
+import { ImageApp } from "@/components/app/image";
 
 const { fetchWipTasks, wipLoading, wipTasksGrouped } = useWip();
 
@@ -49,51 +50,60 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
     <section>
       <div class="space-y-10">
-        <template v-for="(product, parentCode) in wipTasksGrouped" :key="parentCode">
-          <template v-for="(plan, sku) in product" :key="sku">
+        <template v-for="(parent, parentCode) in wipTasksGrouped" :key="parentCode">
+          <template v-for="(plan, sku) in parent" :key="sku">
             <div v-for="(batches, planId) in plan" :key="planId"
-              class="border rounded-md p-4 flex flex-wrap gap-4 shadow-sm">
-              <div class="flex flex-wrap items-center  gap-4 mb-4 grow">
-                <div class="flex items-center gap-4">
-                  <div class="size-16 bg-muted rounded-md">
-                  </div>
-                  <div>
-                    <p class="font-medium">{{ parentCode }}</p>
-                    <span class="text-sm text-muted-foreground">Product SKU</span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="size-16 bg-muted rounded-md">
-                  </div>
-                  <div>
-                    <p class="font-medium">{{ parentCode }}</p>
-                    <span class="text-sm text-muted-foreground">Product SKU</span>
-                  </div>
-                </div>
-                <div>
-                  <p class="font-medium">{{ planId }}</p>
-                  <span class="text-sm text-muted-foreground">Plan code</span>
-                </div>
-                <div class="lg:ml-auto self-start">
-                  <Badge>PENDING</Badge>
-                </div>
-              </div>
-
+              class="grid xl:grid-cols-2 border rounded-md p-4 shadow-sm gap-4">
               <div v-for="(tasks, batchId) in batches" :key="batchId" class="border rounded-md">
-                <div class="flex justify-between p-4 text-sm  items-center">
-                  <div>
-                    <span class="text-muted-foreground">Jan 15, 2024</span>
+                <div class="flex flex-wrap items-center gap-4 p-4 grow">
+
+                  <div class="flex items-center gap-4">
+                    <div class="size-16 bg-muted rounded-md ">
+                      <ImageApp :image="getS3Link(tasks[0].parent_thumbnail, 'thumbnail')"
+                        class="max-w-full max-h-full" />
+                    </div>
+                    <div>
+                      <p class="font-medium">{{ tasks[0].parent_code }}</p>
+                      <span class="text-sm text-muted-foreground">Parent product SKU</span>
+                    </div>
                   </div>
-                  <Badge variant="secondary">
-                    5 tasks</Badge>
+
+                  <div class="flex items-center gap-4">
+                    <div class="size-16 bg-muted rounded-md">
+                      <ImageApp :image="getS3Link(tasks[0].product.thumbnail, 'thumbnail')"
+                        class="max-w-full max-h-full" />
+                    </div>
+                    <div>
+                      <p class="font-medium">{{ tasks[0].product.sku }}</p>
+                      <span class="text-sm text-muted-foreground">Product SKU</span>
+                    </div>
+
+                  </div>
+
+                  <div>
+                    <p class="font-medium">{{ tasks[0].plan.code }}</p>
+                    <span class="text-sm text-muted-foreground">Plan code</span>
+                  </div>
+
+
                 </div>
-                <Separator />
+                <div class="flex justify-between p-4 pt-0 text-sm items-end">
+                  <div class="font-medium">
+                    {{ toOrdinal(tasks[0].batch.batch_index + 1) }} Batch
+                  </div>
+                  <div class="flex flex-col items-end gap-2">
+                    <Badge variant="secondary">
+                      {{ tasks.length }} Tasks</Badge>
+                    <span class="text-muted-foreground">Scheduled on {{ formatReadableDate(tasks[0].batch.start_date)
+                    }}</span>
+                  </div>
+
+                </div>
+                <Separator label="TASKS" class="mb-2" />
 
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead class="h-8">SKU</TableHead>
-                      <TableHead class="h-8">Plan code</TableHead>
+                    <TableRow class="border-none">
                       <TableHead class="h-8">Status</TableHead>
                       <TableHead class="h-8">Access date</TableHead>
                       <TableHead class="h-8">Availability</TableHead>
@@ -101,15 +111,12 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
                   </TableHeader>
                   <TableBody>
                     <TableRow v-for="task in tasks" :key="task.id" class="border-none group">
-                      <TableCell>sku</TableCell>
-                      <TableCell>plan code</TableCell>
-
                       <TableCell>
                         <Badge variant="secondary" class="gap-2">
                           <CircleHelp class="size-4" /> {{ task.status }}
                         </Badge>
                       </TableCell>
-                      <TableCell class="text-muted-foreground">{{ formatReadableDate(task.can_access_at) }}
+                      <TableCell class="text-muted-foreground">{{ formatReadableDate(task.can_accessed_at) }}
                       </TableCell>
                       <TableCell class="flex justify-center ">
                         <Check v-if="task.is_startable" class="size-4 " />
