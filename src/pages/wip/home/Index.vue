@@ -2,37 +2,59 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { WipTaskQueryParams } from "@/types/wip";
+import type { WipBatch, WipPlanQueryParams } from "@/types/wip";
 
-import { formatReadableDate, getS3Link, toOrdinal } from "@/lib/utils";
+import { formatReadableDate, getIconByPlanStatus, getS3Link, toOrdinal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, CircleHelp, Ellipsis, EllipsisVertical, X } from "lucide-vue-next";
-import { ImageApp } from "@/components/app/image";
 
-const { fetchWipTasks, wipLoading, wipTasksGrouped } = useWip();
+import {
+
+  LoaderCircle,
+
+} from "lucide-vue-next";
+
+import CardInfo from "./components/CardInfo.vue";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import WipTaskDataTable from "./components/WipTaskDataTable.vue";
+import WipBatchAccordion from "./components/WipBatchAccordion.vue";
+
+const { fetchWipPlans, wipLoading, wipTasksGrouped, handleGetWip } = useWip();
 
 function useWip() {
   const wipStore = useWipStore();
   const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
 
-  async function fetchWipTasks(params?: Partial<WipTaskQueryParams>) {
-    await wipStore.getTasksByWorkCenters(params);
+  async function fetchWipPlans(params?: Partial<WipPlanQueryParams>) {
+    await wipStore.getWipPlansByWorkCenters(params);
+  }
+
+  async function handleGetWip(batch: WipBatch) {
+
+    //only fetch the data when theres no tasks on batch to avoid repeated fetch
+    if (batch.tasks) return;
+
+    const res = await wipStore.getTasksByBatchId(batch.batch_id)
+
+    if (res) {
+      batch.tasks = res;
+    }
   }
 
   return {
     wipTasksGrouped,
-    fetchWipTasks,
+    fetchWipPlans,
     wipLoading,
+    handleGetWip
   };
 }
 
 async function handleDepartmentSelectionChange(workCenters: string[]) {
-  await fetchWipTasks({
+  await fetchWipPlans({
     work_centers: workCenters,
   });
 }
+
 </script>
 <template>
   <div class="container space-y-6">
@@ -50,7 +72,41 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
     <section>
       <div class="space-y-10">
-        <template v-for="(parent, parentCode) in wipTasksGrouped" :key="parentCode">
+        <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.sku"
+          class="rounded-md border p-4 shadow-sm space-y-4">
+          <div v-for="product in parentProduct.product_data" :key="product.sku" class="space-y-4">
+            <div class="flex gap-2 items-start">
+              <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
+                {{
+                  parentProduct.sku }}</CardInfo>
+
+            </div>
+            <div class="flex flex-wrap gap-4">
+              <div v-for="plan in product.plan_data" :key="plan.id"
+                class="border rounded-md p-4 space-y-2 basis-[30rem] flex-1">
+                <div class="flex gap-4">
+                  <CardInfo :image="getS3Link(product.thumbnail, 'thumbnail')" label="Product SKU">{{ product.sku }}
+                  </CardInfo>
+                  <CardInfo label="Plan code">{{ plan.code }}</CardInfo>
+                  <div class="ml-auto flex flex-col justify-center gap-2">
+                    <Badge class="ml-auto capitalize gap-1">
+                      <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
+                      {{ plan.status_code }}
+                    </Badge>
+                    <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetWip" />
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- <template v-for="(parent, parentCode) in wipTasksGrouped" :key="parentCode">
           <template v-for="(plan, sku) in parent" :key="sku">
             <div v-for="(batches, planId) in plan" :key="planId"
               class="grid xl:grid-cols-2 border rounded-md p-4 shadow-sm gap-4">
@@ -131,7 +187,7 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
               </div>
             </div>
           </template>
-        </template>
+</template> -->
       </div>
     </section>
   </div>
