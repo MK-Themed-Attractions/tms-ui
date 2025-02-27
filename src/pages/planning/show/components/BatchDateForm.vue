@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuthStore } from "@/stores/authStore";
 import { usePlanStore } from "@/stores/planStore";
 import type { PlanBatch } from "@/types/planning";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -26,15 +27,18 @@ const emits = defineEmits<{
 }>();
 
 const planStore = usePlanStore();
+const authStore = useAuthStore()
 const { errors } = storeToRefs(planStore);
 
 const { dateLoading, dateSubmit } = useDate();
 
 function useDate() {
   const dateLoading = ref(false);
+  const { user } = storeToRefs(authStore)
   const dateFormSchema = toTypedSchema(
     z.object({
       start_date: z.string().nonempty("Required"),
+      user_id: z.string().default(user.value.id)
     }),
   );
   const { handleSubmit, setFieldValue } = useForm({
@@ -83,16 +87,12 @@ function useDate() {
         <FormControl>
           <Input type="date" v-bind="componentField" />
         </FormControl>
-        <FormDescription
-          >Date from which batch should be assignable.</FormDescription
-        >
+        <FormDescription>Date from which batch should be assignable.</FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
 
-    <ButtonApp type="submit" class="ml-auto" :loading="dateLoading"
-      >Change Date</ButtonApp
-    >
+    <ButtonApp type="submit" class="ml-auto" :loading="dateLoading">Change Date</ButtonApp>
   </form>
 </template>
 
