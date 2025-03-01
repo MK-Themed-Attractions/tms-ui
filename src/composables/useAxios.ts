@@ -6,6 +6,7 @@ import Axios, {
 import { ref, watchEffect, type MaybeRefOrGetter } from "vue";
 import { useAxiosErrorRedirects } from "./useAxiosErrorRedirects";
 import { useAuthStore } from "@/stores/authStore";
+import { storeToRefs } from "pinia";
 
 /* global error instance */
 const errors = ref<AxiosResponseError | null>(null);
@@ -23,7 +24,11 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     (response) => {
       return response;
     },
-    (error) => {
+    async (error) => {
+      if (error.status === 401) {
+        await useAuthStore().logout();
+        await redirectToLoginPage();
+      }
       return Promise.reject({
         status: error.status,
         data: error.response.data,
@@ -33,28 +38,7 @@ export const useAxios = (config: CreateAxiosDefaults) => {
 
   const loading = ref(false);
   const { redirectToLoginPage } = useAxiosErrorRedirects();
-
-  /* ERROR REDIRECTS */
-  watchEffect(async () => {
-    switch (errors.value?.status) {
-      /* unauthorize response */
-      case 401: {
-        /* invalidate all fetched data */
-        await useAuthStore().logout();
-
-        /* redirect to login */
-        await redirectToLoginPage();
-
-        /* manually set the error to session expired */
-        errors.value = {
-          data: {
-            message: "Session Expired! Please login again.",
-          },
-          status: 401,
-        };
-      }
-    }
-  });
+  const authStore = useAuthStore();
 
   /**
    * use to set the axios header
