@@ -2,38 +2,41 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { WipBatch, WipPlanQueryParams } from "@/types/wip";
+import type { WipBatch, WipPlanQueryParams, WipTask } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, getS3Link, toOrdinal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import {
-
-  LoaderCircle,
-
+  Ellipsis,
 } from "lucide-vue-next";
 
 import CardInfo from "./components/CardInfo.vue";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
+import WipTaskDropdown from "./components/WipTaskDropdown.vue";
+import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { provide, ref } from "vue";
+import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
+import { TableCell } from "@/components/ui/table";
+import { batchWipSuccessKey } from "@/lib/injectionKeys";
 
-const { fetchWipPlans, wipLoading, wipTasksGrouped, handleGetWip } = useWip();
+const { fetchWipPlans, wipLoading, wipTasksGrouped, handleGetBatchWip, assigningBatch, selectedTaskIds, handleMultipleTaskAssign, handleSingleTaskAssign, fetchBatchWip } = useWip();
+const { openAssignWorkerDialog } = useWorker()
 
 function useWip() {
   const wipStore = useWipStore();
   const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
+  const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
+  const selectedTaskIds = ref<string[]>([])
+
 
   async function fetchWipPlans(params?: Partial<WipPlanQueryParams>) {
     await wipStore.getWipPlansByWorkCenters(params);
   }
 
-  async function handleGetWip(batch: WipBatch) {
-
-    //only fetch the data when theres no tasks on batch to avoid repeated fetch
-    if (batch.tasks) return;
-
+  async function fetchBatchWip(batch: WipBatch) {
     const res = await wipStore.getTasksByBatchId(batch.batch_id)
 
     if (res) {
@@ -41,12 +44,84 @@ function useWip() {
     }
   }
 
+  //fetch batch wips only when batch doesnt have tasks in it
+  async function handleGetBatchWip(batch: WipBatch) {
+    //only fetch the data when theres no tasks on batch to avoid repeated fetch
+    if (batch.tasks) return;
+    await fetchBatchWip(batch)
+  }
+
+  /**
+   * transform tasks array object to task id array
+   * @param tasks tasks array to be converted to array of ids
+   * @return Array of task ids
+   */
+  function toTaskIds(tasks: WipTask[]) {
+    return tasks.reduce<string[]>((acc, cur) => {
+      acc.push(cur.id)
+      return acc;
+    }, [])
+  }
+
+  /**
+   * For single task assignment. Sets assigning task and select one task for selectedTaskIds
+   * @param task 
+   * @param tasks 
+   */
+  function handleSingleTaskAssign(task: WipTask, batch: WipBatch) {
+    const taskIds = toTaskIds(batch.tasks ? batch.tasks : [])
+
+    assigningBatch.value = {
+      batch,
+      taskIds
+    }
+
+    //clear selected task ids to make sure that one id is selected 
+    selectedTaskIds.value = []
+    selectedTaskIds.value.push(task.id)
+
+    //open the dialog
+    openAssignWorkerDialog.value = true
+  }
+
+  /**
+   * For multiple task assignment. Sets assigning task and select all task for selectedTaskIds
+   * @param tasks 
+   */
+  function handleMultipleTaskAssign(batch: WipBatch) {
+    const taskIds = toTaskIds(batch.tasks ? batch.tasks : [])
+
+    assigningBatch.value = {
+      batch,
+      taskIds
+    }
+
+    //make selected tasks ids to be the assigning task ids
+    //this simply means select all of the assigning task ids
+    selectedTaskIds.value = JSON.parse(JSON.stringify(assigningBatch.value.taskIds));
+
+    openAssignWorkerDialog.value = true
+  }
+
   return {
     wipTasksGrouped,
     fetchWipPlans,
+    fetchBatchWip,
     wipLoading,
-    handleGetWip
+    handleGetBatchWip,
+    assigningBatch,
+    selectedTaskIds,
+    handleSingleTaskAssign,
+    handleMultipleTaskAssign
   };
+}
+
+function useWorker() {
+  const openAssignWorkerDialog = ref(false)
+
+  return {
+    openAssignWorkerDialog
+  }
 }
 
 async function handleDepartmentSelectionChange(workCenters: string[]) {
@@ -54,6 +129,10 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
     work_centers: workCenters,
   });
 }
+
+
+/* Provide the batch fetching functionality on children components */
+provide(batchWipSuccessKey, fetchBatchWip)
 
 </script>
 <template>
@@ -99,96 +178,61 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
                 <Separator />
 
-                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetWip" />
+                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
+                  <template #default="{ batch }">
+                    <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks">
+                      <template #action.header>
+                        <TableCell>
+                          <WipTaskDropdown>
+                            <template #activator>
+                              <Ellipsis class="size-4" />
+                            </template>
 
+                            <DropdownMenuLabel>Batch</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem @click="handleMultipleTaskAssign(batch)">Assign multiple tasks
+                            </DropdownMenuItem>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>Start all</DropdownMenuItem>
+                            <DropdownMenuItem>Pause all</DropdownMenuItem>
+                            <DropdownMenuItem>Stop all</DropdownMenuItem>
+                            <DropdownMenuItem>Finish all</DropdownMenuItem>
+                          </WipTaskDropdown>
+                        </TableCell>
+                      </template>
+                      <template #action="{ task }">
+                        <WipTaskDropdown>
+                          <template #activator>
+                            <Ellipsis class="invisible group-hover:visible size-4" />
+                          </template>
+                          <DropdownMenuLabel>Options</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem @click="handleSingleTaskAssign(task, batch)">Assign task
+                          </DropdownMenuItem>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem>Start</DropdownMenuItem>
+                          <DropdownMenuItem>Pause</DropdownMenuItem>
+                          <DropdownMenuItem>Stop</DropdownMenuItem>
+                          <DropdownMenuItem>Finish</DropdownMenuItem>
+                        </WipTaskDropdown>
+
+                      </template>
+                    </WipTaskDataTable>
+                  </template>
+                </WipBatchAccordion>
               </div>
             </div>
           </div>
-
         </div>
-        <!-- <template v-for="(parent, parentCode) in wipTasksGrouped" :key="parentCode">
-          <template v-for="(plan, sku) in parent" :key="sku">
-            <div v-for="(batches, planId) in plan" :key="planId"
-              class="grid xl:grid-cols-2 border rounded-md p-4 shadow-sm gap-4">
-              <div v-for="(tasks, batchId) in batches" :key="batchId" class="border rounded-md">
-                <div class="flex flex-wrap items-center gap-4 p-4 grow">
-
-                  <div class="flex items-center gap-4">
-                    <div class="size-16 bg-muted rounded-md ">
-                      <ImageApp :image="getS3Link(tasks[0].parent_thumbnail, 'thumbnail')"
-                        class="max-w-full max-h-full" />
-                    </div>
-                    <div>
-                      <p class="font-medium">{{ tasks[0].parent_code }}</p>
-                      <span class="text-sm text-muted-foreground">Parent product SKU</span>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-4">
-                    <div class="size-16 bg-muted rounded-md">
-                      <ImageApp :image="getS3Link(tasks[0].product.thumbnail, 'thumbnail')"
-                        class="max-w-full max-h-full" />
-                    </div>
-                    <div>
-                      <p class="font-medium">{{ tasks[0].product.sku }}</p>
-                      <span class="text-sm text-muted-foreground">Product SKU</span>
-                    </div>
-
-                  </div>
-
-                  <div>
-                    <p class="font-medium">{{ tasks[0].plan.code }}</p>
-                    <span class="text-sm text-muted-foreground">Plan code</span>
-                  </div>
-
-
-                </div>
-                <div class="flex justify-between p-4 pt-0 text-sm items-end">
-                  <div class="font-medium">
-                    {{ toOrdinal(tasks[0].batch.batch_index + 1) }} Batch
-                  </div>
-                  <div class="flex flex-col items-end gap-2">
-                    <Badge variant="secondary">
-                      {{ tasks.length }} Tasks</Badge>
-                    <span class="text-muted-foreground">Scheduled on {{ formatReadableDate(tasks[0].batch.start_date)
-                    }}</span>
-                  </div>
-
-                </div>
-                <Separator label="TASKS" class="mb-2" />
-
-                <Table>
-                  <TableHeader>
-                    <TableRow class="border-none">
-                      <TableHead class="h-8">Status</TableHead>
-                      <TableHead class="h-8">Access date</TableHead>
-                      <TableHead class="h-8">Availability</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow v-for="task in tasks" :key="task.id" class="border-none group">
-                      <TableCell>
-                        <Badge variant="secondary" class="gap-2">
-                          <CircleHelp class="size-4" /> {{ task.status }}
-                        </Badge>
-                      </TableCell>
-                      <TableCell class="text-muted-foreground">{{ formatReadableDate(task.can_accessed_at) }}
-                      </TableCell>
-                      <TableCell class="flex justify-center ">
-                        <Check v-if="task.is_startable" class="size-4 " />
-                        <X v-else class="size-4" />
-                      </TableCell>
-                      <TableCell>
-                        <Ellipsis class="invisible group-hover:visible size-4" />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </template>
-</template> -->
       </div>
+
+      <!-- DIALOGS -->
+      <WorkerAssignDialog v-model:selected-task-ids="selectedTaskIds" v-model="openAssignWorkerDialog"
+        v-if="assigningBatch" :batch="assigningBatch">
+      </WorkerAssignDialog>
     </section>
   </div>
 </template>

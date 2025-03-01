@@ -12,7 +12,7 @@ const page = defineModel({ default: 1 });
       <ChevronsLeft />
     </ButtonApp>
     <ButtonApp
-      :disabled="disablePrev"
+      :disabled="disablePrev || loading"
       size="icon"
       class="h-8 w-8"
       variant="outline"
@@ -21,7 +21,7 @@ const page = defineModel({ default: 1 });
       <ChevronLeft />
     </ButtonApp>
     <ButtonApp
-      :disabled="disableNext"
+      :disabled="disableNext || loading"
       size="icon"
       class="h-8 w-8"
       variant="outline"

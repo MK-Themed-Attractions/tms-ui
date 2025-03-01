@@ -5,6 +5,7 @@ export { default as PaginationPerPageApp } from "./PaginationPerPageApp.vue";
 export interface PaginationAppProps {
   pageName?: string;
   perPageName?: string;
+  defaultPerPage?: number;
 }
 
 export interface PaginationQuery {
@@ -15,4 +16,5 @@ export interface PaginationQuery {
 export interface PaginationButtonsAppProps {
   disablePrev?: boolean;
   disableNext?: boolean;
+  loading?:boolean
 }

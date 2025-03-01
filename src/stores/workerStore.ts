@@ -31,7 +31,7 @@ export const useWorkerStore = defineStore("workers", () => {
     if (paginatedResponse.value) {
       return paginatedResponse.value.data;
     } else {
-      return null;
+      return [];
     }
   });
 

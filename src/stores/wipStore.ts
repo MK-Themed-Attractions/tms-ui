@@ -75,6 +75,18 @@ export const useWipStore = defineStore("wips", () => {
     }
   }
 
+  async function assignWorkersToTasks(payload: {
+    workers: string[];
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post("/api/tasks/mass-assign-workers", payload);
+  }
+
   return {
     invalidate,
     errors,
@@ -82,6 +94,7 @@ export const useWipStore = defineStore("wips", () => {
     paginatedResponse,
     getWipPlansByWorkCenters,
     getTasksByBatchId,
+    assignWorkersToTasks,
     wipTasksGrouped,
   };
 });

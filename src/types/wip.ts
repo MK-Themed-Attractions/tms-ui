@@ -19,9 +19,17 @@ export interface WipTask {
   manpower: number;
   runtime: number;
   id: string;
-  status: "unassigned";
+  status: WipStatus;
   workcenter: ProductRoutingWorkcenter;
 }
+
+export type WipStatus =
+  | "unassigned"
+  | "done"
+  | "ongoing"
+  | "pending"
+  | "cancelled"
+  | "qc-failed";
 
 export type WipTaskGrouped = WipPlanProduct & {
   product_data: (WipPlanProduct & {

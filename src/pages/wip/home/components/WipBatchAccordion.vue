@@ -23,7 +23,7 @@ const emits = defineEmits<{
                 </div>
             </AccordionTrigger>
             <AccordionContent>
-                <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks" />
+                <slot v-if="batch.tasks && batch.tasks.length" :batch="batch" />
                 <p v-else class="text-muted-foreground flex items-center gap-2 justify-center">
                     <LoaderCircle class="animate-spin" /> Retrieving data, please wait.
                 </p>
