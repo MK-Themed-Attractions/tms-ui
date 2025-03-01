@@ -7,8 +7,8 @@ import DropdownMenuGroup from '@/components/ui/dropdown-menu/DropdownMenuGroup.v
 
 <template>
     <DropdownMenu>
-        <DropdownMenuTrigger>
-            <slot name="activator"/>
+        <DropdownMenuTrigger @click.stop="">
+            <slot name="activator" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" class="min-w-[10rem]">

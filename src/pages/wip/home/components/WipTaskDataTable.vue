@@ -8,6 +8,9 @@ import { CheckCircle, CircleHelp, Ellipsis, XCircle } from 'lucide-vue-next';
 const props = defineProps<{
     tasks: WipTask[]
 }>()
+const emits = defineEmits<{
+    (e: 'select', task: WipTask): void
+}>()
 
 </script>
 <template>
@@ -25,7 +28,8 @@ const props = defineProps<{
             </TableRow>
         </TableHeader>
         <TableBody>
-            <TableRow v-for="task in tasks" :key="task.id" class="border-none group">
+            <TableRow v-for="task in tasks" :key="task.id" class="border-none group cursor-pointer"
+                @click="$emit('select', task)">
                 <TableCell>
                     <Badge variant="secondary" class="gap-2">
                         <component class="size-4" :is="getIconByTaskStatus(task.status)" /> <span class="capitalize">{{

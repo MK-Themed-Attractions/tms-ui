@@ -21,10 +21,11 @@ import { provide, ref } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
+import WipTaskShowDialog from "./components/WipTaskShowDialog.vue";
 
 const { fetchWipPlans, wipLoading, wipTasksGrouped, handleGetBatchWip, assigningBatch, selectedTaskIds, handleMultipleTaskAssign, handleSingleTaskAssign, fetchBatchWip } = useWip();
 const { openAssignWorkerDialog } = useWorker()
-
+const { handleShowWipDialog, showWipDialog, selectedWip } = useWipShow()
 function useWip() {
   const wipStore = useWipStore();
   const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
@@ -124,6 +125,22 @@ function useWorker() {
   }
 }
 
+function useWipShow() {
+  const showWipDialog = ref(false)
+  const selectedWip = ref<WipTask>()
+
+  function handleShowWipDialog(task: WipTask) {
+    selectedWip.value = task;
+    showWipDialog.value = true;
+  }
+
+  return {
+    showWipDialog,
+    handleShowWipDialog,
+    selectedWip
+  }
+}
+
 async function handleDepartmentSelectionChange(workCenters: string[]) {
   await fetchWipPlans({
     work_centers: workCenters,
@@ -180,7 +197,8 @@ provide(batchWipSuccessKey, fetchBatchWip)
 
                 <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
                   <template #default="{ batch }">
-                    <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks">
+                    <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
+                      @select="handleShowWipDialog">
                       <template #action.header>
                         <TableCell>
                           <WipTaskDropdown>
@@ -204,11 +222,11 @@ provide(batchWipSuccessKey, fetchBatchWip)
                       <template #action="{ task }">
                         <WipTaskDropdown>
                           <template #activator>
-                            <Ellipsis class="invisible group-hover:visible size-4" />
+                            <Ellipsis class="invisible group-hover:visible size-4 m-auto" />
                           </template>
                           <DropdownMenuLabel>Options</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem @click="handleSingleTaskAssign(task, batch)">Assign task
+                          <DropdownMenuItem @click.stop="handleSingleTaskAssign(task, batch)">Assign task
                           </DropdownMenuItem>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
@@ -233,6 +251,8 @@ provide(batchWipSuccessKey, fetchBatchWip)
       <WorkerAssignDialog v-model:selected-task-ids="selectedTaskIds" v-model="openAssignWorkerDialog"
         v-if="assigningBatch" :batch="assigningBatch">
       </WorkerAssignDialog>
+
+      <WipTaskShowDialog v-if="selectedWip" v-model="showWipDialog" :task="selectedWip"></WipTaskShowDialog>
     </section>
   </div>
 </template>

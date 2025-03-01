@@ -87,6 +87,25 @@ export const useWipStore = defineStore("wips", () => {
     const res = await post("/api/tasks/mass-assign-workers", payload);
   }
 
+  /**
+   * Get fully detailed task
+   * @param planTaskId - task id on Plan microservice
+   */
+  async function getWipTask(planTaskId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: WipTask }>(
+      `/api/tasks/get-task-details-by-plan-task/${planTaskId}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     invalidate,
     errors,
@@ -94,6 +113,7 @@ export const useWipStore = defineStore("wips", () => {
     paginatedResponse,
     getWipPlansByWorkCenters,
     getTasksByBatchId,
+    getWipTask,
     assignWorkersToTasks,
     wipTasksGrouped,
   };

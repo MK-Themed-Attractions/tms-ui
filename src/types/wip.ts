@@ -1,5 +1,6 @@
 import type { PlanBatch, PlanStatus, PlanStatusCode } from "./planning";
 import type { Product, ProductRoutingWorkcenter } from "./products";
+import type { Worker } from "./workers";
 
 export interface WipTask {
   task_plan_id: string;
@@ -21,6 +22,7 @@ export interface WipTask {
   id: string;
   status: WipStatus;
   workcenter: ProductRoutingWorkcenter;
+  workers?: Worker[];
 }
 
 export type WipStatus =
