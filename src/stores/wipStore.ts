@@ -9,6 +9,7 @@ import type {
   WipTaskGrouped,
   WipPlanQueryParams,
   WipTaskQueryParams,
+  TaskStatus,
 } from "@/types/wip";
 
 export const useWipStore = defineStore("wips", () => {
@@ -17,7 +18,7 @@ export const useWipStore = defineStore("wips", () => {
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, put } = useAxios({
+  const { get, errors, loading, setHeader, post, put, patch } = useAxios({
     baseURL: baseUrl,
   });
 
@@ -106,6 +107,22 @@ export const useWipStore = defineStore("wips", () => {
     }
   }
 
+  /**
+   * Change the status of the WIP task
+   * @param taskId WIP task id
+   */
+  async function changeTaskStatus(
+    taskId: string,
+    payload: { status: TaskStatus | "start" | "pause"},
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch(`/api/tasks/change-status/${taskId}`, payload);
+  }
+
   return {
     invalidate,
     errors,
@@ -116,5 +133,6 @@ export const useWipStore = defineStore("wips", () => {
     getWipTask,
     assignWorkersToTasks,
     wipTasksGrouped,
+    changeTaskStatus,
   };
 });

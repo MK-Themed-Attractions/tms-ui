@@ -23,9 +23,20 @@ import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
 import WipTaskShowDialog from "./components/WipTaskShowDialog.vue";
 
-const { fetchWipPlans, wipLoading, wipTasksGrouped, handleGetBatchWip, assigningBatch, selectedTaskIds, handleMultipleTaskAssign, handleSingleTaskAssign, fetchBatchWip } = useWip();
+const { fetchWipPlans,
+  wipLoading,
+  wipTasksGrouped,
+  handleGetBatchWip,
+  assigningBatch,
+  selectedTaskIds,
+  handleSingleTaskAssign,
+  fetchBatchWip,
+  handleShowMultipleTaskAssignDialog,
+  handleShowSingleTaskAssignDialog } = useWip();
+
 const { openAssignWorkerDialog } = useWorker()
-const { handleShowWipDialog, showWipDialog, selectedWip } = useWipShow()
+const { handleShowWipDialog, showWipDialog } = useWipShow()
+
 function useWip() {
   const wipStore = useWipStore();
   const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
@@ -59,7 +70,7 @@ function useWip() {
    */
   function toTaskIds(tasks: WipTask[]) {
     return tasks.reduce<string[]>((acc, cur) => {
-      acc.push(cur.id)
+      acc.push(cur.task_plan_id)
       return acc;
     }, [])
   }
@@ -79,10 +90,7 @@ function useWip() {
 
     //clear selected task ids to make sure that one id is selected 
     selectedTaskIds.value = []
-    selectedTaskIds.value.push(task.id)
-
-    //open the dialog
-    openAssignWorkerDialog.value = true
+    selectedTaskIds.value.push(task.task_plan_id)
   }
 
   /**
@@ -100,7 +108,18 @@ function useWip() {
     //make selected tasks ids to be the assigning task ids
     //this simply means select all of the assigning task ids
     selectedTaskIds.value = JSON.parse(JSON.stringify(assigningBatch.value.taskIds));
+  }
 
+  function handleShowSingleTaskAssignDialog(task: WipTask, batch: WipBatch) {
+    handleSingleTaskAssign(task, batch)
+    //open the dialog
+    openAssignWorkerDialog.value = true
+  }
+
+  function handleShowMultipleTaskAssignDialog(batch: WipBatch) {
+
+    handleMultipleTaskAssign(batch)
+    //open the dialog
     openAssignWorkerDialog.value = true
   }
 
@@ -113,7 +132,9 @@ function useWip() {
     assigningBatch,
     selectedTaskIds,
     handleSingleTaskAssign,
-    handleMultipleTaskAssign
+    handleMultipleTaskAssign,
+    handleShowSingleTaskAssignDialog,
+    handleShowMultipleTaskAssignDialog
   };
 }
 
@@ -127,17 +148,16 @@ function useWorker() {
 
 function useWipShow() {
   const showWipDialog = ref(false)
-  const selectedWip = ref<WipTask>()
 
-  function handleShowWipDialog(task: WipTask) {
-    selectedWip.value = task;
+  function handleShowWipDialog(task: WipTask, batch: WipBatch) {
+    handleSingleTaskAssign(task, batch)
+
     showWipDialog.value = true;
   }
 
   return {
     showWipDialog,
     handleShowWipDialog,
-    selectedWip
   }
 }
 
@@ -198,7 +218,8 @@ provide(batchWipSuccessKey, fetchBatchWip)
                 <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
                   <template #default="{ batch }">
                     <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                      @select="handleShowWipDialog">
+                      @select="(task) => handleShowWipDialog(task, batch)">
+
                       <template #action.header>
                         <TableCell>
                           <WipTaskDropdown>
@@ -208,7 +229,7 @@ provide(batchWipSuccessKey, fetchBatchWip)
 
                             <DropdownMenuLabel>Batch</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem @click="handleMultipleTaskAssign(batch)">Assign multiple tasks
+                            <DropdownMenuItem @click="handleShowMultipleTaskAssignDialog(batch)">Assign multiple tasks
                             </DropdownMenuItem>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
@@ -219,6 +240,7 @@ provide(batchWipSuccessKey, fetchBatchWip)
                           </WipTaskDropdown>
                         </TableCell>
                       </template>
+
                       <template #action="{ task }">
                         <WipTaskDropdown>
                           <template #activator>
@@ -226,7 +248,7 @@ provide(batchWipSuccessKey, fetchBatchWip)
                           </template>
                           <DropdownMenuLabel>Options</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem @click.stop="handleSingleTaskAssign(task, batch)">Assign task
+                          <DropdownMenuItem @click.stop="handleShowSingleTaskAssignDialog(task, batch)">Assign task
                           </DropdownMenuItem>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
@@ -252,7 +274,9 @@ provide(batchWipSuccessKey, fetchBatchWip)
         v-if="assigningBatch" :batch="assigningBatch">
       </WorkerAssignDialog>
 
-      <WipTaskShowDialog v-if="selectedWip" v-model="showWipDialog" :task="selectedWip"></WipTaskShowDialog>
+      <WipTaskShowDialog v-if="selectedTaskIds && assigningBatch" v-model="showWipDialog" :batch="assigningBatch.batch"
+        :task-id="selectedTaskIds[0]">
+      </WipTaskShowDialog>
     </section>
   </div>
 </template>

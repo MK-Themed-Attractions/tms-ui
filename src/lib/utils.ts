@@ -1,5 +1,5 @@
 import type { PlanStatusCode } from "@/types/planning";
-import type { WipStatus } from "@/types/wip";
+import type { TaskStatus } from "@/types/wip";
 import { type ClassValue, clsx } from "clsx";
 import {
   AlertCircle,
@@ -7,6 +7,7 @@ import {
   Clock,
   Flag,
   HelpCircle,
+  Pause,
   RefreshCcw,
   Slash,
   ThumbsDown,
@@ -105,7 +106,7 @@ export function getIconByPlanStatus(status: PlanStatusCode) {
  * @param status WIP task status code
  * @returns Icon component
  */
-export function getIconByTaskStatus(status: WipStatus) {
+export function getIconByTaskStatus(status: TaskStatus) {
   switch (status) {
     case "unassigned":
       return HelpCircle;
@@ -119,5 +120,7 @@ export function getIconByTaskStatus(status: WipStatus) {
       return Clock;
     case "qc-failed":
       return ThumbsDown;
+    case "paused":
+      return Pause;
   }
 }

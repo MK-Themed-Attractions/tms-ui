@@ -20,18 +20,19 @@ export interface WipTask {
   manpower: number;
   runtime: number;
   id: string;
-  status: WipStatus;
+  status: TaskStatus;
   workcenter: ProductRoutingWorkcenter;
   workers?: Worker[];
 }
 
-export type WipStatus =
+export type TaskStatus =
   | "unassigned"
   | "done"
   | "ongoing"
   | "pending"
   | "cancelled"
-  | "qc-failed";
+  | "qc-failed"
+  | "paused";
 
 export type WipTaskGrouped = WipPlanProduct & {
   product_data: (WipPlanProduct & {

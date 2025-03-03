@@ -3,31 +3,128 @@ import { ButtonApp } from '@/components/app/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogDescription, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import { formatReadableDate, getIconByTaskStatus } from '@/lib/utils';
 import { useWipStore } from '@/stores/wipStore';
-import type { WipTask } from '@/types/wip';
-import { AlertCircle, CheckCircle, LoaderCircle, X, XCircle } from 'lucide-vue-next';
+import type { PlanBatch } from '@/types/planning';
+import type { TaskStatus, WipBatch, WipTask } from '@/types/wip';
+import { AlertCircle, CheckCircle, Flag, LoaderCircle, Pause, Play, Square, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { onUpdated, ref } from 'vue';
+import { inject, onUpdated, ref, watch, watchEffect } from 'vue';
+import { toast } from 'vue-sonner';
 
 const dialog = defineModel({ default: false })
 
 const props = defineProps<{
-    task: WipTask
+    batch: WipBatch,
+    taskId: string
 }>()
 const wipStore = useWipStore()
 const { loading } = storeToRefs(wipStore)
-const detailedTask = ref<WipTask>()
 
+const { canFinish, canPause, canStart, handleFinishTask, handlePauseTask, handleStartTask, wipLoading } = useTaskControl()
+const task = ref<WipTask>()
+const madeChanges = ref(false) //this will determine if batchTask should re-fetch or not 
+const fetchBatchTasks = inject(batchWipSuccessKey);
 
-onUpdated(async () => {
-    //only fetch when dialog is opened and do not refetch when task is already fetched.   
-    if (dialog.value && detailedTask.value?.task_plan_id !== props.task.task_plan_id)
-        detailedTask.value = await wipStore.getWipTask(props.task.task_plan_id)
+watch(() => props.taskId, async (newValue, oldValue) => {
+    madeChanges.value = false
+    await fetchTask()
 })
 
+//refetch the batch tasks if there's any changes that've made
+onUpdated(async () => {
+    if (fetchBatchTasks && madeChanges.value)
+        fetchBatchTasks(props.batch)
+})
+
+function useTaskControl() {
+
+    const wipStore = useWipStore()
+    const { errors, loading: wipLoading } = storeToRefs(wipStore)
+
+    function canStart(status: TaskStatus) {
+        return status === 'pending' || status === 'paused'
+    }
+
+    function canPause(status: TaskStatus) {
+        return status === 'ongoing'
+    }
+
+    function canFinish(status: TaskStatus) {
+        return status === 'ongoing' || status === 'pending'
+    }
+
+    async function handleStartTask(task: WipTask) {
+
+        if (!canStart(task.status)) return;
+
+        await wipStore.changeTaskStatus(task.id, { status: 'start' })
+
+        if (!errors.value) {
+            madeChanges.value = true;
+            await fetchTask()
+            toast.info('Task info', {
+                description: 'Task successfully started'
+            })
+
+        } else toast.error('Task info', {
+            description: 'Something went wrong while starting the task'
+        })
+
+    }
+    async function handlePauseTask(task: WipTask) {
+        if (!canPause(task.status)) return;
+
+        await wipStore.changeTaskStatus(task.id, { status: 'pause' })
+
+        if (!errors.value) {
+            madeChanges.value = true;
+            await fetchTask()
+
+            toast.info('Task info', {
+                description: 'Task successfully paused'
+            })
+
+        } else toast.error('Task info', {
+            description: 'Something went wrong while pausing the task'
+        })
+
+    }
+    async function handleFinishTask(task: WipTask) {
+        if (!canFinish(task.status)) return;
+
+        await wipStore.changeTaskStatus(task.id, { status: 'done' })
+
+        if (!errors.value) {
+            madeChanges.value = true;
+            await fetchTask()
+
+            toast.info('Task info', {
+                description: 'Task finished.'
+            })
+        } else toast.error('Task info', {
+            description: 'Something went wrong while finishing the task'
+        })
+
+    }
+
+    return {
+        canStart,
+        canPause,
+        canFinish,
+        handleStartTask,
+        handleFinishTask,
+        handlePauseTask,
+        wipLoading
+    }
+}
+
+async function fetchTask() {
+    task.value = await wipStore.getWipTask(props.taskId)
+}
 /* INITIALIZE */
-detailedTask.value = await wipStore.getWipTask(props.task.task_plan_id)
+task.value = await wipStore.getWipTask(props.taskId)
 
 </script>
 <template>
@@ -38,34 +135,32 @@ detailedTask.value = await wipStore.getWipTask(props.task.task_plan_id)
                 <DialogDescription>View detailed information about this task including assigned workers and status.
                 </DialogDescription>
             </DialogHeader>
-            <div
-                class="shadow-sm flex flex-wrap flex-col max-h-[12rem] border rounded-md p-4 [&>*:nth-child(even)]:mb-2 [&>*:nth-child(even)]:font-medium [&>*:nth-child(odd)]:text-muted-foreground">
+            <div v-if="task"
+                class="shadow-sm flex flex-wrap flex-col md:max-h-[12rem] border rounded-md p-4 [&>*:nth-child(even)]:mb-2 [&>*:nth-child(even)]:font-medium [&>*:nth-child(odd)]:text-muted-foreground">
                 <span>UUID:</span> <span class="uppercase">{{ task.task_plan_id }}</span>
 
                 <span>Product SKU:</span> <span>{{ task.sku }}</span>
 
-                <span>Startable:</span>
+                <span>Ready to start:</span>
                 <span class="flex gap-2 items-center">
                     <component :is="task.is_startable ? CheckCircle : XCircle" class="size-4" /> {{ task.is_startable ?
                         'Yes' : 'Not yet' }}
                 </span>
 
-                <span>Can be start at:</span> <span>{{ formatReadableDate(task.can_accessed_at) }}</span>
+                <span>Planned start date:</span> <span>{{ formatReadableDate(task.can_accessed_at) }}</span>
 
                 <span>Status:</span>
                 <Badge class="w-fit gap-1 capitalize">
                     <component :is="getIconByTaskStatus(task.status)" class="size-4" /> {{ task.status }}
                 </Badge>
 
-                <span>Current department:</span> <span>{{ task.workcenter.name }}</span>
-
                 <span>Required manpower:</span> <span>{{ task.manpower }}</span>
             </div>
             <div class="border rounded-md shadow-sm p-4">
                 <p class="font-medium mb-2">Workers assigned:</p>
 
-                <ul v-if="detailedTask && detailedTask.workers && !loading" class="flex gap-2 flex-wrap">
-                    <li v-for="worker in detailedTask?.workers" :key="worker.id">
+                <ul v-if="task && task.workers && task.workers.length && !loading" class="flex gap-2 flex-wrap">
+                    <li v-for="worker in task.workers" :key="worker.id">
                         <ButtonApp size="sm" as="div" variant="secondary">
                             <span> {{ worker.worker_number }} - {{ worker.full_name }}</span>
                             <Separator orientation="vertical" />
@@ -82,6 +177,21 @@ detailedTask.value = await wipStore.getWipTask(props.task.task_plan_id)
                     <AlertCircle class="size-4" /> Theres no workers assigned to this task
                 </div>
 
+            </div>
+
+            <div class="border rounded-md shadow-sm p-4">
+                <p class="font-medium mb-2 ">Controls:</p>
+                <div class="flex items-center gap-2 justify-center flex-wrap" v-if="task">
+                    <ButtonApp :prepend-icon="Play" :disabled="!canStart(task.status) || wipLoading"
+                        @click="handleStartTask(task)" :loading="wipLoading">
+                        Start</ButtonApp>
+                    <ButtonApp :prepend-icon="Pause" :disabled="!canPause(task.status) || wipLoading"
+                        @click="handlePauseTask(task)" :loading="wipLoading">
+                        Pause</ButtonApp>
+                    <ButtonApp :prepend-icon="Flag" :disabled="!canFinish(task.status) || wipLoading"
+                        @click="handleFinishTask(task)" :loading="wipLoading">
+                        Finish</ButtonApp>
+                </div>
             </div>
         </DialogScrollContent>
     </Dialog>
