@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import {
+  Building,
   Ellipsis,
 } from "lucide-vue-next";
 
@@ -17,7 +18,7 @@ import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
 import WipTaskDropdown from "./components/WipTaskDropdown.vue";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { provide, ref } from "vue";
+import { onBeforeUnmount, provide, ref } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
@@ -147,6 +148,7 @@ function useWorker() {
 }
 
 function useWipShow() {
+
   const showWipDialog = ref(false)
 
   function handleShowWipDialog(task: WipTask, batch: WipBatch) {
@@ -171,6 +173,12 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
 
+/* CLEANUP */
+// clear the wip task grouped when this component unmounted
+onBeforeUnmount(() => {
+  useWipStore().paginatedResponse = undefined
+})
+
 </script>
 <template>
   <div class="container space-y-6">
@@ -187,7 +195,7 @@ provide(batchWipSuccessKey, fetchBatchWip)
     </section>
 
     <section>
-      <div class="space-y-10">
+      <div class="space-y-10" v-if="wipTasksGrouped">
         <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.sku"
           class="rounded-md border p-4 shadow-sm space-y-4">
           <div v-for="product in parentProduct.product_data" :key="product.sku" class="space-y-4">
@@ -268,16 +276,21 @@ provide(batchWipSuccessKey, fetchBatchWip)
           </div>
         </div>
       </div>
-
-      <!-- DIALOGS -->
-      <WorkerAssignDialog v-model:selected-task-ids="selectedTaskIds" v-model="openAssignWorkerDialog"
-        v-if="assigningBatch" :batch="assigningBatch">
-      </WorkerAssignDialog>
-
-      <WipTaskShowDialog v-if="selectedTaskIds && assigningBatch" v-model="showWipDialog" :batch="assigningBatch.batch"
-        :task-id="selectedTaskIds[0]">
-      </WipTaskShowDialog>
+      <div v-else class="border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
+        <Building  class="mx-auto"/>
+        <h2 class="text-2xl font-bold tracking-tight">No department selected</h2>
+        <p class="text-sm text-muted-foreground">click on the toolbar and select a department to start.</p>
+      </div>
     </section>
+
+    <!-- DIALOGS -->
+    <WorkerAssignDialog v-model:selected-task-ids="selectedTaskIds" v-model="openAssignWorkerDialog"
+      v-if="assigningBatch" :batch="assigningBatch">
+    </WorkerAssignDialog>
+
+    <WipTaskShowDialog v-if="selectedTaskIds && assigningBatch" v-model="showWipDialog" :batch="assigningBatch.batch"
+      :task-id="selectedTaskIds[0]">
+    </WipTaskShowDialog>
   </div>
 </template>
 

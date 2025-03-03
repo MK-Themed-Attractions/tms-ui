@@ -179,18 +179,24 @@ task.value = await wipStore.getWipTask(props.taskId)
 
             </div>
 
-            <div class="border rounded-md shadow-sm p-4">
-                <p class="font-medium mb-2 ">Controls:</p>
-                <div class="flex items-center gap-2 justify-center flex-wrap" v-if="task">
-                    <ButtonApp :prepend-icon="Play" :disabled="!canStart(task.status) || wipLoading"
-                        @click="handleStartTask(task)" :loading="wipLoading">
-                        Start</ButtonApp>
-                    <ButtonApp :prepend-icon="Pause" :disabled="!canPause(task.status) || wipLoading"
-                        @click="handlePauseTask(task)" :loading="wipLoading">
-                        Pause</ButtonApp>
-                    <ButtonApp :prepend-icon="Flag" :disabled="!canFinish(task.status) || wipLoading"
-                        @click="handleFinishTask(task)" :loading="wipLoading">
-                        Finish</ButtonApp>
+            <div class="border rounded-md shadow-sm p-4" v-if="task">
+                <div v-if="task.is_startable">
+                    <p class="font-medium mb-2 ">Controls:</p>
+                    <div class="flex items-center gap-2 justify-center flex-wrap">
+                        <ButtonApp :prepend-icon="Play" :disabled="!canStart(task.status) || wipLoading"
+                            @click="handleStartTask(task)" :loading="wipLoading">
+                            Start</ButtonApp>
+                        <ButtonApp :prepend-icon="Pause" :disabled="!canPause(task.status) || wipLoading"
+                            @click="handlePauseTask(task)" :loading="wipLoading">
+                            Pause</ButtonApp>
+                        <ButtonApp :prepend-icon="Flag" :disabled="!canFinish(task.status) || wipLoading"
+                            @click="handleFinishTask(task)" :loading="wipLoading">
+                            Finish</ButtonApp>
+                    </div>
+                </div>
+                <div v-else class="flex gap-2 items-center justify-center">
+                    <AlertCircle class="size-4 " />
+                    <p class="text-sm text-muted-foreground font-medium">You are not able to start this task yet.</p>
                 </div>
             </div>
         </DialogScrollContent>
