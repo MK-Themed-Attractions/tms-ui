@@ -6,12 +6,15 @@ import { Separator } from '@/components/ui/separator';
 import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import { formatReadableDate, getIconByTaskStatus } from '@/lib/utils';
 import { useWipStore } from '@/stores/wipStore';
-import type { PlanBatch } from '@/types/planning';
-import type { TaskStatus, WipBatch, WipTask } from '@/types/wip';
-import { AlertCircle, CheckCircle, Flag, LoaderCircle, Pause, Play, Square, X, XCircle } from 'lucide-vue-next';
+import type { WipBatch, WipTask } from '@/types/wip';
+import { AlertCircle, CheckCircle, Delete, Flag, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { inject, onUpdated, ref, watch, watchEffect } from 'vue';
+import { inject, ref, watch } from 'vue';
+import { useTaskControls } from '../../useTaskControls';
+import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
+import type { Worker } from '@/types/workers';
 import { toast } from 'vue-sonner';
+import WorkerAssignDialog from './WorkerAssignDialog.vue';
 
 const dialog = defineModel({ default: false })
 
@@ -20,104 +23,140 @@ const props = defineProps<{
     taskId: string
 }>()
 const wipStore = useWipStore()
-const { loading } = storeToRefs(wipStore)
+const { loading, errors: wipErrors } = storeToRefs(wipStore)
 
-const { canFinish, canPause, canStart, handleFinishTask, handlePauseTask, handleStartTask, wipLoading } = useTaskControl()
+const { canFinish, canPause, canStart, startTask, showWipToast, finishTask, pauseTask, canAssign } = useTaskControls()
+const { handleConfirmRemoveWorker,
+    showWorkerRemoveConfirmDialog,
+    handleRemoveWorker,
+    showWorkerAssignDialog,
+    handleShowAssignDialog,
+    handleRemoveWorkers,
+    handleWorkerAssignOnSuccess } = useWorker()
 const task = ref<WipTask>()
+const selectedTaskIds = ref<string[]>()
 const madeChanges = ref(false) //this will determine if batchTask should re-fetch or not 
 const fetchBatchTasks = inject(batchWipSuccessKey);
 
-watch(() => props.taskId, async (newValue, oldValue) => {
-    madeChanges.value = false
-    await fetchTask()
-})
 
-//refetch the batch tasks if there's any changes that've made
-onUpdated(async () => {
-    if (fetchBatchTasks && madeChanges.value)
+/* fetch the task when dialog is opened
+and when its when changes are made fetch the batch tasks
+to reflect the changes */
+watch(dialog, async () => {
+    if (dialog.value) {
+        await fetchTask()
+    } else if (fetchBatchTasks && madeChanges.value) {
         fetchBatchTasks(props.batch)
+        madeChanges.value = false
+    }
 })
 
-function useTaskControl() {
+function useWorker() {
+    const showWorkerRemoveConfirmDialog = ref(false)
+    const selectedWorker = ref<Worker>()
+    const showWorkerAssignDialog = ref(false)
 
-    const wipStore = useWipStore()
-    const { errors, loading: wipLoading } = storeToRefs(wipStore)
-
-    function canStart(status: TaskStatus) {
-        return status === 'pending' || status === 'paused'
+    function handleConfirmRemoveWorker(worker: Worker) {
+        showWorkerRemoveConfirmDialog.value = true
+        selectedWorker.value = worker;
     }
 
-    function canPause(status: TaskStatus) {
-        return status === 'ongoing'
+    function handleShowAssignDialog() {
+        selectedTaskIds.value = []
+        if (task.value)
+            selectedTaskIds.value = [task.value.id]
+        showWorkerAssignDialog.value = true
     }
 
-    function canFinish(status: TaskStatus) {
-        return status === 'ongoing' || status === 'pending'
-    }
+    async function handleRemoveWorker() {
 
-    async function handleStartTask(task: WipTask) {
+        if (!selectedWorker.value || !task.value) return
 
-        if (!canStart(task.status)) return;
+        showWorkerRemoveConfirmDialog.value = false;
 
-        await wipStore.changeTaskStatus(task.id, { status: 'start' })
+        await wipStore.unassignWorkersFromTasks({
+            tasks: [task.value.id],
+            workers: [selectedWorker.value.id]
+        })
+        await fetchTask()
 
-        if (!errors.value) {
+
+        if (!wipErrors.value) {
             madeChanges.value = true;
-            await fetchTask()
             toast.info('Task info', {
-                description: 'Task successfully started'
+                description: 'Worker successfully removed fromt the task.'
+            })
+        }
+        else {
+            toast.error('Task info', {
+                description: 'Something went wrong while removing worker from task.'
             })
 
-        } else toast.error('Task info', {
-            description: 'Something went wrong while starting the task'
+        }
+    }
+    async function handleRemoveWorkers() {
+        if (!task.value || !task.value.workers) return;
+
+        showWorkerRemoveConfirmDialog.value = false
+
+        const taskWorkerIds = task.value?.workers.reduce<string[]>((acc, worker) => {
+            acc.push(worker.id)
+            return acc;
+        }, [])
+
+        await wipStore.unassignWorkersFromTasks({
+            workers: taskWorkerIds,
+            tasks: [task.value.id]
         })
 
-    }
-    async function handlePauseTask(task: WipTask) {
-        if (!canPause(task.status)) return;
-
-        await wipStore.changeTaskStatus(task.id, { status: 'pause' })
-
-        if (!errors.value) {
+        if (!wipErrors.value) {
             madeChanges.value = true;
             await fetchTask()
-
-            toast.info('Task info', {
-                description: 'Task successfully paused'
+            toast.info('Task Info', {
+                description: 'All workers for this task has been removed.'
             })
-
-        } else toast.error('Task info', {
-            description: 'Something went wrong while pausing the task'
-        })
-
+        } else {
+            toast.error('Task Info', {
+                description: 'Something went wrong while removing all of the workers.'
+            })
+        }
     }
-    async function handleFinishTask(task: WipTask) {
-        if (!canFinish(task.status)) return;
 
-        await wipStore.changeTaskStatus(task.id, { status: 'done' })
-
-        if (!errors.value) {
-            madeChanges.value = true;
-            await fetchTask()
-
-            toast.info('Task info', {
-                description: 'Task finished.'
-            })
-        } else toast.error('Task info', {
-            description: 'Something went wrong while finishing the task'
-        })
-
+    async function handleWorkerAssignOnSuccess() {
+        await fetchTask()
+        madeChanges.value = true
     }
 
     return {
-        canStart,
-        canPause,
-        canFinish,
-        handleStartTask,
-        handleFinishTask,
-        handlePauseTask,
-        wipLoading
+        handleRemoveWorker,
+        handleConfirmRemoveWorker,
+        showWorkerRemoveConfirmDialog,
+        showWorkerAssignDialog,
+        handleShowAssignDialog,
+        handleRemoveWorkers,
+        handleWorkerAssignOnSuccess
     }
+}
+async function handleStartTask(task: WipTask) {
+    const status = await startTask(task)
+    await fetchTask()
+    showWipToast(status)
+    madeChanges.value = true;
+}
+
+async function handlePauseTask(task: WipTask) {
+    const status = await pauseTask(task)
+    await fetchTask()
+    showWipToast(status)
+    madeChanges.value = true;
+}
+
+async function handleFinishTask(task: WipTask) {
+    const status = await finishTask(task)
+    await fetchTask()
+    showWipToast(status)
+
+    madeChanges.value = true;
 }
 
 async function fetchTask() {
@@ -157,16 +196,37 @@ task.value = await wipStore.getWipTask(props.taskId)
                 <span>Required manpower:</span> <span>{{ task.manpower }}</span>
             </div>
             <div class="border rounded-md shadow-sm p-4">
-                <p class="font-medium mb-2">Workers assigned:</p>
+                <div class="flex items-center justify-between gap-2  mb-2">
+                    <p class="font-medium">Workers assigned:</p>
+                    <div class="flex gap-2" v-if="task && canAssign(task.status)">
+                        <ButtonApp size="icon" class="size-6" variant="outline" @click="handleShowAssignDialog">
+                            <Plus />
+                        </ButtonApp>
+                        <ConfirmationDialog title="Remove all workers" @yes="handleRemoveWorkers"
+                            description="Removing all workers will result in none of their points being recorded.">
+                            <template #activator>
+                                <ButtonApp size="icon" class="size-6" variant="outline">
+                                    <Trash />
+                                </ButtonApp>
+                            </template>
+
+                            <div> Are you sure you want to remove all of the workers?</div>
+                        </ConfirmationDialog>
+                    </div>
+                </div>
 
                 <ul v-if="task && task.workers && task.workers.length && !loading" class="flex gap-2 flex-wrap">
                     <li v-for="worker in task.workers" :key="worker.id">
                         <ButtonApp size="sm" as="div" variant="secondary">
                             <span> {{ worker.worker_number }} - {{ worker.full_name }}</span>
-                            <Separator orientation="vertical" />
-                            <ButtonApp variant="icon" size="xs" class="size-4">
-                                <X />
-                            </ButtonApp>
+
+                            <template v-if="canAssign(task.status)">
+                                <Separator orientation="vertical" />
+                                <ButtonApp variant="icon" size="xs" class="size-4"
+                                    @click="handleConfirmRemoveWorker(worker)">
+                                    <X />
+                                </ButtonApp>
+                            </template>
                         </ButtonApp>
                     </li>
                 </ul>
@@ -183,14 +243,14 @@ task.value = await wipStore.getWipTask(props.taskId)
                 <div v-if="task.is_startable">
                     <p class="font-medium mb-2 ">Controls:</p>
                     <div class="flex items-center gap-2 justify-center flex-wrap">
-                        <ButtonApp :prepend-icon="Play" :disabled="!canStart(task.status) || wipLoading"
-                            @click="handleStartTask(task)" :loading="wipLoading">
+                        <ButtonApp :prepend-icon="Play" :disabled="!canStart(task.status) || loading"
+                            @click="handleStartTask(task)" :loading="loading">
                             Start</ButtonApp>
-                        <ButtonApp :prepend-icon="Pause" :disabled="!canPause(task.status) || wipLoading"
-                            @click="handlePauseTask(task)" :loading="wipLoading">
+                        <ButtonApp :prepend-icon="Pause" :disabled="!canPause(task.status) || loading"
+                            @click="handlePauseTask(task)" :loading="loading">
                             Pause</ButtonApp>
-                        <ButtonApp :prepend-icon="Flag" :disabled="!canFinish(task.status) || wipLoading"
-                            @click="handleFinishTask(task)" :loading="wipLoading">
+                        <ButtonApp :prepend-icon="Flag" :disabled="!canFinish(task.status) || loading"
+                            @click="handleFinishTask(task)" :loading="loading">
                             Finish</ButtonApp>
                     </div>
                 </div>
@@ -200,6 +260,15 @@ task.value = await wipStore.getWipTask(props.taskId)
                 </div>
             </div>
         </DialogScrollContent>
+
+        <ConfirmationDialog v-model="showWorkerRemoveConfirmDialog" @yes="handleRemoveWorker" title="Remove worker"
+            description="Removing this worker will result in their points not being recorded.">
+            Are you sure you want to remove this worker?
+        </ConfirmationDialog>
+
+        <WorkerAssignDialog v-if="task" v-model="showWorkerAssignDialog" v-model:selected-task-ids="selectedTaskIds"
+            @success="handleWorkerAssignOnSuccess" :batch="{ batch, taskIds: [task.id] }">
+        </WorkerAssignDialog>
     </Dialog>
 </template>
 

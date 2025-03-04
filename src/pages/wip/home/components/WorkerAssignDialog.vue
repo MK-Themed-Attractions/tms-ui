@@ -18,6 +18,9 @@ const props = defineProps<{
         taskIds: string[]
     }
 }>()
+const emits = defineEmits<{
+    (e: 'success'): void;
+}>()
 
 const fetchBatchWip = inject(batchWipSuccessKey);
 const dialog = defineModel({ default: false })
@@ -47,13 +50,14 @@ function handleTaskSelect(taskId: string) {
 
 async function assignWorkers() {
     await wipStore.assignWorkersToTasks({ tasks: selectedTaskIds.value, workers: selectedWorkerIds.value })
-    if (fetchBatchWip) await fetchBatchWip(props.batch.batch)
-    
+
     if (!wipErrors.value) {
+        emits('success');
         toast.info('Task assignment', {
             description: 'Task successfully assigned.'
         })
 
+        if (fetchBatchWip) await fetchBatchWip(props.batch.batch)
         dialog.value = false;
     } else {
         toast.error('Task Error', {

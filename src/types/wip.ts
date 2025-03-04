@@ -23,6 +23,11 @@ export interface WipTask {
   status: TaskStatus;
   workcenter: ProductRoutingWorkcenter;
   workers?: Worker[];
+  task_workers?: {
+    id: string;
+    task_id: string;
+    worker_ids: string[];
+  };
 }
 
 export type TaskStatus =

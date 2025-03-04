@@ -18,7 +18,7 @@ export const useWipStore = defineStore("wips", () => {
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, put, patch } = useAxios({
+  const { get, errors, loading, setHeader, post, patch } = useAxios({
     baseURL: baseUrl,
   });
 
@@ -88,6 +88,22 @@ export const useWipStore = defineStore("wips", () => {
     const res = await post("/api/tasks/mass-assign-workers", payload);
   }
 
+  async function unassignWorkersFromTasks(payload: {
+    workers: string[];
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post("/api/tasks/mass-un-assign-workers", payload, {
+      params: {
+        _method: "DELETE",
+      },
+    });
+  }
+
   /**
    * Get fully detailed task
    * @param planTaskId - task id on Plan microservice
@@ -113,7 +129,7 @@ export const useWipStore = defineStore("wips", () => {
    */
   async function changeTaskStatus(
     taskId: string,
-    payload: { status: TaskStatus | "start" | "pause"},
+    payload: { status: TaskStatus | "start" | "pause" },
   ) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -121,6 +137,21 @@ export const useWipStore = defineStore("wips", () => {
     );
 
     await patch(`/api/tasks/change-status/${taskId}`, payload);
+  }
+  /**
+   * Change the status of the WIP task
+   * @param taskId WIP task id
+   */
+  async function changeTaskStatusArray(payload: {
+    status: TaskStatus | "start" | "pause";
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch("/api/tasks/mass-change-status", payload);
   }
 
   return {
@@ -132,7 +163,9 @@ export const useWipStore = defineStore("wips", () => {
     getTasksByBatchId,
     getWipTask,
     assignWorkersToTasks,
+    unassignWorkersFromTasks,
     wipTasksGrouped,
     changeTaskStatus,
+    changeTaskStatusArray,
   };
 });
