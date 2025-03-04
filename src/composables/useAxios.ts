@@ -102,6 +102,24 @@ export const useAxios = (config: CreateAxiosDefaults) => {
       loading.value = false;
     }
   }
+  async function patch<T, U>(
+    url: string,
+    payload?: T,
+    config?: AxiosRequestConfig,
+  ) {
+    try {
+      loading.value = true;
+      const res = await axios.patch(url, payload, config);
+
+      errors.value = null;
+
+      return res.data as U;
+    } catch (err) {
+      errors.value = err as AxiosResponseError;
+    } finally {
+      loading.value = false;
+    }
+  }
   async function destroy<T>(url: string, config?: AxiosRequestConfig) {
     try {
       loading.value = true;
@@ -125,5 +143,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     put,
     setHeader,
     destroy,
+    patch,
   };
 };

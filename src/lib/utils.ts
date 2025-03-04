@@ -1,12 +1,17 @@
 import type { PlanStatusCode } from "@/types/planning";
+import type { TaskStatus } from "@/types/wip";
 import { type ClassValue, clsx } from "clsx";
 import {
   AlertCircle,
   Archive,
   Clock,
   Flag,
+  HelpCircle,
+  Pause,
   RefreshCcw,
   Slash,
+  ThumbsDown,
+  XCircle,
 } from "lucide-vue-next";
 import { twMerge } from "tailwind-merge";
 
@@ -79,7 +84,6 @@ export function toOrdinal(n: number) {
  * @param status plan status code
  * @returns Icon component
  */
-
 export function getIconByPlanStatus(status: PlanStatusCode) {
   switch (status) {
     case "pending":
@@ -94,5 +98,29 @@ export function getIconByPlanStatus(status: PlanStatusCode) {
       return Slash;
     case "undefined":
       return AlertCircle;
+  }
+}
+
+/**
+ * Get icon component based on Wip task status
+ * @param status WIP task status code
+ * @returns Icon component
+ */
+export function getIconByTaskStatus(status: TaskStatus) {
+  switch (status) {
+    case "unassigned":
+      return HelpCircle;
+    case "cancelled":
+      return Slash;
+    case "done":
+      return Flag;
+    case "ongoing":
+      return RefreshCcw;
+    case "pending":
+      return Clock;
+    case "qc-failed":
+      return ThumbsDown;
+    case "paused":
+      return Pause;
   }
 }

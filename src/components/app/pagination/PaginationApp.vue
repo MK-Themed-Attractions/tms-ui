@@ -14,13 +14,14 @@ const props = withDefaults(
   {
     pageName: "page",
     perPageName: "per-page",
+    defaultPerPage: 30
   },
 );
 const emits = defineEmits<{
   (e: "change:query", query: Partial<PaginationQuery>): void;
 }>();
 
-const perPage = useRouteQuery(props.perPageName, "30");
+const perPage = useRouteQuery(props.perPageName, props.defaultPerPage.toString());
 const page = useRouteQuery(props.pageName, 1, { transform: Number });
 
 /* watch for route query 
@@ -41,16 +42,10 @@ watch(page, (newValue) => {
 </script>
 <template>
   <div class="flex justify-end gap-6">
-    <PaginationPerPageApp
-      v-model="perPage"
-      class="flex items-center gap-2"
-    ></PaginationPerPageApp>
-    <PaginationButtonsApp
-      v-model="page"
-      class="flex items-center gap-2"
-      :disable-prev="$attrs['disable-prev'] as boolean"
-      :disable-next="$attrs['disable-next'] as boolean"
-    ></PaginationButtonsApp>
+    <PaginationPerPageApp v-model="perPage" class="flex items-center gap-2"></PaginationPerPageApp>
+    <PaginationButtonsApp v-model="page" class="flex items-center gap-2" :loading="$attrs['loading'] as boolean"
+      :disable-prev="$attrs['disable-prev'] as boolean" :disable-next="$attrs['disable-next'] as boolean">
+    </PaginationButtonsApp>
   </div>
 </template>
 

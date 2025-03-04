@@ -99,22 +99,24 @@ watch(selectedDepartmentId, (newValue) => {
         </div>
       </div>
 
-      <div class="flex border w-fit rounded-md overflow-hidden">
-        <ButtonApp size="sm" variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted">
-          Unassigned
-        </ButtonApp>
-        <ButtonApp size="sm" variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted">
-          Pending
-        </ButtonApp>
-        <ButtonApp size="sm" variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted">
-          Ongoing
-        </ButtonApp>
-        <ButtonApp size="sm" variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted">
-          QC failed
-        </ButtonApp>
+      <div class="basis-full">
+        <div class="flex border rounded-md w-fit">
+          <ButtonApp variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted text-xs">
+            Unassigned
+          </ButtonApp>
+          <ButtonApp variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted text-xs">
+            Pending
+          </ButtonApp>
+          <ButtonApp variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted text-xs">
+            Ongoing
+          </ButtonApp>
+          <ButtonApp variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted text-xs">
+            QC failed
+          </ButtonApp>
+        </div>
+
       </div>
 
-      <div></div>
     </div>
   </div>
 </template>

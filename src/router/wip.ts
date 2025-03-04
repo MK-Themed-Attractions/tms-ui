@@ -7,7 +7,7 @@ export const wip: RouteRecordRaw[] = [
     component: () => import("@/pages/wip/Index.vue"),
     children: [
       {
-        path: "/",
+        path: "",
         name: "wipIndex",
         component: () => import("@/pages/wip/home/Index.vue"),
       },

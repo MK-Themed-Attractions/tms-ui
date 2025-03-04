@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { DialogProps } from ".";
-import DialogContent from "@/components/ui/dialog/DialogContent.vue";
 import ButtonApp from "../button/ButtonApp.vue";
 
 const props = withDefaults(defineProps<Partial<DialogProps>>(), {
@@ -22,9 +21,11 @@ const emits = defineEmits<{
   (e: "yes"): void;
   (e: "no"): void;
 }>();
+
+const dialog = defineModel({ default: false })
 </script>
 <template>
-  <Dialog>
+  <Dialog v-model:open="dialog">
     <DialogTrigger>
       <slot name="activator" />
     </DialogTrigger>
@@ -46,9 +47,11 @@ const emits = defineEmits<{
         <slot> Are you sure? </slot>
 
         <div class="mt-6 flex gap-2">
-          <ButtonApp variant="secondary" @click="$emit('yes')">
-            {{ yesMessage }}
-          </ButtonApp>
+          <DialogClose>
+            <ButtonApp variant="secondary" @click="$emit('yes')">
+              {{ yesMessage }}
+            </ButtonApp>
+          </DialogClose>
           <DialogClose>
             <ButtonApp @click="$emit('no')">{{ noMessage }} </ButtonApp>
           </DialogClose>

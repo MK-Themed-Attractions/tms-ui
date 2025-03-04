@@ -4,7 +4,13 @@ import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import { computed, ref } from "vue";
-import type { WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
+import type {
+  WipTask,
+  WipTaskGrouped,
+  WipPlanQueryParams,
+  WipTaskQueryParams,
+  TaskStatus,
+} from "@/types/wip";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = import.meta.env.VITE_COMMON_URL;
@@ -12,81 +18,140 @@ export const useWipStore = defineStore("wips", () => {
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, put } = useAxios({
+  const { get, errors, loading, setHeader, post, patch } = useAxios({
     baseURL: baseUrl,
   });
 
-  const paginatedResponse = ref<SimplePaginate<WipTask>>();
+  const paginatedResponse = ref<SimplePaginate<WipTaskGrouped>>();
 
   const authStore = useAuthStore();
   setHeader("Bearer-Token", bearerToken);
 
   /* GETTERS */
-  const wipTasks = computed(() => paginatedResponse.value?.data);
-
-  /* grouped wiptask according to their parent_sku > sku > plan > batch */
-  const wipTasksGrouped = computed(() => {
-    /* return when wipTasks is empty */
-    if (!wipTasks?.value) return;
-
-    let grouped: WipTaskGrouped = {};
-
-    /* group by parent_sku > sku > plan_id > batch_id */
-    grouped = wipTasks.value.reduce<WipTaskGrouped>((acc, task) => {
-      const { parent_code, sku, plan_id, batch_id } = task;
-
-      /* initilize an empty object on each grouped key */
-      if (!acc[parent_code]) acc[parent_code] = {};
-      if (!acc[parent_code][sku]) acc[parent_code][sku] = {};
-      if (!acc[parent_code][sku][plan_id]) acc[parent_code][sku][plan_id] = {};
-      if (!acc[parent_code][sku][plan_id][batch_id])
-        acc[parent_code][sku][plan_id][batch_id] = {
-          batchIndex: task.batch_index,
-          tasks: [],
-        }; //this is array since we will be pushing WipTasks here
-
-      /* push each task to their corresponding groups */
-      acc[parent_code][sku][plan_id][batch_id].tasks.push(task);
-
-      return acc;
-    }, {});
-
-    /* sort by task_index*/
-    Object.values(grouped).forEach((skuGroup) => {
-      Object.values(skuGroup).forEach((planGroup) => {
-        Object.values(planGroup).forEach((batchGroup) => {
-          Object.values(batchGroup).forEach((batch) => {
-            batch.tasks.sort((a, b) => a.task_index - b.task_index);
-          });
-        });
-      });
-    });
-
-    return grouped;
-  });
+  const wipTasksGrouped = computed(() => paginatedResponse.value?.data);
 
   /* ACTIONS */
   function invalidate() {
     bearerToken.value = null;
   }
 
-  async function getTasksByWorkCenters(params?: Partial<WipTaskQueryParams>) {
+  async function getWipPlansByWorkCenters(
+    params?: Partial<WipPlanQueryParams>,
+  ) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
     );
 
-    const res = await get<{ data: SimplePaginate<WipTask> }>(
-      "/api/tasks/get-task/bulk-parent-code",
+    const res = await get<SimplePaginate<WipTaskGrouped>>(
+      "/api/tasks/get-ongoing-plans",
       {
         params,
       },
     );
 
     if (res) {
-      paginatedResponse.value = res.data;
+      paginatedResponse.value = res;
       return res.data;
     }
+  }
+  async function getTasksByBatchId(
+    batchId: string,
+    params?: Partial<WipTaskQueryParams>,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: WipTask[] }>(
+      `api/tasks/get-batch-tasks/${batchId}`,
+      {
+        params,
+      },
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  async function assignWorkersToTasks(payload: {
+    workers: string[];
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post("/api/tasks/mass-assign-workers", payload);
+  }
+
+  async function unassignWorkersFromTasks(payload: {
+    workers: string[];
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post("/api/tasks/mass-un-assign-workers", payload, {
+      params: {
+        _method: "DELETE",
+      },
+    });
+  }
+
+  /**
+   * Get fully detailed task
+   * @param planTaskId - task id on Plan microservice
+   */
+  async function getWipTask(planTaskId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: WipTask }>(
+      `/api/tasks/get-task-details-by-plan-task/${planTaskId}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  /**
+   * Change the status of the WIP task
+   * @param taskId WIP task id
+   */
+  async function changeTaskStatus(
+    taskId: string,
+    payload: { status: TaskStatus | "start" | "pause" },
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch(`/api/tasks/change-status/${taskId}`, payload);
+  }
+  /**
+   * Change the status of the WIP task
+   * @param taskId WIP task id
+   */
+  async function changeTaskStatusArray(payload: {
+    status: TaskStatus | "start" | "pause";
+    tasks: string[];
+  }) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch("/api/tasks/mass-change-status", payload);
   }
 
   return {
@@ -94,8 +159,13 @@ export const useWipStore = defineStore("wips", () => {
     errors,
     loading,
     paginatedResponse,
-    getTasksByWorkCenters,
-    wipTasks,
+    getWipPlansByWorkCenters,
+    getTasksByBatchId,
+    getWipTask,
+    assignWorkersToTasks,
+    unassignWorkersFromTasks,
     wipTasksGrouped,
+    changeTaskStatus,
+    changeTaskStatusArray,
   };
 });
