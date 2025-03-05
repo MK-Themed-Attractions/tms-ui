@@ -35,11 +35,7 @@ function useUpdate() {
 </script>
 <template>
   <div class="rounded-lg border shadow-sm">
-    <DataTable
-      v-if="departments"
-      :items="departments"
-      :columns="displayColumns"
-    >
+    <DataTable v-if="departments" :items="departments" :columns="displayColumns">
       <template #item.code="{ item }">
         <TableCell>
           <span class="rounded-md border px-2 text-xs font-medium uppercase">
@@ -49,10 +45,7 @@ function useUpdate() {
       </template>
       <template #item.work_centers="{ item }">
         <TableCell class="flex gap-1">
-          <span
-            class="rounded-md border px-2 text-xs font-medium uppercase"
-            v-for="wc in item.work_centers"
-          >
+          <span class="rounded-md border px-2 text-xs font-medium uppercase" v-for="wc in item.work_centers">
             {{ wc }}
           </span>
         </TableCell>
@@ -60,10 +53,7 @@ function useUpdate() {
 
       <template #item.actions="{ item }">
         <TableCell>
-          <DepartmentDataTableAction
-            :worker-department="item"
-            @update="handleWorkerDepartmentUpdate"
-          >
+          <DepartmentDataTableAction :worker-department="item" @update="handleWorkerDepartmentUpdate">
             <ButtonApp size="icon" variant="ghost" class="h-6 w-6">
               <Ellipsis class="stroke-muted-foreground" />
             </ButtonApp>
@@ -79,10 +69,7 @@ function useUpdate() {
 
     <Teleport to="#overlay">
       <!-- Department Update -->
-      <DepartmentDialog
-        v-model="updateDialog"
-        :worker-department="updateValues"
-      >
+      <DepartmentDialog v-model="updateDialog" :worker-department="updateValues">
         <template #header.title>
           <DialogTitle> Update department </DialogTitle>
         </template>

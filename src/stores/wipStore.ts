@@ -11,6 +11,7 @@ import type {
   WipTaskQueryParams,
   TaskStatus,
 } from "@/types/wip";
+import type { DepartmentKPIPayload } from "@/types/qc";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = import.meta.env.VITE_COMMON_URL;
@@ -154,6 +155,18 @@ export const useWipStore = defineStore("wips", () => {
     await patch("/api/tasks/mass-change-status", payload);
   }
 
+  async function changeTaskQCStatus(
+    taskId: string,
+    payload: DepartmentKPIPayload,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch(`/api/tasks/qc-change-status/${taskId}`, payload);
+  }
+
   return {
     invalidate,
     errors,
@@ -167,5 +180,6 @@ export const useWipStore = defineStore("wips", () => {
     wipTasksGrouped,
     changeTaskStatus,
     changeTaskStatusArray,
+    changeTaskQCStatus,
   };
 });

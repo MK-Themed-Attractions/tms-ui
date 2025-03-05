@@ -18,6 +18,7 @@ import { useWorkerDepartmentStore } from "./workerDepartmentStore";
 import { useWorkerStore } from "./workerStore";
 import { usePlanStore } from "./planStore";
 import { useWipStore } from "./wipStore";
+import { useQcStore } from "./qcStore";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = useStorage<User>("user", null, undefined, {
@@ -116,6 +117,7 @@ export const useAuthStore = defineStore("auth", () => {
     useWorkerStore().invalidate();
     usePlanStore().invalidate();
     useWipStore().invalidate();
+    useQcStore().invalidate();
   }
 
   return {
