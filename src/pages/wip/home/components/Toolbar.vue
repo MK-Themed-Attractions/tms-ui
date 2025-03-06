@@ -21,19 +21,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import {
-  AlarmClock,
   Building,
   ChevronDown,
   CircleHelp,
   Clock,
   LoaderCircle,
-  PlayCircle,
   RefreshCcw,
   Search,
   XCircle,
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
-import { watch, watchEffect } from "vue";
+import { watch } from "vue";
 
 const props = defineProps<{
   loading?: boolean;

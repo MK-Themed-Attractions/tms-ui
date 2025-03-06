@@ -4,38 +4,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatReadableDate } from '@/lib/utils';
 import type { WipTask } from '@/types/wip';
 import type { QCTaskVerdict } from '../data';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ButtonApp } from '@/components/app/button';
-import { ThumbsUp } from 'lucide-vue-next';
+
 import type { DepartmentKPI, DepartmentKPIForm, DepartmentKPIPayload } from '@/types/qc';
-import { Separator } from '@/components/ui/separator';
 import { ref, watchEffect } from 'vue';
-import { Textarea } from '@/components/ui/textarea';
-import Label from '@/components/ui/label/Label.vue';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
-import { useQcStore } from '@/stores/qcStore';
 import { useWipStore } from '@/stores/wipStore';
+import QcKpiChecklist from './QcKpiChecklist.vue';
+import { storeToRefs } from 'pinia';
+import { toast } from 'vue-sonner';
 
 
 const props = defineProps<{
     task: WipTask
     verdict: QCTaskVerdict //default verdict
     departmentKpis: DepartmentKPI[]
+    loading?: boolean
+}>()
+const emits = defineEmits<{
+    (e: 'success'): void
 }>()
 
 const dialog = defineModel({ default: false })
 const showConfirmationDialog = ref(false)
-const checkedKpis = ref<DepartmentKPIForm[]>()
 const finalVerdict = ref<QCTaskVerdict>('pass')
+const checkedKpisPass = ref<DepartmentKPIForm[]>()
+const checkedKpisFail = ref<DepartmentKPIForm[]>()
 
 const wipStore = useWipStore()
+const { errors: wipErrors } = storeToRefs(wipStore)
 
 async function handleSubmit() {
-    if (!checkedKpis.value) return;
+    if (!checkedKpisPass.value || !checkedKpisFail.value) return;
 
-    //loop through each work center
-    checkedKpis.value.forEach(async (dept) => {
+    if (finalVerdict.value === 'pass')
+        checkedKpisPass.value.forEach(changeTaskStatus);
+    else checkedKpisFail.value.forEach(changeTaskStatus)
+
+    //function for looping through each work center
+    async function changeTaskStatus(dept: DepartmentKPIForm) {
 
         //collect the KPI id in an array
         const kpiArray = dept.kpi.reduce<string[]>((acc, kpi) => {
@@ -54,21 +60,29 @@ async function handleSubmit() {
         }
 
         await wipStore.changeTaskQCStatus(props.task.id, payload)
-    })
 
+        if (!wipErrors.value) {
+            toast.info('QC Info', {
+                description: 'Task has been successfully inspected.'
+            })
+            dialog.value = false;
+            emits('success')
+        } else {
+            toast.error('QC Info', {
+                description: 'Something went wrong while inspecting the task.'
+            })
+        }
+    }
 }
 
-function handlePass() {
-    finalVerdict.value = 'pass'
+function handleQCEvaluate(verdict: QCTaskVerdict) {
+    finalVerdict.value = verdict
     showConfirmationDialog.value = true;
 }
-function handleFail() {
-    finalVerdict.value = 'fail'
-    showConfirmationDialog.value = true;
-}
+
 
 watchEffect(() => {
-    checkedKpis.value = props.departmentKpis.map(dept => {
+    const updatedKpi = props.departmentKpis.map(dept => {
         return {
             ...dept,
             kpi: dept.kpi.map(k => {
@@ -79,6 +93,8 @@ watchEffect(() => {
             })
         }
     })
+    checkedKpisFail.value = JSON.parse(JSON.stringify(updatedKpi));
+    checkedKpisPass.value = JSON.parse(JSON.stringify(updatedKpi));
 })
 </script>
 <template>
@@ -111,48 +127,23 @@ watchEffect(() => {
                         </TabsTrigger>
                     </TabsList>
                     <TabsContent value="pass">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>KPI Checklist</CardTitle>
-                                <CardDescription>Carefully check if the item meets all the criteria below.
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent>
-                                <div v-for="dept in checkedKpis" :key="dept.id" class="p-4 border rounded-md space-y-2">
-                                    <h3>Work center code: <strong>{{ dept.department }}</strong></h3>
-                                    <Separator orientation="horizontal" />
-                                    <ul class="grid lg:grid-cols-2 gap-2">
-                                        <li v-for="kpi in dept.kpi" class="flex gap-2">
-                                            <Checkbox class="mt-1" :checked="kpi.checked"
-                                                @update:checked="e => kpi.checked = e" />
-                                            <div>
-                                                <p class="font-medium">{{ kpi.title }}</p>
-                                                <span class="text-muted-foreground">{{ kpi.description }}</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                    <Separator />
-
-                                    <div class="space-y-2">
-                                        <Label for="comment">Comment (optional):</Label>
-                                        <Textarea v-model="dept.comment" id="comment"></Textarea>
-                                    </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <ButtonApp :prepend-icon="ThumbsUp" @click="handlePass">Smash</ButtonApp>
-                            </CardFooter>
-                        </Card>
+                        <QcKpiChecklist v-model:checked="checkedKpisPass"
+                            description="Carefully check if the item meets all the criteria below." verdict="pass"
+                            :loading="loading" @submit="handleQCEvaluate" />
                     </TabsContent>
                     <TabsContent value="fail">
-                        Failses
+                        <QcKpiChecklist v-model:checked="checkedKpisFail"
+                            description="Deselect all criteria that do not meet the quality requirements and add comment if necessary."
+                            :loading="loading" verdict="fail" @submit="handleQCEvaluate" />
                     </TabsContent>
                 </Tabs>
             </div>
         </DialogScrollContent>
 
-        <ConfirmationDialog v-model="showConfirmationDialog" @yes="handleSubmit"></ConfirmationDialog>
+        <ConfirmationDialog v-model="showConfirmationDialog" @yes="handleSubmit" title="Confirmation"
+            description="Please read before proceeding">
+            <p>Make sure you have thoroughly checked the item to avoid mistakes. Are you sure you want to proceed?</p>
+        </ConfirmationDialog>
     </Dialog>
 </template>
 

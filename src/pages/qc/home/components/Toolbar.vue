@@ -15,13 +15,14 @@ const emits = defineEmits<{
 const props = defineProps<{
     loading?: boolean
 }>()
+const selectedDepartmentId = defineModel<string>()
 
-const { selectedDepartmentId, departments, fetchDepartments } = useDepartment()
+
+const { departments, fetchDepartments } = useDepartment()
 
 function useDepartment() {
     const workerDepartmentStore = useWorkerDepartmentStore()
-    const { departments, loading } = storeToRefs(workerDepartmentStore)
-    const selectedDepartmentId = ref<string>()
+    const { departments } = storeToRefs(workerDepartmentStore)
 
     async function fetchDepartments() {
         await workerDepartmentStore.getDepartments()
@@ -35,7 +36,6 @@ function useDepartment() {
     });
 
     return {
-        selectedDepartmentId,
         departments,
         fetchDepartments
     }

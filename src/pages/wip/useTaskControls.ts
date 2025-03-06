@@ -8,7 +8,7 @@ export const useTaskControls = function useTaskControl() {
   const { errors } = storeToRefs(wipStore);
 
   function canStart(status: TaskStatus) {
-    return status === "pending" || status === "paused";
+    return status === "pending" || status === "paused" || status === 'qc-failed';
   }
 
   function canPause(status: TaskStatus) {
@@ -20,7 +20,7 @@ export const useTaskControls = function useTaskControl() {
   }
 
   function canAssign(status: TaskStatus) {
-    return status !== "ongoing" && status !== "done";
+    return status !== "ongoing" && status !== "done" && status !== 'qc-passed';
   }
 
   function isNotDone(status: TaskStatus) {

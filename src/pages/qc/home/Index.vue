@@ -5,34 +5,43 @@ import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import type { WipBatch, WipTask, WipTaskGrouped } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
-import { getS3Link, toOrdinal } from '@/lib/utils';
+import { getS3Link } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import WipBatchAccordion from '@/pages/wip/home/components/WipBatchAccordion.vue';
 import QCTasksDataTable from './components/QCTasksDataTable.vue';
-import { qcTaskDataTableColumn, type QCTaskVerdict } from './data';
-import { Badge } from '@/components/ui/badge';
+import { type QCTaskVerdict } from './data';
+
 import { TableCell } from '@/components/ui/table';
 import { AlertCircle, Ellipsis } from 'lucide-vue-next';
 import QCTaskDropdownMenu from './components/QCTaskDropdownMenu.vue';
 import QcTaskDialog from './components/QcTaskDialog.vue';
 import { useQcStore } from '@/stores/qcStore';
+import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 
-const { getTasksByWorkCenters, wipTaskGrouped, wipLoading, handleGetBatchWip } = useWip()
+const { getTasksByWorkCenters, wipTaskGrouped, wipLoading, handleGetBatchWip, selectedDepartmentId, handleFetchBatchWip } = useWip()
 const { handleFail, handlePass, selectedQCTask, showQCTaskDialog, departmentKPIs, getDepartmentKPIs } = useQC()
+const workerDepartmentStore = useWorkerDepartmentStore()
 
 function useWip() {
+
     const wipStore = useWipStore()
+    const selectedDepartmentId = ref<string>()
     const wipTaskGrouped = ref<WipTaskGrouped[]>()
+    const selectedBatch = ref<WipBatch>()
     const { loading: wipLoading } = storeToRefs(wipStore)
 
+    //Get all DONE plans > batches > tasks  
     async function getTasksByWorkCenters(workCenters: string[]) {
         const res = await wipStore.getWipPlansByWorkCenters({ filter: 'done', work_centers: workCenters })
         if (res) wipTaskGrouped.value = res;
     }
 
+    //Get all done tasks for a batch
     async function fetchBatchWip(batch: WipBatch) {
+        const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
         const res = await wipStore.getTasksByBatchId(batch.batch_id, {
-            filter: 'done'
+            filter: 'done',
+            operation_code: workCenters
         })
 
         if (res) {
@@ -42,9 +51,16 @@ function useWip() {
 
     //fetch batch wips only when batch doesnt have tasks in it
     async function handleGetBatchWip(batch: WipBatch) {
+        selectedBatch.value = batch;
         //only fetch the data when theres no tasks on batch to avoid repeated fetch
         if (batch.tasks) return;
         await fetchBatchWip(batch)
+    }
+
+    //getch batch wip without batch parameter and using selectedBatch
+    async function handleFetchBatchWip() {
+        if (!selectedBatch.value) return
+        await fetchBatchWip(selectedBatch.value)
     }
 
     return {
@@ -52,16 +68,19 @@ function useWip() {
         wipLoading,
         getTasksByWorkCenters,
         handleGetBatchWip,
+        selectedDepartmentId,
+        selectedBatch,
+        handleFetchBatchWip
     }
 }
 
 function useQC() {
-
     const qcStore = useQcStore()
     const { departmentKPIs } = storeToRefs(qcStore)
 
     const showQCTaskDialog = ref(false)
     const selectedQCTask = ref<{ task: WipTask, verdict: QCTaskVerdict }>()
+
     function handlePass(task: WipTask) {
         selectedQCTask.value = {
             task,
@@ -78,6 +97,7 @@ function useQC() {
         showQCTaskDialog.value = true;
     }
 
+    //Get list of KPI for a work center
     async function getDepartmentKPIs(workCenters: string[]) {
         await qcStore.getDepartmentKPIs({ codes: workCenters })
     }
@@ -109,7 +129,7 @@ async function handleDepartmentChange(workCenterIds: string[]) {
             </p>
         </div>
 
-        <Toolbar @change="handleDepartmentChange" :loading="wipLoading">
+        <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentChange" :loading="wipLoading">
         </Toolbar>
 
         <div class="flex flex-wrap gap-4">
@@ -153,7 +173,8 @@ async function handleDepartmentChange(workCenterIds: string[]) {
         </div>
 
         <QcTaskDialog v-if="selectedQCTask && departmentKPIs" v-model="showQCTaskDialog" :task="selectedQCTask.task"
-            :department-kpis="departmentKPIs" :verdict="selectedQCTask.verdict"></QcTaskDialog>
+            :department-kpis="departmentKPIs" :verdict="selectedQCTask.verdict" :loading="wipLoading" @success="handleFetchBatchWip">
+        </QcTaskDialog>
     </div>
 </template>
 

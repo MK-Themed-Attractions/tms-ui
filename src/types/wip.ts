@@ -28,8 +28,8 @@ export interface WipTask {
     task_id: string;
     worker_ids: string[];
   };
-  qc_failed_at?:string;
-  qc_passed_at?:string;
+  qc_failed_at?: string;
+  qc_passed_at?: string;
 }
 
 export type TaskStatus =
@@ -86,5 +86,6 @@ export interface WipTaskQueryParams {
   keyword: string;
   pages: number;
   is_accessible: boolean;
+  operation_code: string[];
   // "keyword": "2505-0005"
 }
