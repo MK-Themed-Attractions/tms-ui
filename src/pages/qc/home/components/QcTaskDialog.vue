@@ -115,6 +115,10 @@ watchEffect(() => {
                     <span>Planned start date:</span> <span>{{ formatReadableDate(task.can_accessed_at) }}</span>
 
                     <span>Required manpower:</span> <span>{{ task.manpower }}</span>
+
+                    <template v-if="task.qc_failed_at">
+                        <span>Already failed on:</span> <span>{{ formatReadableDate(task.qc_failed_at) }}</span>
+                    </template>
                 </div>
 
                 <Tabs :default-value="verdict" class="">

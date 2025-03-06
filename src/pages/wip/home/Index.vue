@@ -544,6 +544,7 @@ onBeforeUnmount(() => {
                         </WipTaskDropdown>
 
                       </template>
+                      
                     </WipTaskDataTable>
                   </template>
                 </WipBatchAccordion>

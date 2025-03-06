@@ -21,7 +21,8 @@ const props = defineProps<{
         <template #item.status="{ item }">
             <TableCell>
                 <Badge class="gap-1" variant="secondary">
-                    <component :is="getIconByTaskStatus(item.status)" class="size-4" /> <span class="capitalize">{{ item.status }}</span>
+                    <component :is="getIconByTaskStatus(item.status)" class="size-4" /> <span class="capitalize">{{
+                        item.status }}</span>
                 </Badge>
             </TableCell>
         </template>

@@ -107,6 +107,7 @@ function useQC() {
         selectedQCTask,
         handleFail,
         handlePass,
+
         getDepartmentKPIs,
         departmentKPIs
     }
@@ -116,6 +117,7 @@ async function handleDepartmentChange(workCenterIds: string[]) {
     await getTasksByWorkCenters(workCenterIds)
     await getDepartmentKPIs(workCenterIds)
 }
+
 
 
 </script>
@@ -146,7 +148,8 @@ async function handleDepartmentChange(workCenterIds: string[]) {
                         <Separator orientation="horizontal" />
                         <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
                             <template #default="{ batch }">
-                                <QCTasksDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks">
+                                <QCTasksDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
+                                    @navigate-to="handlePass">
                                     <template #item.actions="{ item }">
                                         <TableCell>
                                             <QCTaskDropdownMenu @pass="handlePass(item)" @fail="handleFail(item)">
@@ -173,7 +176,8 @@ async function handleDepartmentChange(workCenterIds: string[]) {
         </div>
 
         <QcTaskDialog v-if="selectedQCTask && departmentKPIs" v-model="showQCTaskDialog" :task="selectedQCTask.task"
-            :department-kpis="departmentKPIs" :verdict="selectedQCTask.verdict" :loading="wipLoading" @success="handleFetchBatchWip">
+            :department-kpis="departmentKPIs" :verdict="selectedQCTask.verdict" :loading="wipLoading"
+            @success="handleFetchBatchWip">
         </QcTaskDialog>
     </div>
 </template>

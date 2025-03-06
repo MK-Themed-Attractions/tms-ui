@@ -24,7 +24,7 @@ export const useTaskControls = function useTaskControl() {
   }
 
   function isNotDone(status: TaskStatus) {
-    return status !== "done";
+    return status !== "done" && status !== 'qc-passed';
   }
 
   function hasWorkers(status: TaskStatus) {
