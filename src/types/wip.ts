@@ -28,6 +28,8 @@ export interface WipTask {
     task_id: string;
     worker_ids: string[];
   };
+  qc_failed_at?: string;
+  qc_passed_at?: string;
 }
 
 export type TaskStatus =
@@ -37,7 +39,8 @@ export type TaskStatus =
   | "pending"
   | "cancelled"
   | "qc-failed"
-  | "paused";
+  | "paused"
+  | "qc-passed";
 
 export type WipTaskGrouped = WipPlanProduct & {
   product_data: (WipPlanProduct & {
@@ -76,12 +79,15 @@ export interface WipPlan {
 export interface WipPlanQueryParams {
   filter: string;
   work_centers: string[];
+  keyword: string;
+  filterBy: "product-sku" | "plan-code";
 }
 
 export interface WipTaskQueryParams {
-  filter: PlanStatusCode;
+  filter: TaskStatus;
   keyword: string;
   pages: number;
   is_accessible: boolean;
+  operation_code: string[];
   // "keyword": "2505-0005"
 }

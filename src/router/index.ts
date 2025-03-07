@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { storeToRefs } from "pinia";
 import { planning } from "./planning";
 import { wip } from "./wip";
+import { qc } from "./qc";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,6 +65,7 @@ const router = createRouter({
         },
         ...planning,
         ...wip,
+        ...qc
       ],
     },
     ...auth,

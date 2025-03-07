@@ -11,6 +11,7 @@ import {
   RefreshCcw,
   Slash,
   ThumbsDown,
+  ThumbsUp,
   XCircle,
 } from "lucide-vue-next";
 import { twMerge } from "tailwind-merge";
@@ -120,6 +121,8 @@ export function getIconByTaskStatus(status: TaskStatus) {
       return Clock;
     case "qc-failed":
       return ThumbsDown;
+    case "qc-passed":
+      return ThumbsUp;
     case "paused":
       return Pause;
   }

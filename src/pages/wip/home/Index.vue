@@ -23,10 +23,11 @@ import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
 import WipTaskShowDialog from "./components/WipTaskShowDialog.vue";
-import { useTaskControls } from "../useTaskControls";
+import { useTaskControls } from "../../../composables/useTaskControls";
 import { ButtonApp } from "@/components/app/button";
 import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
+import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 
 const { fetchWipPlans,
   wipLoading,
@@ -40,7 +41,7 @@ const { fetchWipPlans,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog } = useWip();
 
-const { openAssignWorkerDialog } = useWorker()
+const { openAssignWorkerDialog, selectedDepartmentId } = useWorker()
 const { handleShowWipDialog, showWipDialog } = useWipShow()
 const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask } = useTaskControls()
 const { handleFinishTask,
@@ -56,8 +57,9 @@ const { handleFinishTask,
   selectedOperation,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
-function useWip() {
+const workerDepartmentStore = useWorkerDepartmentStore()
 
+function useWip() {
   const wipStore = useWipStore();
   const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
   const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
@@ -74,7 +76,10 @@ function useWip() {
   }
 
   async function fetchBatchWip(batch: WipBatch) {
-    const res = await wipStore.getTasksByBatchId(batch.batch_id)
+    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
+    const res = await wipStore.getTasksByBatchId(batch.batch_id, {
+      operation_code: workCenters
+    })
 
     if (res) {
       batch.tasks = res;
@@ -170,9 +175,11 @@ function useWip() {
 
 function useWorker() {
   const openAssignWorkerDialog = ref(false)
+  const selectedDepartmentId = ref<string>()
 
   return {
-    openAssignWorkerDialog
+    openAssignWorkerDialog,
+    selectedDepartmentId
   }
 }
 
@@ -192,26 +199,9 @@ function useWipShow() {
   }
 }
 
-function isBatchDone(batch: WipBatch) {
-  if (!batch.tasks) return false;
-  return batch.tasks.every(task => task.status === 'done');
-}
-function isBatchStartable(batch: WipBatch) {
-  if (!batch.tasks) return false
-  return batch.tasks.some(task => task.is_startable);
-}
-function isBatchAssignable(batch: WipBatch) {
-  if (!batch.tasks) return false;
-  return batch.tasks.some(task => canAssign(task.status))
-}
-
-async function handleDepartmentSelectionChange(workCenters: string[]) {
-  await fetchWipPlans({
-    work_centers: workCenters,
-  });
-}
 
 function useTaskOperations() {
+
   const wipStore = useWipStore()
   const { errors: wipErrors } = storeToRefs(wipStore)
 
@@ -415,6 +405,26 @@ function useTaskOperations() {
 }
 
 
+function isBatchDone(batch: WipBatch) {
+  if (!batch.tasks) return false;
+  return batch.tasks.every(task => task.status === 'done');
+}
+function isBatchStartable(batch: WipBatch) {
+  if (!batch.tasks) return false
+  return batch.tasks.some(task => task.is_startable);
+}
+function isBatchAssignable(batch: WipBatch) {
+  if (!batch.tasks) return false;
+  return batch.tasks.some(task => canAssign(task.status))
+}
+
+async function handleDepartmentSelectionChange(workCenters: string[]) {
+  await fetchWipPlans({
+    work_centers: workCenters,
+  });
+}
+
+
 
 
 /* Provide the batch fetching functionality on children components */
@@ -427,6 +437,7 @@ onBeforeUnmount(() => {
 })
 
 </script>
+
 <template>
   <div class="container space-y-6">
     <div>
@@ -438,7 +449,7 @@ onBeforeUnmount(() => {
     </div>
 
     <section>
-      <Toolbar @change="handleDepartmentSelectionChange" :loading="wipLoading" />
+      <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading" />
     </section>
 
     <section>
@@ -534,6 +545,7 @@ onBeforeUnmount(() => {
                         </WipTaskDropdown>
 
                       </template>
+                      
                     </WipTaskDataTable>
                   </template>
                 </WipBatchAccordion>

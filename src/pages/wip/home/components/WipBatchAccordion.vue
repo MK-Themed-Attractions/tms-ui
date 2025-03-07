@@ -23,7 +23,7 @@ const emits = defineEmits<{
                 </div>
             </AccordionTrigger>
             <AccordionContent>
-                <slot v-if="batch.tasks && batch.tasks.length" :batch="batch" />
+                <slot v-if="batch.tasks" :batch="batch" />
                 <p v-else class="text-muted-foreground flex items-center gap-2 justify-center">
                     <LoaderCircle class="animate-spin" /> Retrieving data, please wait.
                 </p>

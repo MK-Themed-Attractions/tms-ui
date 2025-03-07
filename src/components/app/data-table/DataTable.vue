@@ -60,6 +60,7 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
         v-for="item in items"
         :key="item[Object.keys(item)[0]]"
         @click="emits('navigateTo', item, $router)"
+        class="group"
       >
         <template v-for="column in selectedColumns" :key="column.key">
           <slot :name="`item.${column.key as string}`" :item="item">

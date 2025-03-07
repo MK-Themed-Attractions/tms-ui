@@ -8,7 +8,9 @@ export const useTaskControls = function useTaskControl() {
   const { errors } = storeToRefs(wipStore);
 
   function canStart(status: TaskStatus) {
-    return status === "pending" || status === "paused";
+    return (
+      status === "pending" || status === "paused" || status === "qc-failed"
+    );
   }
 
   function canPause(status: TaskStatus) {
@@ -16,19 +18,22 @@ export const useTaskControls = function useTaskControl() {
   }
 
   function canFinish(status: TaskStatus) {
-    return status === "ongoing" 
+    return status === "ongoing";
   }
 
   function canAssign(status: TaskStatus) {
-    return status !== "ongoing" && status !== "done";
+    return status !== "ongoing" && status !== "done" && status !== "qc-passed";
   }
 
   function isNotDone(status: TaskStatus) {
-    return status !== "done";
+    return status !== "done" && status !== "qc-passed";
   }
 
   function hasWorkers(status: TaskStatus) {
     return status !== "unassigned";
+  }
+  function hadInspected(status: TaskStatus) {
+    return status === "qc-passed" || status === "qc-failed";
   }
 
   function showWipToast(success: boolean) {
@@ -41,7 +46,7 @@ export const useTaskControls = function useTaskControl() {
         description: "Something went wrong while starting the task",
       });
     }
-  }  
+  }
 
   async function startTask(task: WipTask) {
     if (!canStart(task.status)) return false;
@@ -72,6 +77,7 @@ export const useTaskControls = function useTaskControl() {
     canAssign,
     isNotDone,
     showWipToast,
+    hadInspected,
     startTask,
     pauseTask,
     finishTask,
