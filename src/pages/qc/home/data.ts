@@ -1,4 +1,6 @@
 import type { DataTableColumns } from "@/components/app/data-table";
+import type { InputFilterDropdownData } from "@/components/app/input-filter";
+export type QCTaskVerdict = "pass" | "fail";
 
 export const qcTaskDataTableColumn: DataTableColumns[] = [
   { key: "task_index", title: "Sequence" },
@@ -8,4 +10,7 @@ export const qcTaskDataTableColumn: DataTableColumns[] = [
   { key: "actions", title: "" },
 ];
 
-export type QCTaskVerdict = "pass" | "fail";
+export const searchFilterData: InputFilterDropdownData[] = [
+  { key: "product-sku", value: "Product SKU" },
+  { key: "plan-code", value: "Plan code" },
+];

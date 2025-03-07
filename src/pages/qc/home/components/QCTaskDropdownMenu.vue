@@ -20,14 +20,14 @@ function handleFail() {
 </script>
 <template>
     <Popover v-model:open="popover">
-        <PopoverTrigger>
+        <PopoverTrigger @click.stop="">
             <slot />
         </PopoverTrigger>
         <PopoverContent align="end" class="max-w-[20rem] text-sm p-2">
             <p class="font-medium mb-2">Task verdict</p>
             <ul class="space-y-2">
                 <li class="border rounded-md p-2 flex gap-2 hover:bg-muted focus-within:bg-muted" role="button"
-                    @click="handlePass" tabindex="0">
+                    @click.stop="handlePass" tabindex="0">
                     <ThumbsUp />
                     <div>
                         <p>Pass</p>
@@ -35,7 +35,7 @@ function handleFail() {
                     </div>
                 </li>
                 <li class="border rounded-md p-2 flex gap-2 hover:bg-muted focus-within:bg-muted" role="button"
-                    @click="handleFail" tabindex="0">
+                    @click.stop="handleFail" tabindex="0">
                     <ThumbsDown />
                     <div>
                         <p>Fail</p>

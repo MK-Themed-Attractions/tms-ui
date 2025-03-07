@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ButtonApp } from '@/components/app/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+import { InputFilter, type InputFilterDropdownData } from '@/components/app/input-filter';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
-import { Building, ChevronDown, LoaderCircle, Search } from 'lucide-vue-next';
+import { Building, LoaderCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { Separator } from 'radix-vue';
-import { ref, watch } from 'vue';
+import { watch } from 'vue';
+import { searchFilterData } from '../data';
 
 const emits = defineEmits<{
     (e: "change", workCenters: string[]): void;
@@ -16,7 +14,6 @@ const props = defineProps<{
     loading?: boolean
 }>()
 const selectedDepartmentId = defineModel<string>()
-
 
 const { departments, fetchDepartments } = useDepartment()
 
@@ -61,35 +58,13 @@ if (!departments.value) {
                         <SelectLabel>Departments</SelectLabel>
                         <SelectItem v-for="department in departments" :key="department.id" :value="department.id">{{
                             department.name
-                            }}</SelectItem>
+                        }}</SelectItem>
                     </SelectGroup>
                 </SelectContent>
             </Select>
-            <div class="relative grow items-center">
-                <Input id="search" type="text" placeholder="Search..." class="pl-10 pr-[9rem]" />
-                <span class="absolute inset-y-0 start-0 flex items-center justify-center px-2">
-                    <Search class="size-5 text-muted-foreground" />
-                </span>
+            <slot name="append">
 
-                <div class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1">
-                    <Separator orientation="vertical" class="h-5" />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger>
-                            <ButtonApp size="sm" variant="ghost">
-                                Product SKU
-                                <ChevronDown class="size-5" />
-                            </ButtonApp>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel>Search by</DropdownMenuLabel>
-                                <DropdownMenuItem>Product SKU</DropdownMenuItem>
-                                <DropdownMenuItem>Plan code</DropdownMenuItem>
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
+            </slot>
         </div>
     </div>
 </template>

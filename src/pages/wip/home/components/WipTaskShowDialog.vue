@@ -10,7 +10,7 @@ import type { WipBatch, WipTask } from '@/types/wip';
 import { AlertCircle, CheckCircle, Delete, Flag, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { inject, ref, watch } from 'vue';
-import { useTaskControls } from '../../useTaskControls';
+import { useTaskControls } from '../../../../composables/useTaskControls';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import type { Worker } from '@/types/workers';
 import { toast } from 'vue-sonner';

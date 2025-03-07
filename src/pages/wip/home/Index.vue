@@ -23,7 +23,7 @@ import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
 import WipTaskShowDialog from "./components/WipTaskShowDialog.vue";
-import { useTaskControls } from "../useTaskControls";
+import { useTaskControls } from "../../../composables/useTaskControls";
 import { ButtonApp } from "@/components/app/button";
 import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
@@ -437,6 +437,7 @@ onBeforeUnmount(() => {
 })
 
 </script>
+
 <template>
   <div class="container space-y-6">
     <div>

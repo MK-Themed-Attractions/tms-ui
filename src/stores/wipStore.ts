@@ -34,6 +34,10 @@ export const useWipStore = defineStore("wips", () => {
   /* ACTIONS */
   function invalidate() {
     bearerToken.value = null;
+    paginatedResponse.value = undefined;
+  }
+  function reset() {
+    paginatedResponse.value = undefined;
   }
 
   async function getWipPlansByWorkCenters(
@@ -181,5 +185,6 @@ export const useWipStore = defineStore("wips", () => {
     changeTaskStatus,
     changeTaskStatusArray,
     changeTaskQCStatus,
+    reset,
   };
 });

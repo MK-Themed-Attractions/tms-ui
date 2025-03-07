@@ -12,6 +12,9 @@ import { useWipStore } from '@/stores/wipStore';
 import QcKpiChecklist from './QcKpiChecklist.vue';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
+import { useTaskControls } from '@/composables/useTaskControls';
+import { Card, CardContent } from '@/components/ui/card';
+import { ClipboardCheck } from 'lucide-vue-next';
 
 
 const props = defineProps<{
@@ -23,6 +26,7 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: 'success'): void
 }>()
+const { hadInspected } = useTaskControls()
 
 const dialog = defineModel({ default: false })
 const showConfirmationDialog = ref(false)
@@ -117,11 +121,14 @@ watchEffect(() => {
                     <span>Required manpower:</span> <span>{{ task.manpower }}</span>
 
                     <template v-if="task.qc_failed_at">
-                        <span>Already failed on:</span> <span>{{ formatReadableDate(task.qc_failed_at) }}</span>
+                        <span>Already failed at:</span> <span>{{ formatReadableDate(task.qc_failed_at) }}</span>
+                    </template>
+                    <template v-if="task.qc_passed_at">
+                        <span>Passed at:</span> <span>{{ formatReadableDate(task.qc_passed_at) }}</span>
                     </template>
                 </div>
 
-                <Tabs :default-value="verdict" class="">
+                <Tabs :default-value="verdict" class="" v-if="!hadInspected(task.status)">
                     <TabsList class="w-full">
                         <TabsTrigger value="pass" class="grow">
                             Pass
@@ -141,6 +148,16 @@ watchEffect(() => {
                             :loading="loading" verdict="fail" @submit="handleQCEvaluate" />
                     </TabsContent>
                 </Tabs>
+                <!-- fallback -->
+                <Card v-else class="p-4 flex items-center gap-4">
+                    <ClipboardCheck />
+                    <div>
+                        <h4 class="font-medium text-base">This task has already been inspected</h4>
+                        <p class="text-muted-foreground">This task has already undergone inspection, and no further
+                            action
+                            is required.</p>
+                    </div>
+                </Card>
             </div>
         </DialogScrollContent>
 
