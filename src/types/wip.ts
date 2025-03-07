@@ -82,13 +82,13 @@ export interface WipPlanQueryParams {
   keyword: string;
   filterBy: "product-sku" | "plan-code";
   pages: number; //per page
+  is_accessible: boolean;
 }
 
 export interface WipTaskQueryParams {
   filter: TaskStatus;
   keyword: string;
   pages: number;
-  is_accessible: boolean;
   operation_code: string[];
-  // "keyword": "2505-0005"
+  is_accessible: boolean;
 }

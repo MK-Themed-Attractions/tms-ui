@@ -32,6 +32,8 @@ import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
 import { searchFilterData } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const { fetchWipPlans,
   wipLoading,
@@ -62,7 +64,7 @@ const { handleFinishTask,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
 const workerDepartmentStore = useWorkerDepartmentStore()
-const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search } = useTaskStatusFilter()
+const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly } = useTaskStatusFilter()
 
 function useWip() {
   const wipStore = useWipStore();
@@ -86,6 +88,8 @@ function useWip() {
     const params: Partial<WipTaskQueryParams> = { operation_code: workCenters }
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
+    if (tasksForTodayOnly.value)
+      params.is_accessible = tasksForTodayOnly.value
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
     if (res) {
@@ -414,6 +418,7 @@ function useTaskStatusFilter() {
   const selectedTaskStatusFilter = ref<TaskStatus>()
   const search = ref('')
   const filter = ref<InputFilterDropdownData>(searchFilterData[0])
+  const tasksForTodayOnly = ref(true)
 
   async function handleGetWIpsWithFilter() {
     const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
@@ -423,6 +428,7 @@ function useTaskStatusFilter() {
       await fetchWipPlans({
         work_centers: workCenters,
         filter: selectedTaskStatusFilter.value,
+        is_accessible: tasksForTodayOnly.value
       })
       return;
     }
@@ -438,6 +444,11 @@ function useTaskStatusFilter() {
   }
 
   watch(selectedTaskStatusFilter, async (newValue) => {
+    if (!selectedDepartmentId.value) return;
+    await handleGetWIpsWithFilter()
+  })
+  watch(tasksForTodayOnly, async (newValue) => {
+    if (!selectedDepartmentId.value) return;
     await handleGetWIpsWithFilter()
   })
 
@@ -445,7 +456,8 @@ function useTaskStatusFilter() {
     selectedTaskStatusFilter,
     handleGetWIpsWithFilter,
     search,
-    filter
+    filter,
+    tasksForTodayOnly
   }
 }
 function isBatchDone(batch: WipBatch) {
@@ -462,10 +474,10 @@ function isBatchAssignable(batch: WipBatch) {
 }
 
 async function handleDepartmentSelectionChange(workCenters: string[]) {
-  /* reset the filter */
-  selectedTaskStatusFilter.value = undefined;
   await fetchWipPlans({
     work_centers: workCenters,
+    filter: selectedTaskStatusFilter.value,
+    is_accessible: tasksForTodayOnly.value
   });
 }
 
@@ -500,7 +512,14 @@ onBeforeMount(() => {
           </InputFilter>
 
           <div class="basis-full">
-            <WIPFilter v-model="selectedTaskStatusFilter" />
+            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartmentId" />
+          </div>
+
+          <div class="ml-auto">
+            <div class="flex items-center gap-2">
+              <Label for="task-today">Show today&apos;s tasks</Label>
+              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading"/>
+            </div>
           </div>
         </template>
 
@@ -511,8 +530,10 @@ onBeforeMount(() => {
       <div class="space-y-10" v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartmentId">
         <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id"
           class="rounded-md border p-4 shadow-sm space-y-4">
-          <div v-for="product in parentProduct.product_data" :key="product.id" class="space-y-4">
-            <div class="flex gap-2 items-start">
+          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="space-y-4">
+
+            <!-- show parent code only on the first index -->
+            <div class="flex gap-2 items-start justify-center" v-if="index === 0">
               <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
                 {{
                   parentProduct.sku }}</CardInfo>
