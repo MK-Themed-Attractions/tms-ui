@@ -2,7 +2,7 @@
 import { DataTable } from '@/components/app/data-table';
 import { useWorkerStore } from '@/stores/workerStore';
 import { storeToRefs } from 'pinia';
-import { wipWorkerDataTableColumns, workerPerPage } from './data';
+import { wipWorkerDataTableColumns, workerPerPage } from '../../data';
 import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
 import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';

@@ -32,6 +32,7 @@ import {
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import { watch } from "vue";
+import WIPFilter from "./WIPFilter.vue";
 
 const props = defineProps<{
   loading?: boolean;
@@ -71,49 +72,10 @@ watch(selectedDepartmentId, (newValue) => {
           </SelectGroup>
         </SelectContent>
       </Select>
-      <div class="relative grow items-center">
-        <Input id="search" type="text" placeholder="Search..." class="pl-10 pr-[9rem]" />
-        <span class="absolute inset-y-0 start-0 flex items-center justify-center px-2">
-          <Search class="size-5 text-muted-foreground" />
-        </span>
+      <slot name="append">
+      </slot>
 
-        <div class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1">
-          <Separator orientation="vertical" class="h-5" />
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <ButtonApp size="sm" variant="ghost">
-                Product SKU
-                <ChevronDown class="size-5" />
-              </ButtonApp>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Search by</DropdownMenuLabel>
-                <DropdownMenuItem>Product SKU</DropdownMenuItem>
-                <DropdownMenuItem>Plan code</DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
 
-      <div class="basis-full">
-        <div class="flex border rounded-md w-fit">
-          <ButtonApp variant="none" :prepend-icon="CircleHelp" class="rounded-none hover:bg-muted text-xs">
-            Unassigned
-          </ButtonApp>
-          <ButtonApp variant="none" :prepend-icon="Clock" class="rounded-none hover:bg-muted text-xs">
-            Pending
-          </ButtonApp>
-          <ButtonApp variant="none" :prepend-icon="RefreshCcw" class="rounded-none hover:bg-muted text-xs">
-            Ongoing
-          </ButtonApp>
-          <ButtonApp variant="none" :prepend-icon="XCircle" class="rounded-none hover:bg-muted text-xs">
-            QC failed
-          </ButtonApp>
-        </div>
-
-      </div>
 
     </div>
   </div>

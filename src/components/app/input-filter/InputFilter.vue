@@ -5,7 +5,6 @@ import { Separator } from '@/components/ui/separator';
 import { ButtonApp } from '../button';
 import { Check, ChevronDown, Search } from 'lucide-vue-next';
 import type { InputFilterDropdownData, InputFilterProps, InputFilterSearchData } from '.';
-import { ref } from 'vue';
 
 
 const props = withDefaults(defineProps<InputFilterProps>(), {
@@ -14,16 +13,11 @@ const props = withDefaults(defineProps<InputFilterProps>(), {
 })
 const emits = defineEmits<{
     (e: 'submit', searchData: InputFilterSearchData): void,
-    (e: 'update:dropdownData', filter: InputFilterDropdownData): void
 }>()
 
-const selectedFilter = ref<InputFilterDropdownData>(props.dropdownData[0])
+const selectedFilter = defineModel<InputFilterDropdownData>('filter')
 const search = defineModel<string>('search', { default: '' })
 
-function handleFilter(data: InputFilterDropdownData) {
-    selectedFilter.value = data;
-    emits('update:dropdownData', selectedFilter.value)
-}
 </script>
 <template>
     <div class="relative grow items-center">
@@ -36,10 +30,10 @@ function handleFilter(data: InputFilterDropdownData) {
 
         <div class="absolute inset-y-0 right-0 flex max-w-[10rem] items-center gap-2 p-1">
             <Separator orientation="vertical" class="h-5" />
-            <DropdownMenu>
-                <DropdownMenuTrigger >
+            <DropdownMenu v-if="selectedFilter">
+                <DropdownMenuTrigger>
                     <ButtonApp size="sm" variant="ghost" :disabled="disabled">
-                        {{ selectedFilter?.value }}
+                        {{ selectedFilter.value }}
                         <ChevronDown class="size-5" />
                     </ButtonApp>
                 </DropdownMenuTrigger>
@@ -47,7 +41,7 @@ function handleFilter(data: InputFilterDropdownData) {
                     <DropdownMenuGroup>
                         <DropdownMenuLabel>{{ dropdownLabel }}</DropdownMenuLabel>
                         <DropdownMenuItem v-for="dropdown in dropdownData" :key="dropdown.key"
-                            @click="handleFilter(dropdown)">
+                            @click="selectedFilter = dropdown">
                             <Check class="invisible" :class="{ '!visible': dropdown.key === selectedFilter?.key }" />
                             {{ dropdown.value }}
                         </DropdownMenuItem>

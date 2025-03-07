@@ -81,6 +81,7 @@ export interface WipPlanQueryParams {
   work_centers: string[];
   keyword: string;
   filterBy: "product-sku" | "plan-code";
+  pages: number; //per page
 }
 
 export interface WipTaskQueryParams {
