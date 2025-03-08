@@ -73,7 +73,6 @@ function useWip() {
 
   //task ids on common ms
   const selectedTaskIds = ref<string[]>([])
-
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
 
@@ -85,11 +84,9 @@ function useWip() {
   async function fetchBatchWip(batch: WipBatch) {
     const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters, is_accessible: tasksForTodayOnly.value }
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
-    if (tasksForTodayOnly.value)
-      params.is_accessible = tasksForTodayOnly.value
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
     if (res) {
@@ -518,7 +515,7 @@ onBeforeMount(() => {
           <div class="ml-auto">
             <div class="flex items-center gap-2">
               <Label for="task-today">Show today&apos;s tasks</Label>
-              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading"/>
+              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading" />
             </div>
           </div>
         </template>

@@ -28,7 +28,7 @@ const emits = defineEmits<{
                     class="text-center border rounded-md p-2 border-dashed">
                     <Wrench class="mx-auto" />
                     <p class="font-medium">No tasks available for this batch.</p>
-                    <p class="text-muted-foreground">Please check again later or verify if a <strong>filter</strong> is
+                    <p class="text-muted-foreground">Please check again later or verify if <strong>filters</strong> are
                         applied.</p>
                 </div>
 

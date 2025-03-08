@@ -82,7 +82,7 @@ export interface WipPlanQueryParams {
   keyword: string;
   filterBy: "product-sku" | "plan-code";
   pages: number; //per page
-  is_accessible: boolean;
+  is_accessible: boolean | number;
 }
 
 export interface WipTaskQueryParams {
@@ -90,5 +90,5 @@ export interface WipTaskQueryParams {
   keyword: string;
   pages: number;
   operation_code: string[];
-  is_accessible: boolean;
+  is_accessible: boolean | number;
 }
