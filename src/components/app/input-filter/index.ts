@@ -18,5 +18,5 @@ export interface InputFilterDropdownData {
 
 export interface InputFilterSearchData {
   search: string;
-  filter: InputFilterDropdownData;
+  filter?: InputFilterDropdownData;
 }

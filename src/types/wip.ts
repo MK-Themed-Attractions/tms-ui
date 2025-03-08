@@ -81,13 +81,14 @@ export interface WipPlanQueryParams {
   work_centers: string[];
   keyword: string;
   filterBy: "product-sku" | "plan-code";
+  pages: number; //per page
+  is_accessible: boolean | number;
 }
 
 export interface WipTaskQueryParams {
   filter: TaskStatus;
   keyword: string;
   pages: number;
-  is_accessible: boolean;
   operation_code: string[];
-  // "keyword": "2505-0005"
+  is_accessible: boolean | number;
 }

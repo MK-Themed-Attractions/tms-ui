@@ -17,6 +17,7 @@ const emits = defineEmits<{
     <Table>
         <TableHeader>
             <TableRow class="border-none">
+                <TableHead class="h-8">Work center code</TableHead>
                 <TableHead class="h-8">Status</TableHead>
                 <TableHead class="h-8">Access date</TableHead>
                 <TableHead class="h-8">Availability</TableHead>
@@ -30,6 +31,9 @@ const emits = defineEmits<{
         <TableBody>
             <TableRow v-for="task in tasks" :key="task.id" class="border-none group cursor-pointer"
                 @click="$emit('select', task)">
+                <TableCell class="font-medium">
+                    {{ task.operation_code }}
+                </TableCell>
                 <TableCell>
                     <Badge variant="secondary" class="gap-2">
                         <component class="size-4" :is="getIconByTaskStatus(task.status)" /> <span class="capitalize">{{

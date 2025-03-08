@@ -48,6 +48,8 @@ export const useWipStore = defineStore("wips", () => {
       bearerToken,
     );
 
+    if (params) params.is_accessible = params.is_accessible ? 1 : 0;
+
     const res = await get<SimplePaginate<WipTaskGrouped>>(
       "/api/tasks/get-ongoing-plans",
       {
@@ -60,6 +62,7 @@ export const useWipStore = defineStore("wips", () => {
       return res.data;
     }
   }
+
   async function getTasksByBatchId(
     batchId: string,
     params?: Partial<WipTaskQueryParams>,
@@ -68,6 +71,8 @@ export const useWipStore = defineStore("wips", () => {
       `${baseUrl}/api/auth/bearer-token`,
       bearerToken,
     );
+
+    if (params) params.is_accessible = params.is_accessible ? 1 : 0;
 
     const res = await get<{ data: WipTask[] }>(
       `api/tasks/get-batch-tasks/${batchId}`,

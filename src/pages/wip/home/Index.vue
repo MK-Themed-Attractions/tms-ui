@@ -2,7 +2,7 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { WipBatch, WipPlanQueryParams, WipTask } from "@/types/wip";
+import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskQueryParams } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, getS3Link, toOrdinal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Building,
   Ellipsis,
+  Wrench,
 } from "lucide-vue-next";
 
 import CardInfo from "./components/CardInfo.vue";
@@ -18,7 +19,7 @@ import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
 import WipTaskDropdown from "./components/WipTaskDropdown.vue";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { onBeforeUnmount, provide, ref } from "vue";
+import { onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
@@ -28,6 +29,11 @@ import { ButtonApp } from "@/components/app/button";
 import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
+import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
+import { searchFilterData } from "../data";
+import WIPFilter from "./components/WIPFilter.vue";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const { fetchWipPlans,
   wipLoading,
@@ -58,6 +64,7 @@ const { handleFinishTask,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
 const workerDepartmentStore = useWorkerDepartmentStore()
+const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly } = useTaskStatusFilter()
 
 function useWip() {
   const wipStore = useWipStore();
@@ -66,7 +73,6 @@ function useWip() {
 
   //task ids on common ms
   const selectedTaskIds = ref<string[]>([])
-
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
 
@@ -77,9 +83,11 @@ function useWip() {
 
   async function fetchBatchWip(batch: WipBatch) {
     const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
-    const res = await wipStore.getTasksByBatchId(batch.batch_id, {
-      operation_code: workCenters
-    })
+
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters, is_accessible: tasksForTodayOnly.value }
+    if (selectedTaskStatusFilter.value)
+      params.filter = selectedTaskStatusFilter.value;
+    const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
     if (res) {
       batch.tasks = res;
@@ -198,7 +206,6 @@ function useWipShow() {
     handleShowWipDialog,
   }
 }
-
 
 function useTaskOperations() {
 
@@ -404,7 +411,52 @@ function useTaskOperations() {
   }
 }
 
+function useTaskStatusFilter() {
+  const selectedTaskStatusFilter = ref<TaskStatus>()
+  const search = ref('')
+  const filter = ref<InputFilterDropdownData>(searchFilterData[0])
+  const tasksForTodayOnly = ref(true)
 
+  async function handleGetWIpsWithFilter() {
+    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
+
+    /* if search keyword is empty refetch plans */
+    if (!search.value.trim()) {
+      await fetchWipPlans({
+        work_centers: workCenters,
+        filter: selectedTaskStatusFilter.value,
+        is_accessible: tasksForTodayOnly.value
+      })
+      return;
+    }
+
+    /* refetch plans with applied filters */
+    await fetchWipPlans({
+      work_centers: workCenters,
+      filterBy: filter.value?.key,
+      keyword: search.value,
+    })
+
+
+  }
+
+  watch(selectedTaskStatusFilter, async (newValue) => {
+    if (!selectedDepartmentId.value) return;
+    await handleGetWIpsWithFilter()
+  })
+  watch(tasksForTodayOnly, async (newValue) => {
+    if (!selectedDepartmentId.value) return;
+    await handleGetWIpsWithFilter()
+  })
+
+  return {
+    selectedTaskStatusFilter,
+    handleGetWIpsWithFilter,
+    search,
+    filter,
+    tasksForTodayOnly
+  }
+}
 function isBatchDone(batch: WipBatch) {
   if (!batch.tasks) return false;
   return batch.tasks.every(task => task.status === 'done');
@@ -421,11 +473,10 @@ function isBatchAssignable(batch: WipBatch) {
 async function handleDepartmentSelectionChange(workCenters: string[]) {
   await fetchWipPlans({
     work_centers: workCenters,
+    filter: selectedTaskStatusFilter.value,
+    is_accessible: tasksForTodayOnly.value
   });
 }
-
-
-
 
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
@@ -433,11 +484,13 @@ provide(batchWipSuccessKey, fetchBatchWip)
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
 onBeforeUnmount(() => {
-  useWipStore().paginatedResponse = undefined
+  useWipStore().reset()
+})
+onBeforeMount(() => {
+  useWipStore().reset()
 })
 
 </script>
-
 <template>
   <div class="container space-y-6">
     <div>
@@ -449,15 +502,35 @@ onBeforeUnmount(() => {
     </div>
 
     <section>
-      <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading" />
+      <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading">
+        <template #append>
+          <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
+            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter">
+          </InputFilter>
+
+          <div class="basis-full">
+            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartmentId" />
+          </div>
+
+          <div class="ml-auto">
+            <div class="flex items-center gap-2">
+              <Label for="task-today">Show today&apos;s tasks</Label>
+              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading" />
+            </div>
+          </div>
+        </template>
+
+      </Toolbar>
     </section>
 
     <section>
-      <div class="space-y-10" v-if="wipTasksGrouped">
-        <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.sku"
+      <div class="space-y-10" v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartmentId">
+        <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id"
           class="rounded-md border p-4 shadow-sm space-y-4">
-          <div v-for="product in parentProduct.product_data" :key="product.sku" class="space-y-4">
-            <div class="flex gap-2 items-start">
+          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="space-y-4">
+
+            <!-- show parent code only on the first index -->
+            <div class="flex gap-2 items-start justify-center" v-if="index === 0">
               <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
                 {{
                   parentProduct.sku }}</CardInfo>
@@ -481,7 +554,8 @@ onBeforeUnmount(() => {
 
                 <Separator />
 
-                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
+                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip"
+                  :loading="wipLoading">
                   <template #default="{ batch }">
                     <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
                       @select="(task) => handleShowWipDialog(task, batch)">
@@ -545,7 +619,7 @@ onBeforeUnmount(() => {
                         </WipTaskDropdown>
 
                       </template>
-                      
+
                     </WipTaskDataTable>
                   </template>
                 </WipBatchAccordion>
@@ -554,11 +628,20 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-      <div v-else class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
+      <!-- fallback for no department -->
+      <div v-else-if="!wipTasksGrouped"
+        class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
         <Building class="mx-auto" />
         <h2 class="text-2xl font-bold tracking-tight">No department selected</h2>
         <p class="text-sm text-muted-foreground">click on the toolbar and select a department to
           start.</p>
+      </div>
+      <!-- fallback for empty wip -->
+      <div v-else class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
+        <Wrench class="mx-auto" />
+        <h2 class="text-2xl font-bold tracking-tight">No tasks available</h2>
+        <p class="text-sm text-muted-foreground">There are no tasks available at the moment. Please check again later.
+        </p>
       </div>
     </section>
 
