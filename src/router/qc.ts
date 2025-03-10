@@ -12,6 +12,11 @@ export const qc: RouteRecordRaw[] = [
         name: "qcIndex",
         component: () => import("@/pages/qc/home/Index.vue"),
       },
+      {
+        path: "kpi",
+        name: "kpiIndex",
+        component: () => import("@/pages/qc/kpi/Index.vue"),
+      },
     ],
   },
 ];

@@ -21,7 +21,7 @@ import { useTaskControls } from '@/composables/useTaskControls';
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from '@/components/app/input-filter';
 
 const wipStore = useWipStore()
-const { getTasksByWorkCenters, wipTaskGrouped, wipLoading, handleGetBatchWip, selectedDepartmentId, handleFetchBatchWip, getTasksByWorkCentersWithFilter } = useWip()
+const { getTasksByWorkCenters, wipTaskGrouped, wipLoading, handleGetBatchWip, selectedDepartmentId, handleFetchBatchWip, getTasksByWorkCentersWithFilter, filter, search } = useWip()
 const { handleFail, handlePass, selectedQCTask, showQCTaskDialog, departmentKPIs, getDepartmentKPIs } = useQC()
 const { hadInspected } = useTaskControls()
 const workerDepartmentStore = useWorkerDepartmentStore()
@@ -32,7 +32,7 @@ function useWip() {
     const wipTaskGrouped = ref<WipTaskGrouped[]>()
     const selectedBatch = ref<WipBatch>()
     const search = ref<string>()
-    const selectedFilter = ref<InputFilterDropdownData>(searchFilterData[0])
+    const filter = ref<InputFilterDropdownData>(searchFilterData[0])
 
     const { loading: wipLoading } = storeToRefs(wipStore)
 
@@ -53,7 +53,7 @@ function useWip() {
             return;
         }
 
-        const res = await wipStore.getWipPlansByWorkCenters({ filter: 'done', work_centers: workCenters, keyword: data.search, filterBy: data.filter.key })
+        const res = await wipStore.getWipPlansByWorkCenters({ filter: 'done', work_centers: workCenters, keyword: search.value, filterBy: filter.value.key })
         if (res) wipTaskGrouped.value = res;
     }
 
@@ -97,7 +97,7 @@ function useWip() {
         selectedBatch,
         handleFetchBatchWip,
         search,
-        selectedFilter
+        filter,
     }
 }
 
@@ -166,8 +166,8 @@ onBeforeUnmount(() => {
 
         <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentChange" :loading="wipLoading">
             <template #append>
-                <InputFilter :dropdown-data="searchFilterData" @submit="getTasksByWorkCentersWithFilter"
-                    :disabled="!selectedDepartmentId">
+                <InputFilter v-model:filter="filter" v-model:search="search" :dropdown-data="searchFilterData"
+                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartmentId">
                 </InputFilter>
             </template>
         </Toolbar>

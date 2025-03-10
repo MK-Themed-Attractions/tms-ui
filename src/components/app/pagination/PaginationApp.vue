@@ -4,7 +4,6 @@ import {
   PaginationButtonsApp,
   PaginationPerPageApp,
   type PaginationAppProps,
-  type PaginationButtonsAppProps,
   type PaginationQuery,
 } from ".";
 import { watch, watchEffect } from "vue";
@@ -33,6 +32,7 @@ watch(perPage, (newValue) => {
     perPage: newValue,
   });
 });
+
 watch(page, (newValue) => {
   emits("change:query", {
     page: newValue,

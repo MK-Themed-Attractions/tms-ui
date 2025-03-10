@@ -1,4 +1,5 @@
 export { default as PaginationApp } from "./PaginationApp.vue";
+export { default as PaginationApp2 } from "./PaginationApp2.vue";
 export { default as PaginationButtonsApp } from "./PaginationButtonsApp.vue";
 export { default as PaginationPerPageApp } from "./PaginationPerPageApp.vue";
 

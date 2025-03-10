@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const perPage = defineModel({ default: "30" });
+const perPage = defineModel('pages', { default: "30" });
 </script>
 <template>
   <div>
@@ -18,11 +18,7 @@ const perPage = defineModel({ default: "30" });
         <SelectValue class="font-normal"></SelectValue>
       </SelectTrigger>
       <SelectContent side="top">
-        <SelectItem
-          v-for="pageSize in [10, 20, 30, 40, 50]"
-          :key="pageSize"
-          :value="`${pageSize}`"
-        >
+        <SelectItem v-for="pageSize in [10, 20, 30, 40, 50]" :key="pageSize" :value="`${pageSize}`">
           {{ pageSize }}
         </SelectItem>
       </SelectContent>

@@ -15,10 +15,7 @@ const props = defineProps<{
   <div>
     <div class="flex h-full max-h-screen flex-col gap-2">
       <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <RouterLink
-          :to="{ name: 'home' }"
-          class="flex items-center gap-2 text-xs font-semibold"
-        >
+        <RouterLink :to="{ name: 'home' }" class="flex items-center gap-2 text-xs font-semibold">
           <Package2 class="h-6 w-6" />
           <span class="">Task Management System</span>
         </RouterLink>
@@ -30,14 +27,8 @@ const props = defineProps<{
       </div>
       <div class="flex-1">
         <nav class="grid items-start px-2 text-sm font-medium lg:px-4">
-          <NavItem
-            v-for="item in items"
-            :key="item.to?.name || item.name"
-            :to="item.to"
-            :icon="item.icon"
-            :children="item.children"
-            >{{ item.name }}</NavItem
-          >
+          <NavItem v-for="item in items" :key="item.to?.name || item.name" :to="item.to" :icon="item.icon"
+            :children="item.children">{{ item.name }}</NavItem>
         </nav>
       </div>
     </div>

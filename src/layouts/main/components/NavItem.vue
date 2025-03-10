@@ -33,12 +33,9 @@ const isChildRouteSelected = computed(() => {
 
 <template>
   <!-- For navigation without children -->
-  <RouterLink
-    v-if="!children?.length && to"
+  <RouterLink v-if="!children?.length && to"
     class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-    active-class="bg-muted text-primary"
-    :to="to"
-  >
+    exact-active-class="bg-muted text-primary" :to="to">
     <slot name="icon">
       <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
     </slot>
@@ -50,30 +47,19 @@ const isChildRouteSelected = computed(() => {
   <Accordion v-else type="single" collapsible>
     <AccordionItem value="1" class="border-none">
       <AccordionTrigger
-        class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline"
-      >
-        <div
-          class="flex items-center gap-3"
-          :class="{ 'text-primary': isChildRouteSelected }"
-        >
+        class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline">
+        <div class="flex items-center gap-3" :class="{ 'text-primary': isChildRouteSelected }">
           <component v-if="icon" :is="icon" class="h-6 w-6 lg:h-4 lg:w-4" />
           <slot />
         </div>
       </AccordionTrigger>
       <AccordionContent class="ml-2 grid gap-1 rounded-md">
         <template v-for="child in children" :key="child.name">
-          <RouterLink
-            v-if="child.to"
-            :to="child.to"
+          <RouterLink v-if="child.to" :to="child.to"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-            active-class="bg-muted text-primary"
-          >
+            exact-active-class="bg-muted text-primary">
             <slot name="icon">
-              <component
-                v-if="child.icon"
-                :is="child.icon"
-                class="h-6 w-6 lg:h-4 lg:w-4"
-              />
+              <component v-if="child.icon" :is="child.icon" class="h-6 w-6 lg:h-4 lg:w-4" />
             </slot>
 
             <span>{{ child.name }}</span>

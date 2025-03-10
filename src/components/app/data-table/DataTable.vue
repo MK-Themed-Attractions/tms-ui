@@ -20,6 +20,7 @@ const props = defineProps<{
   items: T[];
   columns?: DataTableColumns[];
   loading?: boolean;
+  caption?: string;
 }>();
 
 const emits = defineEmits<{
@@ -41,9 +42,11 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
 </script>
 <template>
   <Table>
-    <slot name="caption">
-      <TableCaption><slot></slot></TableCaption>
-    </slot>
+
+    <TableCaption v-if="caption">
+      {{ caption }}
+    </TableCaption>
+
     <TableHeader>
       <TableRow>
         <template v-for="column in selectedColumns" :key="column.key">
@@ -55,13 +58,8 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
     </TableHeader>
 
     <TableBody>
-      <TableRow
-        v-if="!loading"
-        v-for="item in items"
-        :key="item[Object.keys(item)[0]]"
-        @click="emits('navigateTo', item, $router)"
-        class="group"
-      >
+      <TableRow v-if="!loading" v-for="item in items" :key="item[Object.keys(item)[0]]"
+        @click="emits('navigateTo', item, $router)" class="group">
         <template v-for="column in selectedColumns" :key="column.key">
           <slot :name="`item.${column.key as string}`" :item="item">
             <TableCell> {{ resolveNestedKey(item, column.key) }}</TableCell>
@@ -69,15 +67,10 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
         </template>
       </TableRow>
 
-      <TableEmpty
-        v-if="!items.length && !loading"
-        :colspan="selectedColumns.length"
-      >
+      <TableEmpty v-if="!items.length && !loading" :colspan="selectedColumns.length">
         <div class="text-center">
           <ImageApp image="/no_file.png" class="mx-auto max-w-5" />
-          <span class="font-medium text-muted-foreground"
-            >No Data Available</span
-          >
+          <span class="font-medium text-muted-foreground">No Data Available</span>
         </div>
       </TableEmpty>
       <TableEmpty v-if="loading" :colspan="selectedColumns.length">
@@ -92,6 +85,7 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
         </TableCell>
       </TableRow>
     </TableFooter>
+
   </Table>
 </template>
 
