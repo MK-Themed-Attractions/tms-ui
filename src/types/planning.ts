@@ -3,6 +3,7 @@ import type {
   Product,
   ProductRouting,
   ProductRoutingOperationLetter,
+  ProductRoutingWorkcenter,
 } from "./products";
 
 export interface Plan {
@@ -36,6 +37,7 @@ export interface PlanBatch {
   updated_at: string;
   user_data?: User;
   tasks?: BatchTask[];
+  routes?: ProductRouting[]
 }
 
 export interface BatchTask {

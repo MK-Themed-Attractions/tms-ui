@@ -7,12 +7,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { Separator } from "@/components/ui/separator";
-
 import type { PlanBatch } from "@/types/planning";
 
 import BatchDateForm from "./BatchDateForm.vue";
 import BatchTaskForm from "./BatchTaskForm.vue";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const props = defineProps<{
   batch: PlanBatch;
@@ -24,17 +23,27 @@ const dialog = defineModel({ default: false });
     <DialogScrollContent @interact-outside="(e) => e.preventDefault()">
       <DialogHeader>
         <DialogTitle>Edit batch information</DialogTitle>
-        <DialogDescription
-          >Edit necessary information, save when done.</DialogDescription
-        >
+        <DialogDescription>Edit necessary information, save when done.</DialogDescription>
       </DialogHeader>
 
       <div class="space-y-6">
-        <BatchDateForm :batch="batch" @submited="dialog = false" />
+        <Tabs default-value="date">
+          <TabsList class="w-full *:grow">
+            <TabsTrigger value="date">
+              Change Schedule
+            </TabsTrigger>
+            <TabsTrigger value="qty">
+              Add Tasks
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="date">
+            <BatchDateForm :batch="batch" @submited="dialog = false" />
+          </TabsContent>
+          <TabsContent value="qty">
+            <BatchTaskForm :batch="batch" @submited="dialog = false" />
 
-        <Separator />
-
-        <BatchTaskForm :batch="batch" @submited="dialog = false" />
+          </TabsContent>
+        </Tabs>
       </div>
     </DialogScrollContent>
   </Dialog>

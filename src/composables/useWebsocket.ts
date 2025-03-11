@@ -82,7 +82,7 @@ export const useWebsocket = () => {
   function notifyTaskCreate(message: Notification<PlanBatch>) {
     if (message.data.data)
       planStore.getBatch(message.data.data?.plan_id, message.data.data.id, {
-        includes: "tasks",
+        includes: "tasks,routes",
       });
 
     toast.info("Task notice", {

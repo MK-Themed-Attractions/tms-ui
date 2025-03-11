@@ -321,7 +321,7 @@ function useReviewAndAdd() {
       <div class="col-span-full text-end">
         <FormSubmitButton
           :disabled="Object.keys(errors).length"
-          @add="submit"
+          @add="handlePlanReviewConfirmed"
           :loading="planLoading"
         >
           <ButtonApp
