@@ -3,7 +3,7 @@ import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { storeToRefs } from "pinia";
 import DepartmentDataTable from "./components/DepartmentDataTable.vue";
 import DepartmentToolbar from "./components/DepartmentToolbar.vue";
-import { provide } from "vue";
+import { provide, type Ref } from "vue";
 import { workerDepartmentOnSuccessKey } from "@/lib/injectionKeys";
 import type { WorkerDepartmentQueryParams } from "@/types/workers";
 import { useRoute } from "vue-router";
@@ -57,7 +57,7 @@ function useWorkerDepartment() {
 }
 
 function useSearch() {
-  const search = useRouteQuery("q");
+  const search = useRouteQuery("q") as Ref<string>;
 
   async function handleSearch(searchQuery: string) {
     await fetchDepartments({
@@ -93,19 +93,12 @@ if (!departments.value) await fetchDepartments();
     </div>
 
     <div>
-      <DepartmentToolbar
-        class="mb-4"
-        v-model:search="search"
-        @search="handleSearch"
-      />
+      <DepartmentToolbar class="mb-4" v-model:search="search" @search="handleSearch" />
 
       <DepartmentDataTable v-if="departments" :departments="departments">
         <template #footer>
-          <PaginationApp
-            @change:query="handleQueryChange"
-            :disable-next="!hasNextPage"
-            :disable-prev="!hasPrevPage"
-          ></PaginationApp>
+          <PaginationApp @change:query="handleQueryChange" :disable-next="!hasNextPage" :disable-prev="!hasPrevPage">
+          </PaginationApp>
         </template>
       </DepartmentDataTable>
     </div>

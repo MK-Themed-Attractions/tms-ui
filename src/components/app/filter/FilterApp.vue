@@ -31,7 +31,10 @@ const props = withDefaults(
     maxSelectedText: 3,
   }
 );
-
+const emits = defineEmits<{
+  (e: 'select', selected: T[]): void;
+  (e: 'clearSelect'): void;
+}>()
 
 const selected = defineModel<T[]>({ default: [] })
 
@@ -46,11 +49,14 @@ function handleSelect(item: T) {
   selected.value = exists
     ? selected.value.filter((e) => e.id !== item.id)
     : [...selected.value, item];
+
+  emits('select', selected.value)
 }
 
 function clearSelected() {
   selected.value = [];
 
+  emits('clearSelect')
 }
 
 </script>

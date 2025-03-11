@@ -30,8 +30,6 @@ export const useWorkerStore = defineStore("workers", () => {
   const workers = computed(() => {
     if (paginatedResponse.value) {
       return paginatedResponse.value.data;
-    } else {
-      return [];
     }
   });
 

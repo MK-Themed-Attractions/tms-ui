@@ -138,34 +138,15 @@ watch(search, (newValue) => {
 
 <template>
   <div class="flex items-center justify-between gap-2">
-    <form
-      @submit.prevent="emits('search', search)"
-      class="flex w-[clamp(10rem,50vw,20rem)] items-center gap-2"
-    >
-      <Input
-        placeholder="Search workers..."
-        v-model="search"
-        :disabled="loading"
-        class="h-9"
-      />
+    <form @submit.prevent="emits('search', search)" class="flex w-[clamp(10rem,50vw,20rem)] items-center gap-2">
+      <Input placeholder="Search workers..." v-model="search" :disabled="loading" class="h-9" />
     </form>
     <div class="mr-auto flex flex-wrap gap-2">
-      <FilterApp
-        v-if="departments"
-        :items="departments"
-        class="max-w-[15rem]"
-        text="Department"
-        @select="handleWorkerDepartmentFilter"
-        @clear-select="handleClearDepartmentFilter"
-      >
+      <FilterApp v-if="departments" :items="departments" class="max-w-[15rem]" text="Department"
+        @select="handleWorkerDepartmentFilter" @clear-select="handleClearDepartmentFilter">
       </FilterApp>
-      <FilterApp
-        :items="workerStatuses"
-        class="max-w-[15rem]"
-        text="Status"
-        @select="handleWorkerStatusFilter"
-        @clear-select="handleClearStatusFilter"
-      >
+      <FilterApp :items="workerStatuses" class="max-w-[15rem]" text="Status" @select="handleWorkerStatusFilter"
+        @clear-select="handleClearStatusFilter">
       </FilterApp>
     </div>
 
@@ -187,10 +168,7 @@ watch(search, (newValue) => {
           <DropdownMenuLabel>Settings</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            class="text-destructive hover:!text-destructive"
-            @click="handleShowDeactivateDialog"
-          >
+          <DropdownMenuItem class="text-destructive hover:!text-destructive" @click="handleShowDeactivateDialog">
             <WifiOff class="stroke-destructive" />
             Deactivate RFID
           </DropdownMenuItem>
@@ -199,9 +177,7 @@ watch(search, (newValue) => {
     </div>
 
     <!-- Deactivate batch worker  Dialog-->
-    <WorkerBatchDeactivateDialog
-      v-model="batchDeactivateDialog"
-    ></WorkerBatchDeactivateDialog>
+    <WorkerBatchDeactivateDialog v-model="batchDeactivateDialog"></WorkerBatchDeactivateDialog>
   </div>
 </template>
 
