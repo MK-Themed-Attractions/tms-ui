@@ -4,7 +4,7 @@ import { ButtonApp } from "../button";
 import type { PaginationButtonsAppProps } from ".";
 
 const props = defineProps<PaginationButtonsAppProps>();
-const page = defineModel('page', { default: '1' });
+const page = defineModel<string | number>('page', { default: '1' });
 </script>
 <template>
   <div>

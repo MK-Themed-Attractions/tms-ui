@@ -90,16 +90,8 @@ if (!departments.value) await fetchWorkerDepartments();
     </div>
 
     <div class="space-y-4">
-      <WorkerToolbar
-        @search="handleSearch"
-        :loading="loading"
-        :search-default-value="q?.toString()"
-      />
-      <WorkerDataTable
-        v-if="workers"
-        :workers="workers"
-        class="rounded-lg border shadow-sm"
-      >
+      <WorkerToolbar @search="handleSearch" :loading="loading" :search-default-value="q?.toString()" />
+      <WorkerDataTable v-if="workers" :workers="workers" class="rounded-lg border shadow-sm">
       </WorkerDataTable>
     </div>
   </div>
