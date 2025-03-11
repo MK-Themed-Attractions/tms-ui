@@ -210,7 +210,6 @@ onBeforeUnmount(() => {
                                         <p>All of the tasks for this batch are not done yet.</p>
                                     </div>
                                 </div>
-
                             </template>
 
                         </WipBatchAccordion>

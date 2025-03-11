@@ -12,6 +12,7 @@ import { CheckCircle, XCircle } from 'lucide-vue-next';
 
 
 const { hasNextPage, hasPrevPage, kpis, fetchKPIs, page, perPage, loading } = usePaginate()
+
 function usePaginate() {
     const qcStore = useQcStore()
     const { hasPrevPage, hasNextPage, kpis, loading } = storeToRefs(qcStore)
@@ -97,6 +98,7 @@ if (!kpis.value) {
             </PaginationApp2>
         </template>
     </DataTable>
+
 </template>
 
 

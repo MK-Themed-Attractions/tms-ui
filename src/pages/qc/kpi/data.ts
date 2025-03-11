@@ -22,3 +22,18 @@ export const kpiDataTableColumns: DataTableColumns[] = [
     title: "",
   },
 ];
+
+export const kpiDeptDataTableColumns: DataTableColumns[] = [
+  {
+    key: "title",
+    title: "Title",
+  },
+  {
+    key: "description",
+    title: "Description",
+  },
+  {
+    key: "actions",
+    title: "",
+  },
+];

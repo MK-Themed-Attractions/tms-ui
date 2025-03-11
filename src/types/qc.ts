@@ -3,7 +3,7 @@ import type { QCTaskVerdict } from "@/pages/qc/home/data";
 export interface KPI {
   title: string;
   description: string;
-  is_default: string;
+  is_default: boolean;
   id: string;
   departments?: { department: string; id: string }[];
 }
@@ -40,5 +40,5 @@ export interface KPIPayload {
   title: string;
   description?: string;
   is_default: boolean;
-  code?: string[];
+  codes?: string[];
 }

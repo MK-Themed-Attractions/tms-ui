@@ -50,6 +50,41 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
     return departments.value?.find((d) => d.id === deptId)?.work_centers;
   }
 
+  /**
+   *
+   * @param workCenters array of workCenter code
+   */
+  function getDepartmentByWorkCenters(workCenters: string[]) {
+    const result: WorkerDepartment[] = [];
+    const seen = new Set<string>(); // To track unique department IDs
+
+    departments.value?.forEach((department) => {
+      if (department.work_centers.some((wc) => workCenters.includes(wc))) {
+        if (!seen.has(department.id)) {
+          seen.add(department.id);
+          result.push(department);
+        }
+      }
+    });
+
+    return result;
+  }
+
+  /**
+   * Get department by work center code in a {id:string;department:string} form
+   * @param workCenter workCenter code
+   * @returns string[]
+   */
+  function getDepartmentCodeIdByWorkCenter(workCenter: string) {
+    const dept = departments.value?.find((d) => d.work_centers.includes(workCenter));
+
+    if (dept) {
+      return {
+        department: workCenter,
+        id: dept.id,
+      };
+    }
+  }
   async function getDepartments(params?: Partial<WorkerDepartmentQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -93,6 +128,8 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
 
   return {
     getWorkCentersByDeptId,
+    getDepartmentByWorkCenters,
+    getDepartmentCodeIdByWorkCenter,
     getDepartments,
     errors,
     loading,
