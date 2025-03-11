@@ -180,38 +180,31 @@ onUpdated(async () => {
 </script>
 <template>
   <Dialog v-model:open="dialog">
-    <slot
-      :props="{
-        onClick: () => {
-          dialog = true;
-        },
-      }"
-    >
+    <slot :props="{
+      onClick: () => {
+        dialog = true;
+      },
+    }">
     </slot>
 
-    <DialogScrollContent
-      @pointer-down-outside="(e) => e.preventDefault()"
-      class="max-w-[30rem]"
-    >
+    <DialogScrollContent @pointer-down-outside="(e) => e.preventDefault()" class="max-w-[30rem]">
       <!-- HEADER -->
       <DialogHeader>
         <slot name="header.title">
           <DialogTitle>Add Department</DialogTitle>
         </slot>
         <slot name="header.description">
-          <DialogDescription
-            >Add new department, Click save when your're
-            done.</DialogDescription
-          >
+          <DialogDescription>Add new department, Click save when your're
+            done.</DialogDescription>
         </slot>
       </DialogHeader>
 
       <!-- CONTENT -->
       <div>
-        <Alert variant="destructive" v-if="errors">
+        <Alert variant="destructive" v-if="errors && errors.status === 422">
           <AlertCircle class="h-4 w-4" />
           <AlertTitle>An error occured!</AlertTitle>
-          <AlertDescription>{{ errors?.data.data[0] }}</AlertDescription>
+          <AlertDescription>{{ errors.data.data[0] }}</AlertDescription>
         </Alert>
         <form class="grid gap-4 py-4" @submit="onSubmit">
           <FormField v-slot="{ componentField }" name="code">
@@ -245,12 +238,8 @@ onUpdated(async () => {
               <FormLabel>Work Centers</FormLabel>
 
               <FormControl>
-                <WorkCenterInput
-                  v-if="workCenters && workCenters.length"
-                  v-model="selectedWorkCenters"
-                  :work-centers="workCenters"
-                  @select="handleWorkcenterSelect"
-                />
+                <WorkCenterInput v-if="workCenters && workCenters.length" v-model="selectedWorkCenters"
+                  :work-centers="workCenters" @select="handleWorkcenterSelect" />
               </FormControl>
               <div class="col-start-2 -col-end-1">
                 <FormDescription>Select at least 1 work center</FormDescription>

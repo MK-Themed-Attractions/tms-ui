@@ -44,7 +44,7 @@ function useUpdate() {
         </TableCell>
       </template>
       <template #item.work_centers="{ item }">
-        <TableCell class="flex gap-1">
+        <TableCell class="flex gap-1 flex-wrap ">
           <span class="rounded-md border px-2 text-xs font-medium uppercase" v-for="wc in item.work_centers">
             {{ wc }}
           </span>

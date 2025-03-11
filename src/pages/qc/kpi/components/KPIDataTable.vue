@@ -78,7 +78,7 @@ if (!kpis.value) {
         </template>
         <template #item.departments="{ item }">
             <TableCell>
-                <ul v-if="item.departments && item.departments.length" class="flex items-center gap-2">
+                <ul v-if="item.departments && item.departments.length" class="flex items-center flex-wrap gap-2">
                     <li v-for="dept in item.departments" :key="dept.id" class="text-xs border rounded-md px-1">
                         {{ dept.department }}
                     </li>

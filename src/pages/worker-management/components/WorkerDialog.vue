@@ -149,13 +149,11 @@ onUpdated(() => {
 
 <template>
   <Dialog v-model:open="dialog">
-    <slot
-      :props="{
-        onClick: () => {
-          dialog = true;
-        },
-      }"
-    >
+    <slot :props="{
+      onClick: () => {
+        dialog = true;
+      },
+    }">
     </slot>
 
     <DialogContent @pointer-down-outside="(e) => e.preventDefault()">
@@ -163,16 +161,14 @@ onUpdated(() => {
         <slot name="header.title">
           <DialogTitle>Add Worker</DialogTitle>
         </slot>
-        <DialogDescription
-          >Fill the form below correct data, Click save when your're
-          done.</DialogDescription
-        >
+        <DialogDescription>Fill the form below correct data, Click save when your're
+          done.</DialogDescription>
       </DialogHeader>
       <!-- HEADER -->
 
       <!-- CONTENT -->
       <div>
-        <Alert variant="destructive" v-if="errors">
+        <Alert variant="destructive" v-if="errors && errors.status === 422">
           <AlertCircle class="h-4 w-4" />
           <AlertTitle>An error occured!</AlertTitle>
           <AlertDescription>{{ errors?.data.data[0] }}</AlertDescription>
@@ -193,16 +189,12 @@ onUpdated(() => {
             <FormItem class="">
               <FormLabel>RFID</FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  v-bind="componentField"
-                  @keydown.enter="(e: Event) => e.preventDefault()"
-                />
+                <Input type="text" v-bind="componentField" @keydown.enter="(e: Event) => e.preventDefault()" />
                 <FormMessage />
               </FormControl>
 
-              <FormDescription class="flex items-center gap-2"
-                ><ScanQrCode :size="15" /> Place the ID on the scanner
+              <FormDescription class="flex items-center gap-2">
+                <ScanQrCode :size="15" /> Place the ID on the scanner
               </FormDescription>
             </FormItem>
           </FormField>
@@ -238,11 +230,7 @@ onUpdated(() => {
                 </FormControl>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem
-                      v-for="dept in departments"
-                      :key="dept.id"
-                      :value="dept.id"
-                    >
+                    <SelectItem v-for="dept in departments" :key="dept.id" :value="dept.id">
                       {{ dept.name }}
                     </SelectItem>
                   </SelectGroup>
