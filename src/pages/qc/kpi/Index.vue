@@ -15,7 +15,7 @@ import { useRoute } from 'vue-router';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 
 const route = useRoute()
-const { handleFormSubmit, handleDeptFormSubmit, selectedKpi, handleEditKpi, handleFormEditSubmit, handleDeptEditFormSubmit, handleDeptEditKpi } = useKPI()
+const { handleFormSubmit, handleDeptFormSubmit, selectedKpi, handleEditKpi, handleFormEditSubmit, handleDeptEditFormSubmit, handleDeptEditKpi, handleGetKpiOnDeptMode } = useKPI()
 const selectedDepartmentId = ref<string>()
 const showEditDialog = ref(false)
 const showDeptEditDialog = ref(false)
@@ -78,29 +78,51 @@ function useKPI() {
         showEditDialog.value = true;
     }
 
+    function getWorkCentersByDepartment() {
+        if (selectedDepartmentId.value) {
+            // Get work center codes associated with the selected department
+            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value);
+
+            // Initialize an array to store work center details
+            const workCenterList: { department: string; id: string }[] = [];
+
+            // Loop through each work center and fetch its details
+            workCenters?.forEach(workCenter => {
+                // Get work center details as {id: string, department: string}
+                const workCenterInfo = workerDepartmentStore.getDepartmentCodeIdByWorkCenter(workCenter);
+
+                // Add the work center info to the array if it's valid
+                if (workCenterInfo) {
+                    workCenterList.push(workCenterInfo);
+                }
+            });
+            return workCenterList;
+        }
+    }
+
     function handleDeptEditKpi(kpi: KPI) {
         selectedKpi.value = kpi
+        selectedKpi.value.departments = []
+        selectedKpi.value.departments = getWorkCentersByDepartment()
 
-        //since this kpi data doesnt have departments attach with it
-        //transform the department in a form of {id:string;department:string} type
-        if (selectedDepartmentId.value) {
-            //get workcenter code as an array using the selected department id
-            const departments = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
-            //initialize the kpi departments property
-            selectedKpi.value.departments = []
-            //loop through each department code
-            departments?.forEach(d => {
-                //get the properly typed work center {id:string;department:string}
-                const workCenterIdCode = workerDepartmentStore.getDepartmentCodeIdByWorkCenter(d)
-                //push it in the kpi departments array
-                if (workCenterIdCode) {
-                    selectedKpi.value?.departments?.push(workCenterIdCode)
-                }
-            })
-
-        }
         showDeptEditDialog.value = true;
     }
+
+
+    function handleGetKpiOnDeptMode() {
+        const newKpi = ref<KPI>({
+            is_default: false,
+            departments: [],
+            title: '',
+            description: '',
+            id: ''
+        })
+        if (getWorkCentersByDepartment())
+            newKpi.value.departments = getWorkCentersByDepartment()
+
+        return newKpi.value
+    }
+
 
     return {
         handleFormSubmit,
@@ -108,6 +130,7 @@ function useKPI() {
         handleFormEditSubmit,
         handleDeptEditKpi,
         handleDeptEditFormSubmit,
+        handleGetKpiOnDeptMode,
         selectedKpi,
         handleEditKpi
     }
@@ -157,7 +180,7 @@ function useKPI() {
             </TabsContent>
             <TabsContent value="department">
                 <Card class="space-y-4 p-4">
-                    <KPIFormDialog @submit="handleDeptFormSubmit">
+                    <KPIFormDialog @submit="handleDeptFormSubmit" :kpi="handleGetKpiOnDeptMode()" mode="edit">
                         <ButtonApp :prepend-icon="Plus">Add KPI</ButtonApp>
                     </KPIFormDialog>
                     <KPIDeptDataTable v-model:selecteddepartment="selectedDepartmentId">
@@ -175,12 +198,7 @@ function useKPI() {
                 <KPIFormDialog v-if="selectedKpi" v-model="showDeptEditDialog" mode="edit" :kpi="selectedKpi"
                     @submit="handleDeptEditFormSubmit"></KPIFormDialog>
             </TabsContent>
-
-
         </Tabs>
-
-
-
     </div>
 </template>
 
