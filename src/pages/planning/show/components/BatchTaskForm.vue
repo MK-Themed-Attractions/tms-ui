@@ -18,7 +18,6 @@ import { ref } from "vue";
 import { toast } from "vue-sonner";
 import { z } from "zod";
 import FormRoutingSelectInput from "../../create/components/FormRoutingSelectInput.vue";
-import { useProductStore } from "@/stores/productStore";
 import { useAuthStore } from "@/stores/authStore";
 
 const props = defineProps<{
@@ -29,8 +28,6 @@ const emits = defineEmits<{
 }>();
 const planStore = usePlanStore();
 const { errors } = storeToRefs(planStore);
-const productStore = useProductStore();
-const { product, filteredRoutings } = storeToRefs(productStore);
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -75,9 +72,7 @@ const submit = handleSubmit(async (values) => {
         <FormControl>
           <Input type="number" v-bind="componentField" />
         </FormControl>
-        <FormDescription
-          >Amount of task to be added on this batch.</FormDescription
-        >
+        <FormDescription>Amount of task to be added on this batch.</FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
@@ -85,22 +80,15 @@ const submit = handleSubmit(async (values) => {
       <FormItem>
         <FormLabel>Start route</FormLabel>
         <FormControl>
-          <FormRoutingSelectInput
-            v-if="filteredRoutings && filteredRoutings.length"
-            v-bind="componentField"
-            :routings="filteredRoutings"
-          />
+          <FormRoutingSelectInput v-if="batch.routes && batch.routes.length" v-bind="componentField"
+            :routings="batch.routes" />
         </FormControl>
-        <FormDescription
-          >Amount of task to be added on this batch.</FormDescription
-        >
+        <FormDescription>Amount of task to be added on this batch.</FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
 
-    <ButtonApp type="submit" class="ml-auto" :loading="taskLoading"
-      >Add tasks</ButtonApp
-    >
+    <ButtonApp type="submit" class="ml-auto" :loading="taskLoading">Add tasks</ButtonApp>
   </form>
 </template>
 

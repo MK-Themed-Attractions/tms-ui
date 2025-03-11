@@ -37,7 +37,17 @@ function useDate() {
   const { user } = storeToRefs(authStore)
   const dateFormSchema = toTypedSchema(
     z.object({
-      start_date: z.string().nonempty("Required"),
+      start_date: z.string().nonempty("Required").refine((date) => {
+        const inputDate = new Date(date)
+        const today = new Date()
+
+        today.setHours(0, 0, 0, 0)
+        inputDate.setHours(0, 0, 0, 0)
+
+        return inputDate >= today;
+      }, {
+        message: 'Please select today or a future date.',
+      }),
       user_id: z.string().default(user.value.id)
     }),
   );
@@ -59,7 +69,7 @@ function useDate() {
 
     if (!errors.value) {
       toast("Batch notice", {
-        description: "Batch start date successfully changed.",
+        description: "Batch start date is being processed. Please wait",
       });
 
       emits("submited");

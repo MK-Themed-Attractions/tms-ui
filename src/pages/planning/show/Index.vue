@@ -44,7 +44,7 @@ function useBatch() {
 
     batchLoading.value = true;
     await planStore.getBatch(plan.value?.id, selectedBatchId.value, {
-      includes: "tasks",
+      includes: "tasks,routes",
     });
     batchLoading.value = false;
   });
@@ -63,11 +63,7 @@ function useBatch() {
   <div class="container">
     <div class="grid gap-4 lg:grid-cols-2">
       <ProductImage v-if="productData" :product="productData" class="mx-auto" />
-      <PlanInfo
-        v-if="plan"
-        :plan="plan"
-        @edit="() => (openEditDialog = true)"
-      />
+      <PlanInfo v-if="plan" :plan="plan" @edit="() => (openEditDialog = true)" />
 
       <div class="col-span-full text-sm">
         <h3 class="font-medium">Batches:</h3>
@@ -76,11 +72,7 @@ function useBatch() {
         </p>
 
         <div v-if="plan?.batches?.length" class="mt-2">
-          <PlanBatchTabs
-            v-model="selectedBatchId"
-            :batches="plan.batches"
-            :loading="batchLoading"
-          >
+          <PlanBatchTabs v-model="selectedBatchId" :batches="plan.batches" :loading="batchLoading">
             <template #append>
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -94,14 +86,12 @@ function useBatch() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem @click="openAddBatchDialog = true">
                       <Plus />
-                      Add batch</DropdownMenuItem
-                    >
-                    <DropdownMenuItem
-                      @click="openBatchChangePriorityDialog = true"
-                    >
+                      Add batch
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="openBatchChangePriorityDialog = true">
                       <ArrowUpWideNarrow />
-                      Change batch priority</DropdownMenuItem
-                    >
+                      Change batch priority
+                    </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -122,25 +112,10 @@ function useBatch() {
       </div>
     </div>
 
-    <PlanEditDialog
-      v-model="openEditDialog"
-      v-if="plan"
-      :plan="plan"
-      :key="plan.id"
-    />
+    <PlanEditDialog v-model="openEditDialog" v-if="plan" :plan="plan" :key="plan.id" />
 
-    <BatchAddDialog
-      v-if="plan"
-      v-model="openAddBatchDialog"
-      :key="plan.id"
-      :plan="plan"
-    />
-    <BatchChangePriorityDialog
-      v-if="plan"
-      v-model="openBatchChangePriorityDialog"
-      :plan="plan"
-      :key="plan.id"
-    />
+    <BatchAddDialog v-if="plan" v-model="openAddBatchDialog" :key="plan.id" :plan="plan" />
+    <BatchChangePriorityDialog v-if="plan" v-model="openBatchChangePriorityDialog" :plan="plan" :key="plan.id" />
   </div>
 </template>
 
