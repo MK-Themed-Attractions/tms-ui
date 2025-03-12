@@ -9,7 +9,7 @@ import type {
   PlanQueryParams,
 } from "@/types/planning";
 import { useStorage } from "@vueuse/core";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed, ref } from "vue";
@@ -34,6 +34,7 @@ export const usePlanStore = defineStore("plans", () => {
     paginate: paginatedResponse,
   } = useSimplePaginateAPIResource<Plan>();
   const authStore = useAuthStore();
+  const  { user } = storeToRefs(authStore);
   setHeader("Bearer-Token", bearerToken);
 
   const plan = ref<Plan>();
@@ -110,6 +111,7 @@ export const usePlanStore = defineStore("plans", () => {
     );
 
     await put(`/api/plan/${planId}/batch/${batchId}`, form);
+    
   }
 
   async function updatePlanBatches(planId: string, form: PlanBatchForm) {
@@ -118,7 +120,10 @@ export const usePlanStore = defineStore("plans", () => {
       bearerToken,
     );
 
-    await put(`/api/plan/${planId}/batch/update`, form);
+    await put(`/api/plan/${planId}/batch/update`, {
+      user_id : user.value.id,
+      ...form
+    });
   }
 
   async function getBatch(
