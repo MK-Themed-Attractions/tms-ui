@@ -495,7 +495,7 @@ onBeforeMount(() => {
   <div class="container space-y-6">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Work in progress</h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-sm">
         This section lets you assign workers to tasks, start, pause, and
         complete them, and view real-time task status.
       </p>
