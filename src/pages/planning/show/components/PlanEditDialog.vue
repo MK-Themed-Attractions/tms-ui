@@ -24,6 +24,7 @@ import { ButtonApp } from "@/components/app/button";
 import { usePlanStore } from "@/stores/planStore";
 import { toast } from "vue-sonner";
 import { storeToRefs } from "pinia";
+import { ref, watch, watchEffect } from "vue";
 
 const props = defineProps<{
   plan: Plan;
@@ -35,36 +36,29 @@ const { errors: planErrors, loading } = storeToRefs(planStore);
 const formSchema = toTypedSchema(
   z.object({
     plan_data: z.object({
-      code: z.string().nonempty("Required").default(props.plan.plan_data.code),
+      code: z.string().nonempty("Required"),
       description: z
         .string()
         .optional()
         .nullable()
         .default(props.plan.plan_data.description),
-      is_prototype: z.boolean().default(props.plan.plan_data.is_prototype),
+      is_prototype: z.boolean(),
     }),
   }),
 );
 
 const { handleSubmit, setValues } = useForm({
   validationSchema: formSchema,
-  keepValuesOnUnmount: true,
 });
 
 const submit = handleSubmit(async (values) => {
   await planStore.updatePlanData(props.plan.id, values);
 
   if (!planErrors.value) {
-    /* refetch the plan show to get udpated values */
-    await planStore.getPlan(props.plan.id, { includes: "batches" });
-
-    /* refetch the plan list to get updated values
-     */
-    await planStore.getPlans();
 
     /* display a toast message */
-    toast("Success", {
-      description: "Plan has been successfully updated.",
+    toast.info("Plan update in process", {
+      description: "Plan update is being processed, please wait.",
     });
 
     /* close the dialog */
@@ -76,19 +70,23 @@ const submit = handleSubmit(async (values) => {
   }
 });
 
-setValues({
-  plan_data: props.plan.plan_data,
-});
+watchEffect(() => {
+  setValues({
+    plan_data: {
+      code: props.plan.plan_data.code,
+      description: props.plan.plan_data.description,
+      is_prototype: props.plan.plan_data.is_prototype,
+    }
+  })
+})
 </script>
 <template>
   <Dialog v-model:open="dialog">
     <DialogContent @interact-outside="(e) => e.preventDefault()">
       <DialogHeader>
         <DialogTitle>Edit plan</DialogTitle>
-        <DialogDescription
-          >Edit basic information, once the plan is moving, you are not able to
-          edit this information</DialogDescription
-        >
+        <DialogDescription>Edit basic information, once the plan is moving, you are not able to
+          edit this information</DialogDescription>
       </DialogHeader>
 
       <form @submit="submit" class="space-y-4">

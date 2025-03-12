@@ -34,7 +34,7 @@ export const usePlanStore = defineStore("plans", () => {
     paginate: paginatedResponse,
   } = useSimplePaginateAPIResource<Plan>();
   const authStore = useAuthStore();
-  const  { user } = storeToRefs(authStore);
+  const { user } = storeToRefs(authStore);
   setHeader("Bearer-Token", bearerToken);
 
   const plan = ref<Plan>();
@@ -97,7 +97,10 @@ export const usePlanStore = defineStore("plans", () => {
       bearerToken,
     );
 
-    const res = await put(`/api/plan/${planId}`, form);
+    const res = await put(`/api/plan/${planId}`, {
+      user_id: user.value.id,
+      ...form,
+    });
   }
 
   async function updatePlanBatch(
@@ -111,7 +114,6 @@ export const usePlanStore = defineStore("plans", () => {
     );
 
     await put(`/api/plan/${planId}/batch/${batchId}`, form);
-    
   }
 
   async function updatePlanBatches(planId: string, form: PlanBatchForm) {
@@ -121,8 +123,8 @@ export const usePlanStore = defineStore("plans", () => {
     );
 
     await put(`/api/plan/${planId}/batch/update`, {
-      user_id : user.value.id,
-      ...form
+      user_id: user.value.id,
+      ...form,
     });
   }
 
@@ -143,6 +145,17 @@ export const usePlanStore = defineStore("plans", () => {
 
     if (res) {
       batch.value = res?.data;
+
+      //update the plan to reflect the new changes on batch
+      if (plan.value && plan.value.batches) {
+        const foundBatchIndex = plan.value.batches.findIndex(
+          (b) => b.id === res.data.id,
+        );
+        console.log(foundBatchIndex);
+        if (foundBatchIndex !== -1) {
+          plan.value.batches[foundBatchIndex] = res.data;
+        }
+      }
       return res.data;
     }
   }

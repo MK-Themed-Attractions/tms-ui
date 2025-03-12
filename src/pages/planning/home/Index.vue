@@ -12,6 +12,7 @@ import { PaginationApp, type PaginationQuery } from "@/components/app/pagination
 import type { PlanQueryParams } from "@/types/planning";
 import { useRoute } from "vue-router";
 import { Input } from "@/components/ui/input";
+import PlanEditDialog from "../show/components/PlanEditDialog.vue";
 
 const planStore = usePlanStore();
 const route = useRoute()
