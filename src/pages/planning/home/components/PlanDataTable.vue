@@ -11,6 +11,7 @@ import {
 import PlanDataTableDropdown from "./PlanDataTableDropdown.vue";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { Router } from "vue-router";
+import { PaginationApp } from "@/components/app/pagination";
 
 const props = defineProps<{
   plans: Plan[];
@@ -85,6 +86,10 @@ function gotoShow(plan: Plan, router: Router) {
           <DropdownMenuItem>Delete plan</DropdownMenuItem>
         </PlanDataTableDropdown>
       </TableCell>
+    </template>
+
+    <template #footer>
+      <slot name="footer"></slot>
     </template>
   </DataTable>
 </template>

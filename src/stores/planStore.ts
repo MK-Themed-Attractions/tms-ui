@@ -13,6 +13,10 @@ import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed, ref } from "vue";
+import {
+  useSimplePaginate,
+  useSimplePaginateAPIResource,
+} from "@/composables/usePaginate";
 
 export const usePlanStore = defineStore("plans", () => {
   const baseUrl = import.meta.env.VITE_PLANNING_URL;
@@ -23,7 +27,12 @@ export const usePlanStore = defineStore("plans", () => {
   const { get, errors, loading, setHeader, post, put } = useAxios({
     baseURL: baseUrl,
   });
-  const paginatedResponse = ref<SimplePaginateAPIResource<Plan>>();
+  const {
+    hasNextPage,
+    hasPrevPage,
+    items: plans,
+    paginate: paginatedResponse,
+  } = useSimplePaginateAPIResource<Plan>();
   const authStore = useAuthStore();
   setHeader("Bearer-Token", bearerToken);
 
@@ -31,7 +40,6 @@ export const usePlanStore = defineStore("plans", () => {
   const batch = ref<PlanBatch>();
 
   /* GETTERS */
-  const plans = computed(() => paginatedResponse.value?.data);
 
   function invalidate() {
     paginatedResponse.value = undefined;
@@ -57,7 +65,7 @@ export const usePlanStore = defineStore("plans", () => {
 
     return null;
   }
-  
+
   async function getPlan(planId: string, params?: Partial<PlanQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -160,6 +168,8 @@ export const usePlanStore = defineStore("plans", () => {
   return {
     paginatedResponse,
     plans,
+    hasNextPage,
+    hasPrevPage,
     plan,
     batch,
     getPlans,

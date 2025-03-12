@@ -10,8 +10,8 @@ export interface PaginationAppProps {
 }
 
 export interface PaginationQuery {
-  page: number;
-  perPage: string;
+  page: number|string;
+  perPage: string|number;
 }
 
 export interface PaginationButtonsAppProps {
