@@ -11,6 +11,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@tanstack/vue-table": "^8.21.2",
     "@vee-validate/zod": "^4.15.0",
     "@vueuse/core": "^12.5.0",
     "@vueuse/router": "^12.4.0",
