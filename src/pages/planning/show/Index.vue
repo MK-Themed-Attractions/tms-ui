@@ -96,6 +96,7 @@ function useBatch() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </template>
+            
             <div class="space-y-4">
               <BatchInfo :batch="batch" v-if="batch" />
               <Separator />
