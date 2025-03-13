@@ -8,22 +8,42 @@ import { usePlanStore } from "@/stores/planStore";
 import PlanDataTable from "./components/PlanDataTable.vue";
 import { Button } from "@/components/ui/button";
 import { storeToRefs } from "pinia";
+import { PaginationApp, type PaginationQuery } from "@/components/app/pagination";
+import type { PlanQueryParams } from "@/types/planning";
+import { useRoute } from "vue-router";
+import { Input } from "@/components/ui/input";
+import PlanEditDialog from "../show/components/PlanEditDialog.vue";
 
 const planStore = usePlanStore();
-const { filter, getPlans, plans } = usePlan();
+const route = useRoute()
+const { filter, getPlans, plans, handleGetPlansWithPagination, hasNextPage, hasPrevPage } = usePlan();
+const search = ref<string>()
 
 function usePlan() {
   const filter = ref([]);
-  const { plans } = storeToRefs(planStore);
 
-  async function getPlans() {
-    const res = await planStore.getPlans();
+  const { plans, hasNextPage, hasPrevPage } = storeToRefs(planStore);
+
+  async function getPlans(params?: Partial<PlanQueryParams>) {
+    const res = await planStore.getPlans({
+      page: route.query.page ? +route.query.page : undefined,
+      per_page: route.query['per-page'] ? route.query['per-page'].toString() : undefined,
+      q: search.value,
+      ...params
+    });
+  }
+
+  async function handleGetPlansWithPagination(params: Partial<PaginationQuery>) {
+    await getPlans({ page: params.page ? +params.page : undefined, per_page: params.perPage })
   }
 
   return {
     filter,
     getPlans,
+    handleGetPlansWithPagination,
     plans,
+    hasNextPage,
+    hasPrevPage
   };
 }
 
@@ -43,6 +63,8 @@ await getPlans();
     <div>
       <PlanToolbar>
         <template #prepend>
+          <Input placeholder="Search plan..." class="h-9 w-[clamp(10rem,50vw,20rem)]" v-model="search"
+            @keydown.enter="getPlans()" />
           <!-- <FilterApp v-model="filter" text="Status" :items="planStatuses"></FilterApp> -->
         </template>
         <template #append>
@@ -56,6 +78,10 @@ await getPlans();
     </div>
     <div class="rounded-md border shadow-sm">
       <PlanDataTable v-if="plans" :plans="plans" :columns="planDataColumns">
+        <template #footer>
+          <PaginationApp @change:query="handleGetPlansWithPagination" :disable-next="!hasNextPage"
+            :disalble-prev="!hasPrevPage" />
+        </template>
       </PlanDataTable>
     </div>
   </div>
