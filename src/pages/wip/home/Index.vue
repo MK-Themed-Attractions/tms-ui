@@ -505,7 +505,7 @@ onBeforeMount(() => {
       <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading">
         <template #append>
           <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
-            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter">
+            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
           </InputFilter>
 
           <div class="basis-full">
