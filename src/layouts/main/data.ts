@@ -9,6 +9,7 @@ import {
   Package,
   SearchCheck,
   TrendingUp,
+  User,
   Wrench,
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
@@ -53,5 +54,10 @@ export const navItemData: NavItem[] = [
     name: "Planning",
     to: { name: "planningIndex" },
     icon: Calendar,
+  },
+  {
+    name: "User management",
+    to: { name: "userIndex" },
+    icon: User,
   },
 ];
