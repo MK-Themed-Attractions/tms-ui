@@ -19,8 +19,11 @@ import { useWorkerStore } from "./workerStore";
 import { usePlanStore } from "./planStore";
 import { useWipStore } from "./wipStore";
 import { useQcStore } from "./qcStore";
+import { useRouter } from "vue-router";
 
 export const useAuthStore = defineStore("auth", () => {
+  const router = useRouter();
+
   const user = useStorage<User>("user", null, undefined, {
     serializer: StorageSerializers.object,
   });
@@ -118,6 +121,8 @@ export const useAuthStore = defineStore("auth", () => {
     usePlanStore().invalidate();
     useWipStore().invalidate();
     useQcStore().invalidate();
+
+    router.push({ name: "login" });
   }
 
   return {

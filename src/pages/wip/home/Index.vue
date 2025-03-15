@@ -2,7 +2,7 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskQueryParams } from "@/types/wip";
+import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, getS3Link, toOrdinal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
 import WipTaskDropdown from "./components/WipTaskDropdown.vue";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
+import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
@@ -30,10 +30,11 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
-import { searchFilterData } from "../data";
+import { searchFilterData, workCentersKey } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 
 const { fetchWipPlans,
   wipLoading,
@@ -47,7 +48,7 @@ const { fetchWipPlans,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog } = useWip();
 
-const { openAssignWorkerDialog, selectedDepartmentId } = useWorker()
+const { openAssignWorkerDialog, selectedDepartmentId, workCenters } = useWorker()
 const { handleShowWipDialog, showWipDialog } = useWipShow()
 const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask } = useTaskControls()
 const { handleFinishTask,
@@ -64,27 +65,33 @@ const { handleFinishTask,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
 const workerDepartmentStore = useWorkerDepartmentStore()
-const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly } = useTaskStatusFilter()
+const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly, fetchWipPlansNext, page } = useTaskStatusFilter()
 
 function useWip() {
-  const wipStore = useWipStore();
-  const { wipTasksGrouped, loading: wipLoading } = storeToRefs(wipStore);
-  const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
 
+
+  const wipStore = useWipStore();
+  const { loading: wipLoading } = storeToRefs(wipStore);
+  const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
   //task ids on common ms
   const selectedTaskIds = ref<string[]>([])
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
 
+  const wipTasksGrouped = ref<WipTaskGrouped[]>([]);
 
   async function fetchWipPlans(params?: Partial<WipPlanQueryParams>) {
-    await wipStore.getWipPlansByWorkCenters(params);
+    const wipTaskGroupedData = await wipStore.getWipPlansByWorkCenters(params);
+    if (wipTaskGroupedData) {
+      wipTasksGrouped.value.push(...wipTaskGroupedData)
+      return wipTaskGroupedData;
+    }
+
   }
 
   async function fetchBatchWip(batch: WipBatch) {
-    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters, is_accessible: tasksForTodayOnly.value }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, is_accessible: tasksForTodayOnly.value, }
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
@@ -182,12 +189,15 @@ function useWip() {
 }
 
 function useWorker() {
+
   const openAssignWorkerDialog = ref(false)
   const selectedDepartmentId = ref<string>()
+  const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || ''))
 
   return {
     openAssignWorkerDialog,
-    selectedDepartmentId
+    selectedDepartmentId,
+    workCenters
   }
 }
 
@@ -416,28 +426,48 @@ function useTaskStatusFilter() {
   const search = ref('')
   const filter = ref<InputFilterDropdownData>(searchFilterData[0])
   const tasksForTodayOnly = ref(true)
+  const page = ref(1)
 
   async function handleGetWIpsWithFilter() {
-    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
+    page.value = 1;
+    wipTasksGrouped.value = []
 
     /* if search keyword is empty refetch plans */
     if (!search.value.trim()) {
       await fetchWipPlans({
-        work_centers: workCenters,
+        work_centers: workCenters.value,
         filter: selectedTaskStatusFilter.value,
-        is_accessible: tasksForTodayOnly.value
+        is_accessible: tasksForTodayOnly.value,
+        page: page.value
       })
       return;
     }
 
     /* refetch plans with applied filters */
     await fetchWipPlans({
-      work_centers: workCenters,
+      work_centers: workCenters.value,
       filterBy: filter.value?.key,
       keyword: search.value,
+      page: page.value
     })
 
 
+  }
+
+  async function fetchWipPlansNext(cb: (canAddMore: boolean) => void) {
+    const params: Partial<WipPlanQueryParams> = {
+      work_centers: workCenters.value,
+      page: ++page.value
+    }
+    if (search.value.trim()) {
+      params.keyword = search.value
+      params.filter = filter.value.key
+    }
+
+    const res = await fetchWipPlans(params)
+
+    if (res && !res.length)
+      cb(false)
   }
 
   watch(selectedTaskStatusFilter, async (newValue) => {
@@ -454,13 +484,17 @@ function useTaskStatusFilter() {
     handleGetWIpsWithFilter,
     search,
     filter,
-    tasksForTodayOnly
+    tasksForTodayOnly,
+    page,
+    fetchWipPlansNext
   }
 }
+
 function isBatchDone(batch: WipBatch) {
   if (!batch.tasks) return false;
-  return batch.tasks.every(task => task.status === 'done');
+  return batch.tasks.every(task => task.status === 'done' || task.status === 'qc-passed');
 }
+
 function isBatchStartable(batch: WipBatch) {
   if (!batch.tasks) return false
   return batch.tasks.some(task => task.is_startable);
@@ -471,23 +505,27 @@ function isBatchAssignable(batch: WipBatch) {
 }
 
 async function handleDepartmentSelectionChange(workCenters: string[]) {
+  wipTasksGrouped.value = []
+  page.value = 1;
   await fetchWipPlans({
     work_centers: workCenters,
     filter: selectedTaskStatusFilter.value,
-    is_accessible: tasksForTodayOnly.value
+    is_accessible: tasksForTodayOnly.value,
+    page: page.value
   });
 }
 
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
+provide(workCentersKey,  workCenters)
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
 onBeforeUnmount(() => {
-  useWipStore().reset()
+  wipTasksGrouped.value = []
 })
 onBeforeMount(() => {
-  useWipStore().reset()
+  wipTasksGrouped.value = []
 })
 
 </script>
@@ -505,7 +543,7 @@ onBeforeMount(() => {
       <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading">
         <template #append>
           <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
-            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter">
+            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
           </InputFilter>
 
           <div class="basis-full">
@@ -524,7 +562,8 @@ onBeforeMount(() => {
     </section>
 
     <section>
-      <div class="space-y-10" v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartmentId">
+      <InfiniteScroll v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartmentId"
+        @trigger="fetchWipPlansNext">
         <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id"
           class="rounded-md border p-4 shadow-sm space-y-4">
           <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="space-y-4">
@@ -533,7 +572,7 @@ onBeforeMount(() => {
             <div class="flex gap-2 items-start justify-center" v-if="index === 0">
               <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
                 {{
-                  parentProduct.sku }}</CardInfo>
+                  parentProduct.sku }} </CardInfo>
 
             </div>
             <div class="flex flex-wrap gap-4">
@@ -627,7 +666,9 @@ onBeforeMount(() => {
             </div>
           </div>
         </div>
-      </div>
+        <InfiniteScrollTrigger />
+
+      </InfiniteScroll>
       <!-- fallback for no department -->
       <div v-else-if="!wipTasksGrouped"
         class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
