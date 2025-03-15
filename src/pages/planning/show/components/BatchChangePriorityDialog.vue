@@ -133,34 +133,21 @@ async function handleUpdate() {
 </script>
 <template>
   <Dialog v-model:open="dialog">
-    <DialogScrollContent
-      @interact-outside="(e) => e.preventDefault()"
-      class="max-w-[35rem]"
-    >
+    <DialogScrollContent @interact-outside="(e) => e.preventDefault()" class="max-w-[35rem]">
       <DialogHeader>
         <DialogTitle>Change batch priority</DialogTitle>
-        <DialogDescription
-          >Change a batch priority by clicking on up or down arrow on the right
-          side, press update when done arranging.</DialogDescription
-        >
+        <DialogDescription>Change a batch priority by clicking on up or down arrow on the right
+          side, press update when done arranging.</DialogDescription>
       </DialogHeader>
 
       <div class="mt-4 space-y-4 text-sm">
         <ul v-if="batchesForm" class="grid gap-8">
-          <li
-            v-for="(batch, index) in batchesForm"
-            :key="batch.id"
+          <li v-for="(batch, index) in batchesForm" :key="batch.id"
             class="relative flex items-center rounded-md border shadow"
-            :class="{ outline: activeBatch && activeBatch.id === batch.id }"
-          >
-            <Badge
-              class="absolute -top-4 left-0 rounded-bl-none outline-primary"
-              variant="secondary"
-              >{{ toOrdinal(index + 1) }} priority</Badge
-            >
-            <div
-              class="inline-flex grow flex-wrap items-center justify-between gap-4"
-            >
+            :class="{ outline: activeBatch && activeBatch.id === batch.id }">
+            <Badge class="absolute -top-4 left-0 rounded-bl-none outline-primary" variant="secondary">{{ toOrdinal(index
+              + 1) }} priority</Badge>
+            <div class="inline-flex grow flex-wrap items-center justify-between gap-4">
               <div class="p-2">
                 <p class="font-medium">{{ batch.task_qty }}</p>
                 <span class="text-muted-foreground">Qty</span>
@@ -185,28 +172,16 @@ async function handleUpdate() {
               </div>
             </div>
             <div class="border-l">
-              <ButtonApp
-                class="h-7 w-6"
-                variant="ghost"
-                @click="batchMoveUp(batch)"
-                :disabled="!canMoveUp(index)"
-              >
+              <ButtonApp class="h-7 w-6" variant="ghost" @click="batchMoveUp(batch)" :disabled="!canMoveUp(index)">
                 <ArrowBigUp />
               </ButtonApp>
-              <ButtonApp
-                class="h-7 w-6"
-                variant="ghost"
-                @click="batchMoveDown(batch)"
-                :disabled="!canMoveDown(index)"
-              >
+              <ButtonApp class="h-7 w-6" variant="ghost" @click="batchMoveDown(batch)" :disabled="!canMoveDown(index)">
                 <ArrowBigDown />
               </ButtonApp>
             </div>
           </li>
         </ul>
-        <ButtonApp class="ml-auto" @click="handleUpdate" :loading="loading"
-          >Update</ButtonApp
-        >
+        <ButtonApp class="ml-auto" @click="handleUpdate" :loading="loading">Update</ButtonApp>
       </div>
     </DialogScrollContent>
   </Dialog>

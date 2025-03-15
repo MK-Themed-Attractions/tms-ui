@@ -19,7 +19,7 @@ import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
 import WipTaskDropdown from "./components/WipTaskDropdown.vue";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
+import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
@@ -30,7 +30,7 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
-import { searchFilterData } from "../data";
+import { searchFilterData, workCentersKey } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -48,7 +48,7 @@ const { fetchWipPlans,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog } = useWip();
 
-const { openAssignWorkerDialog, selectedDepartmentId } = useWorker()
+const { openAssignWorkerDialog, selectedDepartmentId, workCenters } = useWorker()
 const { handleShowWipDialog, showWipDialog } = useWipShow()
 const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask } = useTaskControls()
 const { handleFinishTask,
@@ -90,9 +90,8 @@ function useWip() {
   }
 
   async function fetchBatchWip(batch: WipBatch) {
-    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters, is_accessible: tasksForTodayOnly.value, }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, is_accessible: tasksForTodayOnly.value, }
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
@@ -193,10 +192,12 @@ function useWorker() {
 
   const openAssignWorkerDialog = ref(false)
   const selectedDepartmentId = ref<string>()
+  const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || ''))
 
   return {
     openAssignWorkerDialog,
-    selectedDepartmentId
+    selectedDepartmentId,
+    workCenters
   }
 }
 
@@ -429,13 +430,12 @@ function useTaskStatusFilter() {
 
   async function handleGetWIpsWithFilter() {
     page.value = 1;
-    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
     wipTasksGrouped.value = []
 
     /* if search keyword is empty refetch plans */
     if (!search.value.trim()) {
       await fetchWipPlans({
-        work_centers: workCenters,
+        work_centers: workCenters.value,
         filter: selectedTaskStatusFilter.value,
         is_accessible: tasksForTodayOnly.value,
         page: page.value
@@ -445,7 +445,7 @@ function useTaskStatusFilter() {
 
     /* refetch plans with applied filters */
     await fetchWipPlans({
-      work_centers: workCenters,
+      work_centers: workCenters.value,
       filterBy: filter.value?.key,
       keyword: search.value,
       page: page.value
@@ -455,10 +455,8 @@ function useTaskStatusFilter() {
   }
 
   async function fetchWipPlansNext(cb: (canAddMore: boolean) => void) {
-    const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
-
     const params: Partial<WipPlanQueryParams> = {
-      work_centers: workCenters,
+      work_centers: workCenters.value,
       page: ++page.value
     }
     if (search.value.trim()) {
@@ -494,7 +492,7 @@ function useTaskStatusFilter() {
 
 function isBatchDone(batch: WipBatch) {
   if (!batch.tasks) return false;
-  return batch.tasks.every(task => task.status === 'done');
+  return batch.tasks.every(task => task.status === 'done' || task.status === 'qc-passed');
 }
 
 function isBatchStartable(batch: WipBatch) {
@@ -519,6 +517,7 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
+provide(workCentersKey,  workCenters)
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
@@ -573,7 +572,7 @@ onBeforeMount(() => {
             <div class="flex gap-2 items-start justify-center" v-if="index === 0">
               <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
                 {{
-                  parentProduct.sku }}</CardInfo>
+                  parentProduct.sku }} </CardInfo>
 
             </div>
             <div class="flex flex-wrap gap-4">

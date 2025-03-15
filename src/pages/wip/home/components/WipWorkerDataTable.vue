@@ -2,12 +2,12 @@
 import { DataTable } from '@/components/app/data-table';
 import { useWorkerStore } from '@/stores/workerStore';
 import { storeToRefs } from 'pinia';
-import { wipWorkerDataTableColumns, workerPerPage } from '../../data';
+import { wipWorkerDataTableColumns, workCentersKey, workerPerPage } from '../../data';
 import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
-import { TableCell, TableHead, TableRow } from '@/components/ui/table';
+import { TableCell, TableHead } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDataTableChecks } from '@/composables/useDataTableChecks';
-import { computed, ref, watch, watchEffect } from 'vue';
+import { computed, inject, ref, watch, watchEffect } from 'vue';
 import { ButtonApp } from '@/components/app/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-vue-next';
@@ -17,8 +17,12 @@ const emits = defineEmits<{
     (e: 'change', workers: Worker[]): void
 }>()
 const workerStore = useWorkerStore()
-const { workers, hasNextPage, hasPrevPage, loading } = storeToRefs(workerStore)
+const { hasNextPage, hasPrevPage, loading } = storeToRefs(workerStore)
+const workCenters = inject(workCentersKey);
 
+const workers = workerStore.assignableWorkers(workCenters!.value || [])
+
+/* @ts-ignore */
 const { isChecked, checkedItems, handleCheckAll, indicator, toggleCheck } = useDataTableChecks<Worker>(workers)
 
 const { handleSearchWorkers, search } = useSearch()
@@ -77,6 +81,7 @@ await workerStore.getWorkers({ per_page: workerPerPage, includes: 'department' }
 
 <template>
     <div class="border rounded-md shadow-sm">
+
         <div class="p-4 relative">
             <Search class="text-muted-foreground size-4 absolute top-1/2 -translate-y-1/2 left-6" />
             <Input class="pl-8" placeholder="Search employee..." v-model="search"
