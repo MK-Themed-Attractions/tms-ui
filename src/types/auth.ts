@@ -10,6 +10,7 @@ export interface User {
   updated_at: string;
   created_at: string;
   id: string;
+  user_role_ids?: string[];
 }
 
 export interface Token {
@@ -17,6 +18,14 @@ export interface Token {
   token: string;
   validity: string;
 }
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Permission extends Role {}
 
 export interface LoginResponse {
   data: User;

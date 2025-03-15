@@ -54,6 +54,7 @@ export type WipPlanProduct = Pick<
   "sku" | "title" | "updated_at" | "created_at" | "id"
 > & {
   thumbnail: string;
+  parent_code?: string;
 };
 
 export type WipBatch = Omit<

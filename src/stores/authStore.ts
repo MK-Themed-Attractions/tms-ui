@@ -3,10 +3,12 @@ import type {
   BearerTokenResponse,
   LoginCredential,
   LoginResponse,
+  Role,
   Token,
   User,
 } from "@/types/auth";
 import {
+  get,
   StorageSerializers,
   useStorage,
   type MaybeRefOrGetter,
@@ -20,6 +22,8 @@ import { usePlanStore } from "./planStore";
 import { useWipStore } from "./wipStore";
 import { useQcStore } from "./qcStore";
 import { useRouter } from "vue-router";
+import { computed } from "vue";
+import type { SimplePaginate } from "@/types/pagination";
 
 export const useAuthStore = defineStore("auth", () => {
   const router = useRouter();
@@ -44,9 +48,11 @@ export const useAuthStore = defineStore("auth", () => {
     },
   );
 
-  const { errors, loading, post } = useAxios({
+  const { errors, loading, post, get, setHeader } = useAxios({
     baseURL: import.meta.env.VITE_USERS_URL,
   });
+  const accessTokenValue = computed(() => accessToken.value?.token);
+  setHeader("Access-Token", accessTokenValue);
 
   function invalidate() {
     user.value = null;
@@ -125,9 +131,32 @@ export const useAuthStore = defineStore("auth", () => {
     router.push({ name: "login" });
   }
 
+  async function getUsers() {
+    const res = await get<{ data: User[] }>("/api/user");
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  async function getRoles() {
+    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
+
+    if (res) return res.roles.data;
+  }
+
+  async function getPermissions() {
+    const res = await get<{ permissions: SimplePaginate<Role> }>("/api/permission");
+
+    if (res) return res.permissions.data;
+  }
+
   return {
     login,
     user,
+    getUsers,
+    getRoles,
+    getPermissions,
     accessToken,
     refreshToken,
     errors,

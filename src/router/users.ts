@@ -11,6 +11,12 @@ export const users: RouteRecordRaw[] = [
         name: "userIndex",
         component: () => import("@/pages/user-management/home/Index.vue"),
       },
+      {
+        path: "roles-and-permissions",
+        name: "permissionIndex",
+        component: () =>
+          import("@/pages/user-management/permission/home/Index.vue"),
+      },
     ],
   },
 ];
