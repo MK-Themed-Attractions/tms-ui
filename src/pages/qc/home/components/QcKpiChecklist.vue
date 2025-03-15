@@ -61,10 +61,11 @@ const canFail = computed(() => {
                 <Separator orientation="horizontal" />
                 <ul class="grid lg:grid-cols-2 gap-2">
                     <li v-for="kpi in dept.kpi" class="flex gap-2">
-                        <Checkbox class="mt-1" :checked="kpi.checked" @update:checked="e => kpi.checked = e" />
+                        <Checkbox class="mt-1" :checked="kpi.checked" @update:checked="e => kpi.checked = e"
+                            :id="`cb-${kpi.id}`" />
                         <div>
-                            <p class="font-medium">{{ kpi.title }}</p>
-                            <span class="text-muted-foreground">{{ kpi.description }}</span>
+                            <Label class="font-medium" :for="`cb-${kpi.id}`">{{ kpi.title }}</Label>
+                            <p class="text-muted-foreground">{{ kpi.description }}</p>
                         </div>
                     </li>
                 </ul>

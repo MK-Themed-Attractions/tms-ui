@@ -41,6 +41,23 @@ export const useWorkerStore = defineStore("workers", () => {
     return paginatedResponse.value?.links.prev ? true : false;
   });
 
+  /**
+   * Get filtered workers based on their workCenters and active status
+   * @param workCenters
+   * @returns Array of workers with matching workCenters and active status
+   */
+  function assignableWorkers(workCenters: string[]) {
+    return computed(() =>
+      workers.value?.filter((worker) => {
+        return (
+          worker.department?.work_centers.some((center) =>
+            workCenters.includes(center),
+          ) && worker.is_active
+        );
+      }),
+    );
+  }
+
   /* ACTIONS */
 
   function invalidate() {
@@ -145,6 +162,7 @@ export const useWorkerStore = defineStore("workers", () => {
     errors,
     loading,
     workers,
+    assignableWorkers,
     paginatedResponse,
     createWorker,
     updateWorker,
