@@ -39,7 +39,7 @@ export interface BearerTokenResponse {
 
 export interface QueryParams {
   q: string;
-  page: number | number;
+  page: number | string;
   per_page: number | string;
   includes: string;
   filters: FilterQueryParams[];
