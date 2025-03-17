@@ -18,3 +18,21 @@ export const permissionDataTableColumns: DataTableColumns[] = [
     title: "",
   },
 ];
+export const rolesDataTableColumns: DataTableColumns[] = [
+  {
+    key: "name",
+    title: "Key",
+  },
+  {
+    key: "description",
+    title: "Description",
+  },
+  {
+    key: "id",
+    title: "UUID",
+  },
+  {
+    key: "actions",
+    title: "",
+  },
+];

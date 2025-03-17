@@ -45,6 +45,10 @@ export interface PermissionPayload {
   name: string;
   description: string;
 }
+
+export interface RolePayload {
+  
+}
 export interface BearerTokenResponse {
   access_token: string;
   bearer_token: string;

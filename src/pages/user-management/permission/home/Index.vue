@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Roles from './components/Roles.vue';
 import Permissions from './components/Permissions.vue';
 import { Loader, LoaderDescription } from '@/components/app/loader';
-import { Loader2Icon } from 'lucide-vue-next';
 
 
 </script>

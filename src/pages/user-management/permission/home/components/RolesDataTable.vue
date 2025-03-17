@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { DataTable } from '@/components/app/data-table';
-import { TableCell, TableHead, TableHeader } from '@/components/ui/table';
+import { TableCell, TableHead } from '@/components/ui/table';
 import type { Role } from '@/types/auth';
+import { rolesDataTableColumns } from '..';
 
 
 const props = defineProps<{
@@ -9,7 +10,7 @@ const props = defineProps<{
 }>()
 </script>
 <template>
-    <DataTable :items="roles">
+    <DataTable :items="roles" :columns="rolesDataTableColumns">
         <template #header.id="{ item }">
             <TableHead>
                 UUID
@@ -23,6 +24,11 @@ const props = defineProps<{
         <template #item.name="{ item }">
             <TableCell class="font-medium capitalize">
                 {{ item.name }}
+            </TableCell>
+        </template>
+        <template #item.actions="{ item }">
+            <TableCell>
+                <slot name="actions" :item="item" />
             </TableCell>
         </template>
     </DataTable>
