@@ -3,7 +3,7 @@ import { ButtonApp } from '@/components/app/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Permission, PermissionPayload } from '@/types/auth';
+import type { Role, RolePayload } from '@/types/auth';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
 import { computed } from 'vue';
@@ -13,13 +13,13 @@ import { z } from 'zod';
 
 const props = withDefaults(defineProps<{
     mode?: 'add' | 'edit',
-    permission?: Permission
+    role?: Role
     loading?: boolean
 }>(), {
     mode: 'add'
 })
 const emits = defineEmits<{
-    (e: 'submit', payload: PermissionPayload): void
+    (e: 'submit', payload: RolePayload): void
 }>()
 
 const formSchema = toTypedSchema(z.object({
@@ -29,11 +29,11 @@ const formSchema = toTypedSchema(z.object({
 
 /* for editiing */
 const initialValues = computed(() => {
-    if (!props.permission) return {}
+    if (!props.role) return {}
 
     return {
-        name: props.permission.name,
-        description: props.permission.description
+        name: props.role.name,
+        description: props.role.description
     }
 })
 
@@ -53,7 +53,7 @@ const submit = handleSubmit((values) => {
     <form @submit="submit" class="space-y-4">
         <FormField #default="{ componentField }" name="name">
             <FormItem>
-                <FormLabel>Key</FormLabel>
+                <FormLabel>Title</FormLabel>
                 <FormControl>
                     <Input v-bind="componentField" />
                 </FormControl>

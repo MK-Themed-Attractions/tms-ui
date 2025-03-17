@@ -21,7 +21,7 @@ export const permissionDataTableColumns: DataTableColumns[] = [
 export const rolesDataTableColumns: DataTableColumns[] = [
   {
     key: "name",
-    title: "Key",
+    title: "Title",
   },
   {
     key: "description",

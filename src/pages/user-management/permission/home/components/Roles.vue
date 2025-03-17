@@ -3,18 +3,34 @@ import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
 import RolesDataTable from './RolesDataTable.vue';
 import { ref } from 'vue';
-import type { Role } from '@/types/auth';
+import type { Role, RolePayload } from '@/types/auth';
 import { ButtonApp } from '@/components/app/button';
-import { Plus } from 'lucide-vue-next';
+import { Plus, Shield } from 'lucide-vue-next';
+import { storeToRefs } from 'pinia';
+import { toast } from 'vue-sonner';
+import RolesDialog from './RolesDialog.vue';
+import RolesForm from './RolesForm.vue';
+import RolesDataTableDropdown from './RolesDataTableDropdown.vue';
+import { EmptyResource } from '@/components/app/empty-resource';
 
 const authStore = useAuthStore()
-const { fetchRoles, roles } = useRoles()
+const { errors: authErrors, loading: authLoading } = storeToRefs(authStore)
+const { fetchRoles,
+    roles,
+    selectedRole,
+    handleRoleCreateSubmit,
+    handleRoleDeleteSubmit,
+    handleRoleUpdateSubmit,
+    handleShowRoleDialog,
+    handleShowRoleEditDialog,
+    showRolesDialog,
+    showRolesEditDialog } = useRoles()
 
 function useRoles() {
     const roles = ref<Role[]>()
     const showRolesDialog = ref(false)
     const showRolesEditDialog = ref(false)
-    const selecteRole = ref<Role>()
+    const selectedRole = ref<Role>()
 
 
     async function fetchRoles() {
@@ -25,9 +41,9 @@ function useRoles() {
         showRolesDialog.value = true
     }
 
-    function handleShowRoleEditDialog(Role: Role) {
+    function handleShowRoleEditDialog(role: Role) {
         showRolesEditDialog.value = true
-        selecteRole.value = Role
+        selectedRole.value = role
     }
 
     async function handleRoleCreateSubmit(payload: RolePayload) {
@@ -47,12 +63,12 @@ function useRoles() {
 
     async function handleRoleUpdateSubmit(payload: RolePayload) {
 
-        if (!selecteRole.value) {
+        if (!selectedRole.value) {
             console.warn('no Role selected')
             return;
         }
 
-        await authStore.updateRole(selecteRole.value.id, payload);
+        await authStore.updateRole(selectedRole.value.id, payload);
 
         if (!authErrors.value) {
             await fetchRoles()
@@ -83,18 +99,45 @@ function useRoles() {
 
     return {
         fetchRoles,
-        roles
+        roles,
+        selectedRole,
+        showRolesDialog,
+        showRolesEditDialog,
+        handleShowRoleDialog,
+        handleShowRoleEditDialog,
+        handleRoleCreateSubmit,
+        handleRoleUpdateSubmit,
+        handleRoleDeleteSubmit
     }
 }
 
 await fetchRoles()
 </script>
 <template>
-    <Card class="p-4">
-        <ButtonApp :prepend-icon="Plus" @click="handleShowPermissionDialog">Create permission</ButtonApp>
-        <RolesDataTable v-if="roles" :roles="roles">
-
+    <Card class="p-4 space-y-4">
+        <ButtonApp :prepend-icon="Plus" @click="handleShowRoleDialog">Create permission</ButtonApp>
+        <RolesDataTable v-if="roles && roles.length" :roles="roles">
+            <template #actions="{ item }">
+                <RolesDataTableDropdown @edit="handleShowRoleEditDialog(item)" @delete="handleRoleDeleteSubmit(item)" />
+            </template>
         </RolesDataTable>
+
+        <EmptyResource v-else :icon="Shield" title="No role found"
+            description="You start viewing roles as soon as you add one.">
+            <ButtonApp class="w-fit mx-auto mt-4" :prepend-icon="Plus" @click="handleShowRoleEditDialog">Create
+                Role</ButtonApp>
+        </EmptyResource>
+
+
+        <!-- Creating Role -->
+        <RolesDialog v-model="showRolesDialog">
+            <RolesForm :loading="authLoading" @submit="handleRoleCreateSubmit" />
+        </RolesDialog>
+
+        <!-- Updating Role -->
+        <RolesDialog v-model="showRolesEditDialog">
+            <RolesForm :loading="authLoading" @submit="handleRoleUpdateSubmit" mode="edit" :role="selectedRole" />
+        </RolesDialog>
     </Card>
 </template>
 

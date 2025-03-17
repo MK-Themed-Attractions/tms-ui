@@ -6,8 +6,8 @@ const props = withDefaults(defineProps<{
     title?: string;
     description?: string;
 }>(), {
-    title: 'Add Permission',
-    description: 'Ensure the permission key matches the backend. Do not add if unsure..'
+    title: 'Add Role',
+    description: 'Create a new role, attach permissions later.'
 })
 const dialog = defineModel({ default: false })
 </script>

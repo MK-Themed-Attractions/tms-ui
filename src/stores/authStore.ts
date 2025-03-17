@@ -3,8 +3,10 @@ import type {
   BearerTokenResponse,
   LoginCredential,
   LoginResponse,
+  Permission,
   PermissionPayload,
   Role,
+  RolePayload,
   Token,
   User,
 } from "@/types/auth";
@@ -140,14 +142,8 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function getRoles() {
-    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
-
-    if (res) return res.roles.data;
-  }
-
   async function getPermissions() {
-    const res = await get<{ permissions: SimplePaginate<Role> }>(
+    const res = await get<{ permissions: SimplePaginate<Permission> }>(
       "/api/permission",
     );
 
@@ -169,15 +165,36 @@ export const useAuthStore = defineStore("auth", () => {
     const res = await destroy(`/api/permission/${permissionId}`);
   }
 
+  async function getRoles() {
+    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
+
+    if (res) return res.roles.data;
+  }
+
+  async function addRole(payload: RolePayload) {
+    const res = await post("/api/role", payload);
+  }
+
+  async function updateRole(roleId: string, payload: RolePayload) {
+    const res = await put(`/api/role/${roleId}`, payload);
+  }
+
+  async function deleteRole(roleId: string) {
+    const res = await destroy(`/api/role/${roleId}`);
+  }
+
   return {
     login,
     user,
     getUsers,
-    getRoles,
     getPermissions,
     addPermission,
     updatePermission,
     deletePermission,
+    getRoles,
+    addRole,
+    updateRole,
+    deleteRole,
     accessToken,
     refreshToken,
     errors,
