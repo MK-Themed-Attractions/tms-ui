@@ -11,6 +11,7 @@ import { planning } from "./planning";
 import { wip } from "./wip";
 import { qc } from "./qc";
 import { users } from "./users";
+import { workerDashboard } from "./workerDashboard";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -71,6 +72,7 @@ const router = createRouter({
       ],
     },
     ...auth,
+    ...workerDashboard
   ],
 });
 
