@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ref } from 'vue';
+import { Dialog, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+const props = withDefaults(defineProps<{
+    title?: string;
+    description?: string;
+}>(), {
+    title: 'Add Permission',
+    description: 'Ensure the permission key matches the backend. Do not add if unsure..'
+})
 const dialog = defineModel({ default: false })
 </script>
 
@@ -12,16 +18,16 @@ const dialog = defineModel({ default: false })
             <slot name="activator" />
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogScrollContent @interact-outside="e => e.preventDefault()">
             <DialogHeader>
-                <DialogTitle>Add Permission</DialogTitle>
-                <CardDescription>Ensure the permission key matches the backend. Do not add if unsure..</CardDescription>
+                <DialogTitle>{{ title }}</DialogTitle>
+                <CardDescription>{{ description }}</CardDescription>
             </DialogHeader>
 
             <div>
                 <slot />
             </div>
-        </DialogContent>
+        </DialogScrollContent>
     </Dialog>
 </template>
 

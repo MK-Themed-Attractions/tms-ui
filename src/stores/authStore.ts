@@ -3,6 +3,7 @@ import type {
   BearerTokenResponse,
   LoginCredential,
   LoginResponse,
+  PermissionPayload,
   Role,
   Token,
   User,
@@ -48,7 +49,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
   );
 
-  const { errors, loading, post, get, setHeader } = useAxios({
+  const { errors, loading, post, get, setHeader, put, destroy } = useAxios({
     baseURL: import.meta.env.VITE_USERS_URL,
   });
   const accessTokenValue = computed(() => accessToken.value?.token);
@@ -146,9 +147,26 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function getPermissions() {
-    const res = await get<{ permissions: SimplePaginate<Role> }>("/api/permission");
+    const res = await get<{ permissions: SimplePaginate<Role> }>(
+      "/api/permission",
+    );
 
     if (res) return res.permissions.data;
+  }
+
+  async function addPermission(payload: PermissionPayload) {
+    const res = await post("/api/permission", payload);
+  }
+
+  async function updatePermission(
+    permissionId: string,
+    payload: PermissionPayload,
+  ) {
+    const res = await put(`/api/permission/${permissionId}`, payload);
+  }
+
+  async function deletePermission(permissionId: string) {
+    const res = await destroy(`/api/permission/${permissionId}`);
   }
 
   return {
@@ -157,6 +175,9 @@ export const useAuthStore = defineStore("auth", () => {
     getUsers,
     getRoles,
     getPermissions,
+    addPermission,
+    updatePermission,
+    deletePermission,
     accessToken,
     refreshToken,
     errors,

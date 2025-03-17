@@ -40,6 +40,11 @@ export interface BearerTokenPayload {
   user_id: string;
   permissions?: string[];
 }
+
+export interface PermissionPayload {
+  name: string;
+  description: string;
+}
 export interface BearerTokenResponse {
   access_token: string;
   bearer_token: string;
