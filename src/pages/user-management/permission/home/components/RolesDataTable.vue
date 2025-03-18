@@ -26,6 +26,13 @@ const props = defineProps<{
                 {{ item.name }}
             </TableCell>
         </template>
+        <template #item.description="{ item }">
+            <TableCell>
+                <em>
+                    {{ item.description }}
+                </em>
+            </TableCell>
+        </template>
         <template #item.actions="{ item }">
             <TableCell>
                 <slot name="actions" :item="item" />

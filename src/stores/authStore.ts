@@ -4,6 +4,7 @@ import type {
   LoginCredential,
   LoginResponse,
   Permission,
+  PermissionAttachPayload,
   PermissionPayload,
   Role,
   RolePayload,
@@ -51,9 +52,10 @@ export const useAuthStore = defineStore("auth", () => {
     },
   );
 
-  const { errors, loading, post, get, setHeader, put, destroy } = useAxios({
-    baseURL: import.meta.env.VITE_USERS_URL,
-  });
+  const { errors, loading, post, get, setHeader, put, destroy, patch } =
+    useAxios({
+      baseURL: import.meta.env.VITE_USERS_URL,
+    });
   const accessTokenValue = computed(() => accessToken.value?.token);
   setHeader("Access-Token", accessTokenValue);
 
@@ -85,6 +87,7 @@ export const useAuthStore = defineStore("auth", () => {
           access_token: accessToken.value?.token ?? "",
           user_id: user.value.id,
           permissions: [
+            "can-get-departments",
             "can-create-product",
             "can-update-product",
             "can-attach-user-permission",
@@ -183,6 +186,20 @@ export const useAuthStore = defineStore("auth", () => {
     const res = await destroy(`/api/role/${roleId}`);
   }
 
+  async function attachPermissions(payload: PermissionAttachPayload) {
+    const res = await patch("/api/role/attach-permissions", payload);
+  }
+
+  async function getRolePermissions(roleId: string) {
+    const res = await get<{ data: Role }>(
+      `/api/role/get-permissions/${roleId}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     login,
     user,
@@ -192,9 +209,11 @@ export const useAuthStore = defineStore("auth", () => {
     updatePermission,
     deletePermission,
     getRoles,
+    getRolePermissions,
     addRole,
     updateRole,
     deleteRole,
+    attachPermissions,
     accessToken,
     refreshToken,
     errors,
