@@ -3,10 +3,16 @@ import type {
   BearerTokenResponse,
   LoginCredential,
   LoginResponse,
+  Permission,
+  PermissionAttachPayload,
+  PermissionPayload,
+  Role,
+  RolePayload,
   Token,
   User,
 } from "@/types/auth";
 import {
+  get,
   StorageSerializers,
   useStorage,
   type MaybeRefOrGetter,
@@ -20,6 +26,8 @@ import { usePlanStore } from "./planStore";
 import { useWipStore } from "./wipStore";
 import { useQcStore } from "./qcStore";
 import { useRouter } from "vue-router";
+import { computed } from "vue";
+import type { SimplePaginate } from "@/types/pagination";
 
 export const useAuthStore = defineStore("auth", () => {
   const router = useRouter();
@@ -44,9 +52,12 @@ export const useAuthStore = defineStore("auth", () => {
     },
   );
 
-  const { errors, loading, post } = useAxios({
-    baseURL: import.meta.env.VITE_USERS_URL,
-  });
+  const { errors, loading, post, get, setHeader, put, destroy, patch } =
+    useAxios({
+      baseURL: import.meta.env.VITE_USERS_URL,
+    });
+  const accessTokenValue = computed(() => accessToken.value?.token);
+  setHeader("Access-Token", accessTokenValue);
 
   function invalidate() {
     user.value = null;
@@ -76,6 +87,8 @@ export const useAuthStore = defineStore("auth", () => {
           access_token: accessToken.value?.token ?? "",
           user_id: user.value.id,
           permissions: [
+            'can-save-workers',
+            "can-get-departments",
             "can-create-product",
             "can-update-product",
             "can-attach-user-permission",
@@ -125,9 +138,83 @@ export const useAuthStore = defineStore("auth", () => {
     router.push({ name: "login" });
   }
 
+  async function getUsers() {
+    const res = await get<{ data: User[] }>("/api/user");
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  async function getPermissions() {
+    const res = await get<{ permissions: SimplePaginate<Permission> }>(
+      "/api/permission",
+    );
+
+    if (res) return res.permissions.data;
+  }
+
+  async function addPermission(payload: PermissionPayload) {
+    const res = await post("/api/permission", payload);
+  }
+
+  async function updatePermission(
+    permissionId: string,
+    payload: PermissionPayload,
+  ) {
+    const res = await put(`/api/permission/${permissionId}`, payload);
+  }
+
+  async function deletePermission(permissionId: string) {
+    const res = await destroy(`/api/permission/${permissionId}`);
+  }
+
+  async function getRoles() {
+    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
+
+    if (res) return res.roles.data;
+  }
+
+  async function addRole(payload: RolePayload) {
+    const res = await post("/api/role", payload);
+  }
+
+  async function updateRole(roleId: string, payload: RolePayload) {
+    const res = await put(`/api/role/${roleId}`, payload);
+  }
+
+  async function deleteRole(roleId: string) {
+    const res = await destroy(`/api/role/${roleId}`);
+  }
+
+  async function attachPermissions(payload: PermissionAttachPayload) {
+    const res = await patch("/api/role/attach-permissions", payload);
+  }
+
+  async function getRolePermissions(roleId: string) {
+    const res = await get<{ data: Role }>(
+      `/api/role/get-permissions/${roleId}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     login,
     user,
+    getUsers,
+    getPermissions,
+    addPermission,
+    updatePermission,
+    deletePermission,
+    getRoles,
+    getRolePermissions,
+    addRole,
+    updateRole,
+    deleteRole,
+    attachPermissions,
     accessToken,
     refreshToken,
     errors,
