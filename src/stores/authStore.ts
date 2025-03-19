@@ -87,6 +87,7 @@ export const useAuthStore = defineStore("auth", () => {
           access_token: accessToken.value?.token ?? "",
           user_id: user.value.id,
           permissions: [
+            'can-save-workers',
             "can-get-departments",
             "can-create-product",
             "can-update-product",

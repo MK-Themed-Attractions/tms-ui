@@ -8,7 +8,7 @@ import { z } from 'zod';
 import RolePermissionAttachSelectInput from './RolePermissionAttachSelectInput.vue';
 import { ButtonApp } from '@/components/app/button';
 import { useAuthStore } from '@/stores/authStore';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     role: Role,
@@ -23,21 +23,19 @@ const formSchema = toTypedSchema(z.object({
     microservices: z.array(z.object({
         name: z.custom<RoutingMicroserviceType>(),
         permissions: z.array(z.string()).nonempty('All fields are required.')
-    })).nonempty('Start adding permissions')
+    }))
 }))
 const authStore = useAuthStore()
+const { fetchPermissions, permissions } = usePermission()
+const { fetchRolepermissions, roleWithPermissions, rolePermissionsToForm } = useRole()
 
-const { handleSubmit, errors } = useForm({
+
+const { handleSubmit, errors, setValues } = useForm({
     validationSchema: formSchema,
     initialValues: {
-        role_id: props.role.id
+        role_id: props.role.id,
     }
 })
-
-const { fetchPermissions, permissions } = usePermission()
-const { fetchRolepermissions, roleWithPermissions } = useRole()
-
-
 
 const submit = handleSubmit((values) => {
     emits('submit', values)
@@ -57,6 +55,19 @@ function usePermission() {
 
 function useRole() {
     const roleWithPermissions = ref<Role>()
+
+    const rolePermissionsToForm = computed(() => {
+        return roleWithPermissions.value?.role_permissions?.map((rp) => {
+            return {
+                name: rp.microservice,
+                permissions: rp.permissions.reduce<string[]>((acc, p) => {
+                    acc.push(p.id)
+                    return acc;
+                }, [])
+            }
+        })
+    })
+
     async function fetchRolepermissions() {
         const data = await authStore.getRolePermissions(props.role.id)
         roleWithPermissions.value = data;
@@ -64,17 +75,25 @@ function useRole() {
 
     return {
         fetchRolepermissions,
+        rolePermissionsToForm,
         roleWithPermissions
     }
 
 }
+
+
 /* INIT */
 if (!permissions.value) {
     await fetchPermissions()
 }
 if (!roleWithPermissions.value) {
     await fetchRolepermissions()
+    setValues({
+        microservices: [{ name: 'assembly', permissions: ['677cc8876e7e2589b0047e37', '677cc8a66e7e2589b0047e39'] }]
+    })
 }
+// setFieldValue('microservices', [{ name: 'assembly', permissions: ['677cc8876e7e2589b0047e37', '677cc8a66e7e2589b0047e39'] }])
+
 </script>
 
 <template>
@@ -84,15 +103,11 @@ if (!roleWithPermissions.value) {
                 <FormLabel>Microservices and permissions</FormLabel>
                 <FormControl>
                     <RolePermissionAttachSelectInput v-if="permissions" v-bind="componentField"
-                        :permissions="permissions" />
+                        :role-permissions="rolePermissionsToForm" :permissions="permissions" />
                 </FormControl>
                 <FormMessage class="text-center" />
             </FormItem>
         </FormField>
-        <pre>
-            {{ roleWithPermissions }}
-
-        </pre>
         <ButtonApp type="submit" :disabled="Object.keys(errors).length || loading" :loading="loading">Attach</ButtonApp>
     </form>
 </template>

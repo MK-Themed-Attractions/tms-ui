@@ -14,6 +14,7 @@ import RolesDataTableDropdown from './RolesDataTableDropdown.vue';
 import { EmptyResource } from '@/components/app/empty-resource';
 import RolesPermissionAttachDialog from './RolesPermissionAttachDialog.vue';
 import RolePermissionAttachForm from './RolePermissionAttachForm.vue';
+import { Loader } from '@/components/app/loader';
 
 
 const authStore = useAuthStore()
@@ -62,7 +63,8 @@ function useRoles() {
             toast.info('Role info', {
                 description: 'Role successfully added.'
             })
-        } else {
+        }
+        else {
             toast.error('Role error', {
                 description: 'Something went wrong while creating the Role.'
             })
@@ -120,6 +122,7 @@ function useRoles() {
 }
 
 function usePermissions() {
+
     const showRolesPermissionAttachDialog = ref(false)
 
 
@@ -130,6 +133,19 @@ function usePermissions() {
 
     async function handlePermissionAttachSubmit(payload: PermissionAttachPayload) {
         await authStore.attachPermissions(payload);
+
+        if (!authErrors.value) {
+            await fetchRoles()
+            toast.info('Role info', {
+                description: 'Permissions successfully attached.'
+            })
+        }
+        else {
+            toast.error('Role error', {
+                description: 'Something went wrong while attaching permissions.'
+            })
+        }
+
     }
 
     return {
@@ -170,8 +186,13 @@ await fetchRoles()
 
         <!-- Role attchment -->
         <RolesPermissionAttachDialog v-model="showRolesPermissionAttachDialog" v-if="selectedRole">
-            <RolePermissionAttachForm :role="selectedRole" @submit="handlePermissionAttachSubmit"
-                :loading="authLoading" />
+            <Suspense>
+                <RolePermissionAttachForm :role="selectedRole" @submit="handlePermissionAttachSubmit"
+                    :loading="authLoading" />
+                <template #fallback>
+                    <Loader class="min-h-10 p-4" description="Loading permissions..." />
+                </template>
+            </Suspense>
         </RolesPermissionAttachDialog>
     </Card>
 </template>

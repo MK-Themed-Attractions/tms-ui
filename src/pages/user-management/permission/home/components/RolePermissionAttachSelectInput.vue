@@ -3,20 +3,31 @@ import { ButtonApp } from '@/components/app/button';
 import { MultiSelect } from '@/components/app/multi-select/Index';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { routingMicroservices } from '@/microservice';
-import { useAuthStore } from '@/stores/authStore';
 import type { Permission, PermissionAttachMicroservicePayload } from '@/types/auth';
 import { Plus, Trash } from 'lucide-vue-next';
 import { ref, watchEffect } from 'vue';
 
 const props = defineProps<{
     modelValue?: PermissionAttachMicroservicePayload[],
-    permissions: Permission[]
+    permissions: Permission[],
+    rolePermissions?: PermissionAttachMicroservicePayload[]
 }>()
 const emits = defineEmits<{
     (e: 'update:modelValue', model: PermissionAttachMicroservicePayload[]): void
 }>()
 
 const inputs = ref<(PermissionAttachMicroservicePayload & { id?: string })[]>([])
+
+/* if role permissions already exists */
+if (props.rolePermissions) {
+    /* transform it to have ID first */
+    inputs.value = props.rolePermissions.map((rp) => {
+        return {
+            ...rp,
+            id: Math.random().toString()
+        }
+    })
+}
 
 watchEffect(() => {
     const inputWithoutId = inputs.value.map(i => {
