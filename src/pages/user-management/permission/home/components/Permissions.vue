@@ -115,7 +115,7 @@ function usePermission() {
 await fetchPermissions()
 </script>
 <template>
-    <Card class="p-4">
+    <Card class="p-4 space-y-4">
         <ButtonApp :prepend-icon="Plus" @click="handleShowPermissionDialog">Create permission</ButtonApp>
         <PermissionsDataTable v-if="permissions && permissions.length" :permissions="permissions">
             <template #actions="{ item }">

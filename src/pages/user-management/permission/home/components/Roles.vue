@@ -160,7 +160,7 @@ await fetchRoles()
 </script>
 <template>
     <Card class="p-4 space-y-4">
-        <ButtonApp :prepend-icon="Plus" @click="handleShowRoleDialog">Create permission</ButtonApp>
+        <ButtonApp :prepend-icon="Plus" @click="handleShowRoleDialog">Create Role</ButtonApp>
         <RolesDataTable v-if="roles && roles.length" :roles="roles">
             <template #actions="{ item }">
                 <RolesDataTableDropdown @edit="handleShowRoleEditDialog(item)" @delete="handleRoleDeleteSubmit(item)"

@@ -258,7 +258,7 @@ await fetchUsers()
                 <component :is="selectedComponent" v-bind="selectedComponentProps"></component>
 
                 <template #fallback>
-                    <Loader class="min-h-10 p-4" description="Loading, please wait..." />
+                    <Loader class="!min-h-10 p-4" description="Loading, please wait..." />
                 </template>
             </Suspense>
         </UserDialog>
