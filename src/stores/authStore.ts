@@ -10,6 +10,10 @@ import type {
   RolePayload,
   Token,
   User,
+  UserPayload,
+  UserPermissionAttachPayload,
+  UserRole,
+  UserRoleAttachPayload,
 } from "@/types/auth";
 import {
   get,
@@ -87,7 +91,7 @@ export const useAuthStore = defineStore("auth", () => {
           access_token: accessToken.value?.token ?? "",
           user_id: user.value.id,
           permissions: [
-            'can-save-workers',
+            "can-save-workers",
             "can-get-departments",
             "can-create-product",
             "can-update-product",
@@ -143,6 +147,55 @@ export const useAuthStore = defineStore("auth", () => {
 
     if (res) {
       return res.data;
+    }
+  }
+
+  async function addUser(payload: UserPayload) {
+    const res = await post("/api/user/register", payload);
+  }
+  async function updateUser(userId: string, payload: UserPayload) {
+    const res = await put(`/api/user/update/${userId}`, payload);
+  }
+
+  async function resetPassword(userId: string) {
+    const res = await put<unknown, { data: { new_password: string } }>(
+      `/api/user/reset-password/${userId}`,
+    );
+
+    if (res) {
+      return res.data.new_password;
+    }
+  }
+
+  async function attachRoleToUser(
+    userId: string,
+    payload: UserRoleAttachPayload,
+  ) {
+    const res = await patch(`/api/user/attach-role/${userId}`, payload);
+  }
+  async function attachPermissionsToUser(
+    userId: string,
+    payload: UserPermissionAttachPayload,
+  ) {
+    const res = await patch(`/api/user/attach-permission/${userId}`, payload);
+  }
+  async function getUserPermissions(userId: string) {
+    const res = await get<{ data: User }>(
+      `/api/user/get-user-permission/${userId}`,
+    );
+
+    if (res?.data?.user_permissions) {
+      return res.data.user_permissions;
+    }
+  }
+
+  async function getUserRole(userId: string) {
+    const res = await get<{ data: UserRole }>(
+      `/api/user/get-attached-roles/${userId}`,
+    );
+
+    if (res?.data?.roles) {
+      return res.data.roles[0];
     }
   }
 
@@ -204,7 +257,14 @@ export const useAuthStore = defineStore("auth", () => {
   return {
     login,
     user,
+    addUser,
+    updateUser,
     getUsers,
+    resetPassword,
+    attachRoleToUser,
+    attachPermissionsToUser,
+    getUserRole,
+    getUserPermissions,
     getPermissions,
     addPermission,
     updatePermission,

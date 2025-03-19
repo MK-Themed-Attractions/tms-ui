@@ -30,7 +30,7 @@ const { fetchPermissions, permissions } = usePermission()
 const { fetchRolepermissions, roleWithPermissions, rolePermissionsToForm } = useRole()
 
 
-const { handleSubmit, errors, setValues } = useForm({
+const { handleSubmit, errors } = useForm({
     validationSchema: formSchema,
     initialValues: {
         role_id: props.role.id,
@@ -88,11 +88,7 @@ if (!permissions.value) {
 }
 if (!roleWithPermissions.value) {
     await fetchRolepermissions()
-    setValues({
-        microservices: [{ name: 'assembly', permissions: ['677cc8876e7e2589b0047e37', '677cc8a66e7e2589b0047e39'] }]
-    })
 }
-// setFieldValue('microservices', [{ name: 'assembly', permissions: ['677cc8876e7e2589b0047e37', '677cc8a66e7e2589b0047e39'] }])
 
 </script>
 
