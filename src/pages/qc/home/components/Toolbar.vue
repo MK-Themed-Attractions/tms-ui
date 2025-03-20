@@ -1,24 +1,26 @@
 <script setup lang="ts">
-import { InputFilter, type InputFilterDropdownData } from '@/components/app/input-filter';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import { Building, LoaderCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { watch } from 'vue';
-import { searchFilterData } from '../data';
+import { ref, watch } from 'vue';
+import type { WorkerDepartment } from '@/types/workers';
 
+const workerDepartmentStore = useWorkerDepartmentStore()
 const emits = defineEmits<{
-    (e: "change", workCenters: string[]): void;
+    (e: "change", department: WorkerDepartment): void;
 }>();
 const props = defineProps<{
     loading?: boolean
 }>()
-const selectedDepartmentId = defineModel<string>()
+const selectedDepartment = defineModel<WorkerDepartment>()
+
+const selectedDepartmentId = ref<string>()
 
 const { departments, fetchDepartments } = useDepartment()
 
 function useDepartment() {
-    const workerDepartmentStore = useWorkerDepartmentStore()
+
     const { departments } = storeToRefs(workerDepartmentStore)
 
     async function fetchDepartments() {
@@ -26,10 +28,11 @@ function useDepartment() {
     }
 
     watch(selectedDepartmentId, (newValue) => {
-        if (!newValue) return;
+        if (!departments.value) return;
 
-        const workCenters = workerDepartmentStore.getWorkCentersByDeptId(newValue);
-        if (workCenters) emits("change", workCenters);
+        const department = departments.value.find(d => d.id === newValue)
+
+        if (department) emits("change", department);
     });
 
     return {
