@@ -35,6 +35,10 @@ import WIPFilter from "./components/WIPFilter.vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
+import type { WorkerDepartment } from "@/types/workers";
+
+const wipStore = useWipStore();
+const workerDepartmentStore = useWorkerDepartmentStore()
 
 const { fetchWipPlans,
   wipLoading,
@@ -47,8 +51,8 @@ const { fetchWipPlans,
   handleShowMultipleTaskAssignDialog,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog } = useWip();
+const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
-const { openAssignWorkerDialog, selectedDepartmentId, workCenters } = useWorker()
 const { handleShowWipDialog, showWipDialog } = useWipShow()
 const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask } = useTaskControls()
 const { handleFinishTask,
@@ -64,13 +68,9 @@ const { handleFinishTask,
   selectedOperation,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
-const workerDepartmentStore = useWorkerDepartmentStore()
 const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly, fetchWipPlansNext, page } = useTaskStatusFilter()
 
 function useWip() {
-
-
-  const wipStore = useWipStore();
   const { loading: wipLoading } = storeToRefs(wipStore);
   const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
   //task ids on common ms
@@ -189,20 +189,18 @@ function useWip() {
 }
 
 function useWorker() {
-
   const openAssignWorkerDialog = ref(false)
-  const selectedDepartmentId = ref<string>()
-  const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || ''))
+  const selectedDepartment = ref<WorkerDepartment>()
+  const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
 
   return {
     openAssignWorkerDialog,
-    selectedDepartmentId,
+    selectedDepartment,
     workCenters
   }
 }
 
 function useWipShow() {
-
   const showWipDialog = ref(false)
 
   function handleShowWipDialog(task: WipTask, batch: WipBatch) {
@@ -219,7 +217,6 @@ function useWipShow() {
 
 function useTaskOperations() {
 
-  const wipStore = useWipStore()
   const { errors: wipErrors } = storeToRefs(wipStore)
 
   const showBatchOperationDialog = ref(false)
@@ -422,6 +419,7 @@ function useTaskOperations() {
 }
 
 function useTaskStatusFilter() {
+
   const selectedTaskStatusFilter = ref<TaskStatus>()
   const search = ref('')
   const filter = ref<InputFilterDropdownData>(searchFilterData[0])
@@ -471,11 +469,11 @@ function useTaskStatusFilter() {
   }
 
   watch(selectedTaskStatusFilter, async (newValue) => {
-    if (!selectedDepartmentId.value) return;
+    if (!selectedDepartment.value) return;
     await handleGetWIpsWithFilter()
   })
   watch(tasksForTodayOnly, async (newValue) => {
-    if (!selectedDepartmentId.value) return;
+    if (!selectedDepartment.value) return;
     await handleGetWIpsWithFilter()
   })
 
@@ -499,16 +497,24 @@ function isBatchStartable(batch: WipBatch) {
   if (!batch.tasks) return false
   return batch.tasks.some(task => task.is_startable);
 }
+
 function isBatchAssignable(batch: WipBatch) {
   if (!batch.tasks) return false;
   return batch.tasks.some(task => canAssign(task.status))
 }
 
-async function handleDepartmentSelectionChange(workCenters: string[]) {
+async function handleDepartmentSelectionChange(department: WorkerDepartment) {
+  selectedDepartment.value = department;
+  //point the base url of wipStore to the selected department's microservice url
+  wipStore.pointToMicroservice(department.ms_url);
+
+  //reset all filters
   wipTasksGrouped.value = []
   page.value = 1;
+
+  //fetch  with applied filters
   await fetchWipPlans({
-    work_centers: workCenters,
+    work_centers: workCenters.value,
     filter: selectedTaskStatusFilter.value,
     is_accessible: tasksForTodayOnly.value,
     page: page.value
@@ -517,7 +523,7 @@ async function handleDepartmentSelectionChange(workCenters: string[]) {
 
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
-provide(workCentersKey,  workCenters)
+provide(workCentersKey, workCenters)
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
@@ -540,14 +546,14 @@ onBeforeMount(() => {
     </div>
 
     <section>
-      <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentSelectionChange" :loading="wipLoading">
+      <Toolbar v-model="selectedDepartment" @change="handleDepartmentSelectionChange" :loading="wipLoading">
         <template #append>
           <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
-            :disabled="!selectedDepartmentId" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
+            :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
           </InputFilter>
 
           <div class="basis-full">
-            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartmentId" />
+            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartment" />
           </div>
 
           <div class="ml-auto">
@@ -562,7 +568,7 @@ onBeforeMount(() => {
     </section>
 
     <section>
-      <InfiniteScroll v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartmentId"
+      <InfiniteScroll v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartment?.id"
         @trigger="fetchWipPlansNext">
         <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id"
           class="rounded-md border p-4 shadow-sm space-y-4">
