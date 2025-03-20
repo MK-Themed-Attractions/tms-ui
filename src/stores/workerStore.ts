@@ -115,6 +115,7 @@ export const useWorkerStore = defineStore("workers", () => {
       return res.data;
     }
   }
+
   async function createWorker(form: WorkerForm) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -153,6 +154,11 @@ export const useWorkerStore = defineStore("workers", () => {
     await destroy("/api/workers/deactivate", {
       params: { worker_ids: workerIds },
     });
+  }
+
+
+  async function getWorkerTasks(workerRfid: string) {
+    
   }
 
   return {

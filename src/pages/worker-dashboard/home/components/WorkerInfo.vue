@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { HardHat } from 'lucide-vue-next';
+import IconContainer from '../../components/IconContainer.vue';
+
+
+</script>
 <template>
     <div class="border rounded-md p-4 shadow-sm flex gap-4 items-center">
         <IconContainer>
@@ -28,11 +34,6 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { HardHat } from 'lucide-vue-next';
-import IconContainer from '../../components/IconContainer.vue';
 
-
-</script>
 
 <style scoped></style>

@@ -2,14 +2,12 @@
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuthStore } from '@/stores/authStore';
-import { LoaderCircle, Wrench, } from 'lucide-vue-next';
+import { LoaderCircle, } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
 import RFIDInfo from './components/RFIDInfo.vue';
 import NoTaskFound from './components/NoTaskFound.vue';
 import WorkerInfo from './components/WorkerInfo.vue';
 import WorkerToolbar from './components/WorkerToolbar.vue';
-import NoWorkerFound from './components/NoWorkerFound.vue';
-import NoFilterFound from './components/NoFilterFound.vue';
 
 
 const authStore = useAuthStore()
@@ -84,10 +82,8 @@ onUnmounted(() => {
         </div>
         <div class="flex flex-wrap gap-4 flex-col lg:flex-row">
             <RFIDInfo :rfid="rfid" class="mx-auto lg:m-0" />
-            <WorkerInfo class="flex-1" v-if="!true" />
-            <NoWorkerFound v-else />
-            <WorkerToolbar class="grow basis-full" v-if="!true" />
-            <NoFilterFound />
+            <WorkerInfo class="flex-1" />
+            <WorkerToolbar class="grow basis-full" />
         </div>
         <ScrollArea class="relative isolate h-[62%] overflow-y-auto border rounded-md border-dashed">
             <NoTaskFound />
