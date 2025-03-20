@@ -29,6 +29,7 @@ export interface WorkerDepartment {
   updated_at: string;
   created_at: string;
   id: string;
+  ms_url: string;
   worker_count: number;
   work_centers: string[];
 }
@@ -38,6 +39,7 @@ export interface WorkerDepartmentForm {
   name: string;
   description?: string;
   work_centers: string[];
+  ms_url: string; // ENV KEY to point to microservice URL
 }
 
 export interface WorkerQueryParams extends QueryParams {}
