@@ -54,7 +54,7 @@ function useUser() {
     const userPermissionsToForm = computed(() => {
         return userPermissions.value?.map((up) => {
             return {
-                name: up.microservice,
+                name: up.microservice.toLowerCase() as RoutingMicroserviceType,
                 permissions: up.permissions.reduce<string[]>((acc, p) => {
                     acc.push(p.id)
                     return acc;

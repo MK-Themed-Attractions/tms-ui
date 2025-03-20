@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DataTable } from "@/components/app/data-table";
 import { TableCell } from "@/components/ui/table";
-import { formatReadableDate, getIconByPlanStatus } from "@/lib/utils";
+import { formatReadableDate, getIconByPlanStatus, getS3Link } from "@/lib/utils";
 import { type Plan } from "@/types/planning";
 import {
   LoaderCircle,
@@ -17,6 +17,7 @@ import type { Router } from "vue-router";
 import PlanEditDialog from "../../show/components/PlanEditDialog.vue";
 import { ref } from "vue";
 import BatchAddDialog from "../../show/components/BatchAddDialog.vue";
+import { ImageApp } from "@/components/app/image";
 
 const props = defineProps<{
   plans: Plan[];
@@ -62,6 +63,11 @@ function useActions() {
 
 <template>
   <DataTable :items="plans" @navigate-to="gotoShow">
+    <template #item.image="{ item }">
+      <TableCell>
+        <ImageApp :image="getS3Link(item.product_data?.image?.filename || '', 'small')" class="max-w-10"/>
+      </TableCell>
+    </template>
     <template #item.plan_data.code="{ item }">
       <TableCell>
         <span class="font-medium">{{ item.plan_data.code }}</span>
@@ -86,15 +92,7 @@ function useActions() {
         </div>
       </TableCell>
     </template>
-
-    <template #item.updated_at="{ item }">
-      <TableCell>
-        <span class="text-muted-foreground">
-          {{ formatReadableDate(item.updated_at) }}
-        </span>
-      </TableCell>
-    </template>
-
+    
     <template #item.product_data.sku="{ item }">
       <TableCell v-if="!item.product_data">
         <LoaderCircle class="mx-auto animate-spin stroke-muted-foreground" :size="15" />
