@@ -28,16 +28,18 @@ const selectedTaskIds = defineModel<string[]>('selectedTaskIds', { default: [] }
 const wipStore = useWipStore()
 const { loading: wipLoading, errors: wipErrors } = storeToRefs(wipStore)
 
-const selectedWorkerIds = ref<string[]>([])
+const selectedWorkers = ref<{ id: string; rfid: string }[]>([])
 const taskIds = computed(() => props.batch.taskIds)
 
 function handleWorkerSelect(workers: Worker[]) {
-    const workerIds = workers.reduce<string[]>((acc, cur) => {
-        acc.push(cur.id)
-        return acc;
-    }, [])
+    const workerIds = workers.map(worker => {
+        return {
+            id: worker.id,
+            rfid: worker.rfid_card
+        }
+    })
 
-    selectedWorkerIds.value = workerIds;
+    selectedWorkers.value = workerIds;
 }
 function handleTaskSelect(taskId: string) {
     const taskIndex = selectedTaskIds.value.indexOf(taskId)
@@ -49,7 +51,7 @@ function handleTaskSelect(taskId: string) {
 }
 
 async function assignWorkers() {
-    await wipStore.assignWorkersToTasks({ tasks: selectedTaskIds.value, workers: selectedWorkerIds.value })
+    await wipStore.assignWorkersToTasks({ tasks: selectedTaskIds.value, workers: selectedWorkers.value })
 
     if (!wipErrors.value) {
         emits('success');
@@ -95,7 +97,7 @@ async function assignWorkers() {
                         </div>
                     </template>
                 </Suspense>
-                <ButtonApp :disabled="!selectedWorkerIds.length || !selectedTaskIds.length || wipLoading"
+                <ButtonApp :disabled="!selectedWorkers.length || !selectedTaskIds.length || wipLoading"
                     :loading="wipLoading" @click="assignWorkers">
                     Assign</ButtonApp>
             </div>

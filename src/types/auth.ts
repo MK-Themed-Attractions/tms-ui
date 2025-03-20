@@ -1,3 +1,5 @@
+import type { RoutingMicroserviceType } from "@/microservice";
+
 export interface LoginCredential {
   email: string;
   password: string;
@@ -11,6 +13,7 @@ export interface User {
   created_at: string;
   id: string;
   user_role_ids?: string[];
+  user_permissions?: RolePermission[];
 }
 
 export interface Token {
@@ -23,9 +26,25 @@ export interface Role {
   id: string;
   name: string;
   description: string;
+  role_permissions?: RolePermission[];
 }
 
-export interface Permission extends Role {}
+export interface UserRole {
+  user_id: string;
+  id: string;
+  user: User;
+  roles: Role[];
+}
+
+export interface Permission extends Omit<Role, "role_permissions"> {}
+
+export interface RolePermission {
+  microservice: RoutingMicroserviceType;
+  updated_at: string;
+  created_at: string;
+  id: string;
+  permissions: Permission[];
+}
 
 export interface LoginResponse {
   data: User;
@@ -35,11 +54,41 @@ export interface LoginResponse {
   };
 }
 
+export interface UserPayload {
+  mail: string;
+  password?: string;
+  given_name: string;
+  last_name: string;
+}
+
+export interface UserRoleAttachPayload {
+  roles?: string[];
+}
+export interface UserPermissionAttachPayload {
+  microservices: PermissionAttachMicroservicePayload[];
+}
 export interface BearerTokenPayload {
   access_token: string;
   user_id: string;
   permissions?: string[];
 }
+
+export interface PermissionPayload {
+  name: string;
+  description: string;
+}
+
+export interface RolePayload extends PermissionPayload {}
+
+export interface PermissionAttachPayload {
+  role_id: string;
+  microservices: PermissionAttachMicroservicePayload[];
+}
+export interface PermissionAttachMicroservicePayload {
+  name: RoutingMicroserviceType;
+  permissions: string[];
+}
+
 export interface BearerTokenResponse {
   access_token: string;
   bearer_token: string;

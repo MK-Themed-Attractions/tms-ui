@@ -37,7 +37,7 @@ export interface ProductRouting {
 }
 
 export interface ProductRoutingWorkcenter {
-  no: string;
+  no: ProductRoutingWorkCenterType;
   name: string;
   group_code: string;
   search_name: string;
@@ -103,3 +103,33 @@ export type ProductRoutingOperationLetter =
   | "X"
   | "Y"
   | "Z";
+
+export type ProductRoutingWorkCenterType =
+  | "ALU/RESIN"
+  | "CAST"
+  | "MAC-SHOP"
+  | "SCUL"
+  | "TP"
+  | "CNC"
+  | "F-SAND"
+  | "LABEL"
+  | "LIGHT"
+  | "MET"
+  | "MOL-STOR"
+  | "OR"
+  | "ORGANIC"
+  | "PACK"
+  | "SAND"
+  | "SEW"
+  | "ALU"
+  | "ASS"
+  | "HOT-DIP"
+  | "MIX"
+  | "POW-COAT"
+  | "PT"
+  | "SL_SAND"
+  | "TC"
+  | "ADMIN"
+  | "ALU/MESH"
+  | "DET"
+  | "MOL";

@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Roles from './components/Roles.vue';
 import Permissions from './components/Permissions.vue';
+import { Loader, LoaderDescription } from '@/components/app/loader';
 
 
 </script>
@@ -24,10 +25,25 @@ import Permissions from './components/Permissions.vue';
             </TabsList>
 
             <TabsContent value="roles">
-                <Roles />
+                <Suspense :timeout="0" suspensible>
+                    <Roles />
+
+                    <template #fallback>
+                        <Loader>
+                            <LoaderDescription>Loading, please wait...</LoaderDescription>
+                        </Loader>
+                    </template>
+                </Suspense>
             </TabsContent>
             <TabsContent value="permissions">
-                <Permissions />
+                <Suspense :timeout="0" suspensible>
+                    <Permissions />
+                    <template #fallback>
+                        <Loader>
+                            <LoaderDescription>Loading, please wait...</LoaderDescription>
+                        </Loader>
+                    </template>
+                </Suspense>
             </TabsContent>
         </Tabs>
     </div>

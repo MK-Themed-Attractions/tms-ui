@@ -87,8 +87,8 @@ export const useWipStore = defineStore("wips", () => {
   }
 
   async function assignWorkersToTasks(payload: {
-    workers: string[];
     tasks: string[];
+    workers: { id: string; rfid: string }[];
   }) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
