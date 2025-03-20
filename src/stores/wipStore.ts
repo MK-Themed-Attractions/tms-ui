@@ -14,13 +14,21 @@ import type {
 import type { DepartmentKPIPayload } from "@/types/qc";
 
 export const useWipStore = defineStore("wips", () => {
-  const baseUrl = import.meta.env.VITE_COMMON_URL;
+  const baseUrl = ref(import.meta.env.VITE_COMMON_URL);
   const bearerToken = useStorage(
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, patch } = useAxios({
-    baseURL: baseUrl,
+  const {
+    get,
+    errors,
+    loading,
+    setHeader,
+    post,
+    patch,
+    axios: axiosInstance,
+  } = useAxios({
+    baseURL: baseUrl.value,
   });
 
   const paginatedResponse = ref<SimplePaginate<WipTaskGrouped>>();
@@ -36,6 +44,17 @@ export const useWipStore = defineStore("wips", () => {
     bearerToken.value = null;
     paginatedResponse.value = undefined;
   }
+
+  /**
+   * Point all API functions to a specific microservice, when not set, it will use the base
+   * URL that was set on this store.
+   * @param ms_url VITE ENV key
+   */
+  function pointToMicroservice(ms_url: string) {
+    axiosInstance.defaults.baseURL = import.meta.env[ms_url];
+    baseUrl.value = import.meta.env[ms_url];
+  }
+
   function reset() {
     paginatedResponse.value = undefined;
   }
@@ -191,5 +210,6 @@ export const useWipStore = defineStore("wips", () => {
     changeTaskStatusArray,
     changeTaskQCStatus,
     reset,
+    pointToMicroservice,
   };
 });

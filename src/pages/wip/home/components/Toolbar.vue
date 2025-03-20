@@ -31,15 +31,18 @@ import {
   XCircle,
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
-import { watch } from "vue";
-import WIPFilter from "./WIPFilter.vue";
+import type { WorkerDepartment } from "@/types/workers";
+import { Button } from "@/components/ui/button";
+import { ref, watch, watchEffect } from "vue";
 
 const props = defineProps<{
   loading?: boolean;
 }>();
-const selectedDepartmentId = defineModel({ default: "" });
+const selectedDepartment = defineModel<WorkerDepartment>();
+
+const selectedDepartmentId = ref<string>()
 const emits = defineEmits<{
-  (e: "change", workCenters: string[]): void;
+  (e: "change", department: WorkerDepartment): void;
 }>();
 
 const workerDepartmentStore = useWorkerDepartmentStore();
@@ -49,11 +52,17 @@ if (!departments.value) {
   await workerDepartmentStore.getDepartments();
 }
 
-watch(selectedDepartmentId, (newValue) => {
-  const workCenters = workerDepartmentStore.getWorkCentersByDeptId(newValue);
+watch(selectedDepartmentId, () => {
+  if (!departments.value) return;
+  const department = departments.value.find(d => d.id === selectedDepartmentId.value)
+  if (department)
+    handleDepartmentSelect(department)
+})
 
-  if (workCenters) emits("change", workCenters);
-});
+function handleDepartmentSelect(department: WorkerDepartment) {
+  emits('change', department)
+}
+
 </script>
 <template>
   <div class="rounded-md border p-4 shadow-sm">
@@ -67,8 +76,9 @@ watch(selectedDepartmentId, (newValue) => {
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Departments</SelectLabel>
-            <SelectItem v-for="department in departments" :key="department.id" :value="department.id">{{ department.name
-            }}</SelectItem>
+            <SelectItem v-for="department in departments" :key="department.id" :value="department.id">
+              {{ department.name }}
+            </SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>

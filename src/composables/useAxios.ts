@@ -140,5 +140,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     setHeader,
     destroy,
     patch,
+    axios,
   };
 };
