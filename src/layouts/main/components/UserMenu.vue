@@ -10,13 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/authStore";
 import { CircleUser } from "lucide-vue-next";
-import { useRouter } from "vue-router";
 
-const router = useRouter();
 const authStore = useAuthStore();
 async function handleLogout() {
   await authStore.logout();
-  await router.push({ name: "login" });
 }
 </script>
 

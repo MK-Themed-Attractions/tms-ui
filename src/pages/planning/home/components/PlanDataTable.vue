@@ -1,21 +1,28 @@
 <script setup lang="ts">
 import { DataTable } from "@/components/app/data-table";
 import { TableCell } from "@/components/ui/table";
-import { formatReadableDate, getIconByPlanStatus } from "@/lib/utils";
+import { formatReadableDate, getIconByPlanStatus, getS3Link } from "@/lib/utils";
 import { type Plan } from "@/types/planning";
 import {
   LoaderCircle,
   Menu,
+  Pencil,
+  Plus,
   Settings,
+  Trash,
 } from "lucide-vue-next";
 import PlanDataTableDropdown from "./PlanDataTableDropdown.vue";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { Router } from "vue-router";
+import PlanEditDialog from "../../show/components/PlanEditDialog.vue";
+import { ref } from "vue";
+import BatchAddDialog from "../../show/components/BatchAddDialog.vue";
+import { ImageApp } from "@/components/app/image";
 
 const props = defineProps<{
   plans: Plan[];
 }>();
-
+const { handleShowUpdatePlanDialog, selectedPlan, showPlanEditDialog, handleShowAddBatchDialog, showAddBatchDialog } = useActions()
 
 function getPlanTypeIcon(status: "regular" | "prototype") {
   switch (status) {
@@ -29,10 +36,38 @@ function getPlanTypeIcon(status: "regular" | "prototype") {
 function gotoShow(plan: Plan, router: Router) {
   router.push({ name: "planningShow", params: { planId: plan.id } });
 }
+
+function useActions() {
+  const selectedPlan = ref<Plan>()
+  const showPlanEditDialog = ref(false)
+  const showAddBatchDialog = ref(false)
+
+  function handleShowUpdatePlanDialog(plan: Plan) {
+    selectedPlan.value = plan;
+    showPlanEditDialog.value = true
+  }
+  function handleShowAddBatchDialog(plan: Plan) {
+    selectedPlan.value = plan;
+    showAddBatchDialog.value = true
+  }
+
+  return {
+    selectedPlan,
+    showPlanEditDialog,
+    showAddBatchDialog,
+    handleShowUpdatePlanDialog,
+    handleShowAddBatchDialog
+  }
+}
 </script>
 
 <template>
   <DataTable :items="plans" @navigate-to="gotoShow">
+    <template #item.image="{ item }">
+      <TableCell>
+        <ImageApp :image="getS3Link(item.product_data?.image?.filename || '', 'small')" class="max-w-10"/>
+      </TableCell>
+    </template>
     <template #item.plan_data.code="{ item }">
       <TableCell>
         <span class="font-medium">{{ item.plan_data.code }}</span>
@@ -57,15 +92,7 @@ function gotoShow(plan: Plan, router: Router) {
         </div>
       </TableCell>
     </template>
-
-    <template #item.updated_at="{ item }">
-      <TableCell>
-        <span class="text-muted-foreground">
-          {{ formatReadableDate(item.updated_at) }}
-        </span>
-      </TableCell>
-    </template>
-
+    
     <template #item.product_data.sku="{ item }">
       <TableCell v-if="!item.product_data">
         <LoaderCircle class="mx-auto animate-spin stroke-muted-foreground" :size="15" />
@@ -80,13 +107,33 @@ function gotoShow(plan: Plan, router: Router) {
     <template #item.actions="{ item }">
       <TableCell>
         <PlanDataTableDropdown>
-          <DropdownMenuItem>Add batch</DropdownMenuItem>
-          <DropdownMenuItem>Update plan</DropdownMenuItem>
-          <DropdownMenuItem>Delete plan</DropdownMenuItem>
+          <DropdownMenuItem @click="handleShowAddBatchDialog(item)">
+            <Plus />
+            Add batch
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="handleShowUpdatePlanDialog(item)">
+            <Pencil />
+            Update plan
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <Trash />
+            Delete plan
+          </DropdownMenuItem>
         </PlanDataTableDropdown>
       </TableCell>
     </template>
+
+    <template #footer>
+      <PlanEditDialog v-model="showPlanEditDialog" v-if="selectedPlan" :plan="selectedPlan" />
+      <BatchAddDialog v-model="showAddBatchDialog" v-if="selectedPlan" :plan="selectedPlan" />
+      <slot name="footer"></slot>
+
+    </template>
+
+
   </DataTable>
+
+
 </template>
 
 <style scoped></style>

@@ -2,7 +2,6 @@
 import { ButtonApp } from "@/components/app/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogScrollContent,
@@ -10,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -101,35 +99,20 @@ watchEffect(async () => {
 
 <template>
   <Dialog v-model:open="dialog">
-    <DialogScrollContent
-      @interact-outside="(e) => e.preventDefault()"
-      class="max-w-[40rem]"
-    >
+    <DialogScrollContent @interact-outside="(e) => e.preventDefault()" class="max-w-[40rem]">
       <DialogHeader>
         <DialogTitle>Add Batch</DialogTitle>
-        <DialogDescription
-          >Add new batch to this plan. Please review before proceeding as this
+        <DialogDescription>Add new batch to this plan. Please review before proceeding as this
           batch will not be deleted once added.
         </DialogDescription>
 
         <form @submit.prevent="submit" class="mt-4 space-y-4">
-          <ButtonApp
-            :prepend-icon="Plus"
-            variant="secondary"
-            @click="handleAddBatch"
-          >
-            Add batch</ButtonApp
-          >
+          <ButtonApp :prepend-icon="Plus" variant="secondary" @click="handleAddBatch">
+            Add batch</ButtonApp>
           <ul class="space-y-2">
-            <li
-              v-for="(batch, index) in batches"
-              :key="batch.key"
-              class="relative flex flex-wrap gap-2 rounded-md border p-2 shadow"
-            >
-              <FormField
-                #default="{ componentField }"
-                :name="`batches[${index}].qty`"
-              >
+            <li v-for="(batch, index) in batches" :key="batch.key"
+              class="relative flex flex-wrap gap-2 rounded-md border p-2 shadow">
+              <FormField #default="{ componentField }" :name="`batches[${index}].qty`">
                 <FormItem>
                   <FormLabel>Qty</FormLabel>
                   <FormControl>
@@ -139,10 +122,7 @@ watchEffect(async () => {
                   <FormMessage />
                 </FormItem>
               </FormField>
-              <FormField
-                #default="{ componentField }"
-                :name="`batches[${index}].start_date`"
-              >
+              <FormField #default="{ componentField }" :name="`batches[${index}].start_date`">
                 <FormItem>
                   <FormLabel>Access date</FormLabel>
                   <FormControl>
@@ -152,38 +132,26 @@ watchEffect(async () => {
                   <FormMessage />
                 </FormItem>
               </FormField>
-              <FormField
-                #default="{ componentField }"
-                :name="`batches[${index}].start_operation`"
-              >
+              <FormField #default="{ componentField }" :name="`batches[${index}].start_operation`">
                 <FormItem class="flex-1">
                   <FormLabel>Start route</FormLabel>
                   <FormControl>
-                    <FormRoutingSelectInput
-                      v-if="filteredRoutings && filteredRoutings.length"
-                      :routings="filteredRoutings"
-                      v-bind="componentField"
-                    />
+                    <FormRoutingSelectInput v-if="filteredRoutings && filteredRoutings.length"
+                      :routings="filteredRoutings" v-bind="componentField" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               </FormField>
               <div class="absolute right-1 top-1">
-                <ButtonApp
-                  size="icon"
-                  class="h-6 w-6 text-destructive"
-                  variant="ghost"
-                  @click="handleRemoveBatch(index)"
-                >
+                <ButtonApp size="icon" class="h-6 w-6 text-destructive" variant="ghost"
+                  @click="handleRemoveBatch(index)">
                   <Trash />
                 </ButtonApp>
               </div>
             </li>
           </ul>
           <div class="flex justify-end">
-            <ButtonApp type="submit" :prepend-icon="Plus" :loading="planLoading"
-              >Append batch</ButtonApp
-            >
+            <ButtonApp type="submit" :prepend-icon="Plus" :loading="planLoading">Append batch</ButtonApp>
           </div>
         </form>
       </DialogHeader>

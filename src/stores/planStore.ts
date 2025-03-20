@@ -9,10 +9,14 @@ import type {
   PlanQueryParams,
 } from "@/types/planning";
 import { useStorage } from "@vueuse/core";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed, ref } from "vue";
+import {
+  useSimplePaginate,
+  useSimplePaginateAPIResource,
+} from "@/composables/usePaginate";
 
 export const usePlanStore = defineStore("plans", () => {
   const baseUrl = import.meta.env.VITE_PLANNING_URL;
@@ -23,15 +27,20 @@ export const usePlanStore = defineStore("plans", () => {
   const { get, errors, loading, setHeader, post, put } = useAxios({
     baseURL: baseUrl,
   });
-  const paginatedResponse = ref<SimplePaginateAPIResource<Plan>>();
+  const {
+    hasNextPage,
+    hasPrevPage,
+    items: plans,
+    paginate: paginatedResponse,
+  } = useSimplePaginateAPIResource<Plan>();
   const authStore = useAuthStore();
+  const { user } = storeToRefs(authStore);
   setHeader("Bearer-Token", bearerToken);
 
   const plan = ref<Plan>();
   const batch = ref<PlanBatch>();
 
   /* GETTERS */
-  const plans = computed(() => paginatedResponse.value?.data);
 
   function invalidate() {
     paginatedResponse.value = undefined;
@@ -57,7 +66,7 @@ export const usePlanStore = defineStore("plans", () => {
 
     return null;
   }
-  
+
   async function getPlan(planId: string, params?: Partial<PlanQueryParams>) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -88,7 +97,10 @@ export const usePlanStore = defineStore("plans", () => {
       bearerToken,
     );
 
-    const res = await put(`/api/plan/${planId}`, form);
+    const res = await put(`/api/plan/${planId}`, {
+      user_id: user.value.id,
+      ...form,
+    });
   }
 
   async function updatePlanBatch(
@@ -110,7 +122,10 @@ export const usePlanStore = defineStore("plans", () => {
       bearerToken,
     );
 
-    await put(`/api/plan/${planId}/batch/update`, form);
+    await put(`/api/plan/${planId}/batch/update`, {
+      user_id: user.value.id,
+      ...form,
+    });
   }
 
   async function getBatch(
@@ -130,6 +145,17 @@ export const usePlanStore = defineStore("plans", () => {
 
     if (res) {
       batch.value = res?.data;
+
+      //update the plan to reflect the new changes on batch
+      if (plan.value && plan.value.batches) {
+        const foundBatchIndex = plan.value.batches.findIndex(
+          (b) => b.id === res.data.id,
+        );
+        console.log(foundBatchIndex);
+        if (foundBatchIndex !== -1) {
+          plan.value.batches[foundBatchIndex] = res.data;
+        }
+      }
       return res.data;
     }
   }
@@ -160,6 +186,8 @@ export const usePlanStore = defineStore("plans", () => {
   return {
     paginatedResponse,
     plans,
+    hasNextPage,
+    hasPrevPage,
     plan,
     batch,
     getPlans,

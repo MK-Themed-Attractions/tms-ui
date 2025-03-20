@@ -3,12 +3,13 @@ import { usePlanStore } from "@/stores/planStore";
 import type { Notification } from "@/types/notification";
 import type { Plan, PlanBatch } from "@/types/planning";
 import { storeToRefs } from "pinia";
-import { h } from "vue";
+import { useRoute } from "vue-router";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
+  const route = useRoute();
 
   async function init() {
     const authStore = useAuthStore();
@@ -30,18 +31,21 @@ export const useWebsocket = () => {
     await channel.subscribe("planning", (message: Notification<any>) => {
       handlePlanningEvent(message);
     });
+
+    const workCenterChannel = realtime.channels.get(`notifications.DET`);
+
+    await workCenterChannel.subscribe(
+      "common",
+      (message: Notification<any>) => {
+        console.log(message);
+      },
+    );
   }
 
   function handlePlanningEvent(message: Notification<any>) {
     switch (message.data.type) {
       case "plan create":
-        planStore.getPlans().then((value) => {
-          if (value) paginatedResponse.value = value;
-
-          if (message.data.status) notifyPlanCreate(message);
-          else notifyPlanCreateFailed(message);
-        });
-
+        notifyPlanCreate(message);
         break;
       case "batch create":
         notifyBatchCreate(message);
@@ -55,8 +59,17 @@ export const useWebsocket = () => {
   }
 
   function notifyPlanCreate(message: Notification<Plan>) {
-    toast.info("Plan notice", {
-      description: message.data.message,
+    if (route.name === "planningShow") {
+      console.log(message);
+      // planStore.getPlan()
+    }
+
+    planStore.getPlans().then(() => {
+      if (message.data.status) {
+        toast.info("Plan notice", {
+          description: message.data.message,
+        });
+      } else notifyPlanCreateFailed(message);
     });
   }
 
