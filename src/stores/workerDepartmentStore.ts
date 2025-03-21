@@ -11,9 +11,9 @@ import type {
 import { computed, ref } from "vue";
 
 export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
-  const baseUrl = import.meta.env.VITE_WORKERS_URL;
+  const baseUrl = import.meta.env.VITE_WORKERS;
   const bearerToken = useStorage(
-    import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
+    import.meta.env.VITE_WORKERS_BEARER_TOKEN_KEY,
     "",
   );
   const { errors, get, loading, post, setHeader, put } = useAxios({

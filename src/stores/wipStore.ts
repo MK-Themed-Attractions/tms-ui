@@ -14,7 +14,7 @@ import type {
 import type { DepartmentKPIPayload } from "@/types/qc";
 
 export const useWipStore = defineStore("wips", () => {
-  const baseUrl = ref(import.meta.env.VITE_COMMON_URL);
+  const baseUrl = ref(import.meta.env.VITE_COMMON);
   const bearerToken = useStorage(
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
@@ -52,9 +52,10 @@ export const useWipStore = defineStore("wips", () => {
    */
   function pointToMicroservice(ms_url: string | undefined) {
     if (!ms_url || typeof ms_url === "undefined") return;
-    
+
     axiosInstance.defaults.baseURL = import.meta.env[ms_url];
     baseUrl.value = import.meta.env[ms_url];
+    bearerToken.value = import.meta.env[ms_url + "_BEARER_TOKEN_KEY"];
   }
 
   function reset() {

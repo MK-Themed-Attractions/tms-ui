@@ -19,7 +19,7 @@ import {
 } from "@/composables/usePaginate";
 
 export const usePlanStore = defineStore("plans", () => {
-  const baseUrl = import.meta.env.VITE_PLANNING_URL;
+  const baseUrl = import.meta.env.VITE_PLANNING;
   const bearerToken = useStorage(
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",

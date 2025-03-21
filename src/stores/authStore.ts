@@ -58,7 +58,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const { errors, loading, post, get, setHeader, put, destroy, patch } =
     useAxios({
-      baseURL: import.meta.env.VITE_USERS_URL,
+      baseURL: import.meta.env.VITE_USERS,
     });
   const accessTokenValue = computed(() => accessToken.value?.token);
   setHeader("Access-Token", accessTokenValue);

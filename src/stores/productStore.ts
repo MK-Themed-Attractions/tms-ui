@@ -19,7 +19,7 @@ import type {
 import { useStorage } from "@vueuse/core";
 
 export const useProductStore = defineStore("products", () => {
-  const baseUrl = import.meta.env.VITE_PRODUCT_URL;
+  const baseUrl = import.meta.env.VITE_PRODUCT;
   const authStore = useAuthStore();
   const products = ref<Product[] | null>(null);
   const product = ref<Product>();
