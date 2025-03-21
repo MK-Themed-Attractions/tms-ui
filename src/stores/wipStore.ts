@@ -3,7 +3,7 @@ import type { SimplePaginate, SimplePaginateObject } from "@/types/pagination";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import type {
   WipTask,
   WipTaskGrouped,
@@ -15,10 +15,11 @@ import type { DepartmentKPIPayload } from "@/types/qc";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = ref(import.meta.env.VITE_COMMON);
-  const bearerToken = useStorage(
+  let bearerToken = useStorage(
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
+
   const {
     get,
     errors,
@@ -55,7 +56,9 @@ export const useWipStore = defineStore("wips", () => {
 
     axiosInstance.defaults.baseURL = import.meta.env[ms_url];
     baseUrl.value = import.meta.env[ms_url];
-    bearerToken.value = import.meta.env[ms_url + "_BEARER_TOKEN_KEY"];
+    const selectedBearerTokenKey = ms_url + "_BEARER_TOKEN_KEY";
+    bearerToken = useStorage(import.meta.env[selectedBearerTokenKey], "");
+    setHeader("Bearer-Token", bearerToken);
   }
 
   function reset() {

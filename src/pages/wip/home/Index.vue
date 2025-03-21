@@ -288,7 +288,7 @@ function useTaskOperations() {
     //first we filter the tasks that are needed based on the selected operation 
     //it will call the right function. then we convert those filtered tasks
     //into an array of task id
-    const taskIds = selectedBatch.value.tasks.filter(task => can!(task.status)).reduce<string[]>((acc, task) => {
+    const taskIds = selectedBatch.value.tasks.filter(task => can!(task.status) && task.is_startable).reduce<string[]>((acc, task) => {
       acc.push(task.id)
       return acc;
     }, [])

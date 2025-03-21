@@ -84,7 +84,7 @@ export const useAuthStore = defineStore("auth", () => {
     bearerEndPoint: string,
     bearerToken: MaybeRefOrGetter,
   ) {
-    if (!bearerToken.value) {
+    if (!bearerToken.value && user.value) {
       const res = await post<any, BearerTokenResponse>(
         bearerEndPoint,
         {
@@ -130,14 +130,15 @@ export const useAuthStore = defineStore("auth", () => {
       },
     );
     invalidate();
+    localStorage.clear();
 
     /* invalidate other store to clear their bearer tokens and data */
-    useProductStore().invalidate();
-    useWorkerDepartmentStore().invalidate();
-    useWorkerStore().invalidate();
-    usePlanStore().invalidate();
-    useWipStore().invalidate();
-    useQcStore().invalidate();
+    // useProductStore().invalidate();
+    // useWorkerDepartmentStore().invalidate();
+    // useWorkerStore().invalidate();
+    // usePlanStore().invalidate();
+    // useWipStore().invalidate();
+    // useQcStore().invalidate();
 
     router.push({ name: "login" });
   }

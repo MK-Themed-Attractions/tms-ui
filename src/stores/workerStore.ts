@@ -8,7 +8,7 @@ import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = import.meta.env.VITE_WORKERSL;
+  const baseUrl = import.meta.env.VITE_WORKERS;
   const bearerToken = useStorage(
     import.meta.env.VITE_WORKERS_BEARER_TOKEN_KEY,
     "",
