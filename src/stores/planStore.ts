@@ -17,6 +17,7 @@ import {
   useSimplePaginate,
   useSimplePaginateAPIResource,
 } from "@/composables/usePaginate";
+import type { TaskHistory, TaskHistoryParams } from "@/types/taskHistory";
 
 export const usePlanStore = defineStore("plans", () => {
   const baseUrl = import.meta.env.VITE_PLANNING;
@@ -167,6 +168,7 @@ export const usePlanStore = defineStore("plans", () => {
 
     const res = await post(`api/plan/${planId}/batch/append`, form);
   }
+
   async function appendTask(
     planId: string,
     batchId: string,
@@ -180,6 +182,16 @@ export const usePlanStore = defineStore("plans", () => {
       `api/plan/${planId}/batch/${batchId}/task/append`,
       form,
     );
+  }
+
+  async function getTaskHistory(params: TaskHistoryParams) {
+    const res = await get<{ data: TaskHistory[] }>("/api/task-history", {
+      params,
+    });
+
+    if (res) {
+      return res.data;
+    }
   }
 
   return {
@@ -199,6 +211,7 @@ export const usePlanStore = defineStore("plans", () => {
     updatePlanBatch,
     appendBatch,
     appendTask,
+    getTaskHistory,
     errors,
     loading,
   };
