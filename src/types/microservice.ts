@@ -1,0 +1,11 @@
+export type MicroServiceKey =
+  | "planning"
+  | "products"
+  | "qc"
+  | "users"
+  | "workers"
+  | "casting"
+  | "metal"
+  | "assembly"
+  | "detailing"
+  | "sewing"

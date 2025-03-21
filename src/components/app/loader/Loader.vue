@@ -10,7 +10,7 @@ provide(loaderDescriptionKey, computed(() => props.description))
 </script>
 
 <template>
-    <div class="min-h-[40rem] rounded-md border border-dashed grid place-content-center text-center">
+    <div class="rounded-md border border-dashed grid place-content-center text-center">
         <component class="animate-spin mx-auto" :is="icon ? icon : LoaderCircle" />
         <p class="text-sm text-muted-foreground" v-if="description">{{ description }}</p>
         <slot></slot>

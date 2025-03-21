@@ -12,6 +12,7 @@ export interface Product {
   weight_net: number;
   id: string;
   images?: Image[];
+  image?: Image;
   parent_code: string;
   sku: string;
   title: string;
