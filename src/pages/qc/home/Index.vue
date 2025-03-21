@@ -2,7 +2,7 @@
 import { useWipStore } from '@/stores/wipStore';
 import Toolbar from './components/Toolbar.vue';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onBeforeUnmount, ref, watchEffect } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, ref, watchEffect } from 'vue';
 import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
 import { getS3Link } from '@/lib/utils';
@@ -20,6 +20,7 @@ import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import { useTaskControls } from '@/composables/useTaskControls';
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from '@/components/app/input-filter';
 import { InfiniteScroll, InfiniteScrollTrigger } from '@/components/app/infinite-scroll';
+import type { WorkerDepartment } from '@/types/workers';
 
 const wipStore = useWipStore()
 const {
@@ -27,21 +28,22 @@ const {
     wipTaskGrouped,
     wipLoading,
     handleGetBatchWip,
-    selectedDepartmentId,
+    selectedDepartment,
     handleFetchBatchWip,
     getTasksByWorkCentersWithFilter,
     filter,
     search,
     page,
-    getNextTaskByWorkCenters, selectedBatch } = useWip()
+    getNextTaskByWorkCenters,
+    selectedBatch,
+    workCenters } = useWip()
 const { handleFail, handlePass, selectedQCTask, showQCTaskDialog, departmentKPIs, getDepartmentKPIs } = useQC()
 const { hadInspected } = useTaskControls()
 const workerDepartmentStore = useWorkerDepartmentStore()
 
 function useWip() {
 
-    const selectedDepartmentId = ref<string>()
-    const workCenters = ref<string[]>()
+    const selectedDepartment = ref<WorkerDepartment>()
     const wipTaskGrouped = ref<WipTaskGrouped[]>()
     const selectedBatch = ref<WipBatch>()
     const search = ref<string>()
@@ -49,11 +51,7 @@ function useWip() {
     const page = ref(1)
 
     const { loading: wipLoading } = storeToRefs(wipStore)
-
-    watchEffect(() => {
-        if (selectedDepartmentId.value)
-            workCenters.value = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
-    })
+    const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
 
     //Get all DONE plans > batches > tasks  
     async function getTasksByWorkCenters(params?: Partial<WipPlanQueryParams>) {
@@ -123,12 +121,13 @@ function useWip() {
         getTasksByWorkCentersWithFilter,
         getNextTaskByWorkCenters,
         handleGetBatchWip,
-        selectedDepartmentId,
+        selectedDepartment,
         selectedBatch,
         handleFetchBatchWip,
         search,
         filter,
-        page
+        page,
+        workCenters
     }
 }
 
@@ -174,13 +173,15 @@ function useQC() {
     }
 }
 
-async function handleDepartmentChange(workCenterIds: string[]) {
+async function handleDepartmentChange(department: WorkerDepartment) {
+    selectedDepartment.value = department;
+    wipStore.pointToMicroservice(department.ms_url)
+    
     //reset the page and taskGroup everytime the department changes
-
     wipTaskGrouped.value = []
     page.value = 1;
-    await getTasksByWorkCenters({ work_centers: workCenterIds })
-    await getDepartmentKPIs(workCenterIds)
+    await getTasksByWorkCenters({ work_centers: workCenters.value })
+    await getDepartmentKPIs(workCenters.value || [])
 }
 
 onBeforeMount(() => {
@@ -201,16 +202,16 @@ onBeforeUnmount(() => {
             </p>
         </div>
 
-        <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentChange" :loading="wipLoading">
+        <Toolbar v-model="selectedDepartment" @change="handleDepartmentChange" :loading="wipLoading">
             <template #append>
                 <InputFilter v-model:filter="filter" v-model:search="search" :dropdown-data="searchFilterData"
-                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartmentId">
+                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartment">
                 </InputFilter>
             </template>
         </Toolbar>
 
         <InfiniteScroll class="flex flex-wrap gap-4" v-if="wipTaskGrouped && wipTaskGrouped.length"
-            @trigger="getNextTaskByWorkCenters" :key="selectedDepartmentId">
+            @trigger="getNextTaskByWorkCenters" :key="selectedDepartment?.id">
             <template v-for="wipTask in wipTaskGrouped" :key="wipTask.id">
                 <template v-for="product in wipTask.product_data" :key="product.id">
                     <div v-for="plan in product.plan_data" :key="plan.id"

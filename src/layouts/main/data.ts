@@ -8,7 +8,10 @@ import {
   Home,
   Package,
   SearchCheck,
+  Shield,
   TrendingUp,
+  User,
+  UserCircle,
   Wrench,
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
@@ -58,5 +61,21 @@ export const navItemData: NavItem[] = [
     name: "Planning",
     to: { name: "planningIndex" },
     icon: Calendar,
+  },
+  {
+    name: "User management",
+    icon: UserCircle,
+    children: [
+      {
+        to: { name: "userIndex" },
+        icon: User,
+        name: "Users",
+      },
+      {
+        to: { name: "permissionIndex" },
+        icon: Shield,
+        name: "Roles and permissions",
+      },
+    ],
   },
 ];

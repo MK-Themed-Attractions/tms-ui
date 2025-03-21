@@ -31,6 +31,15 @@ export const useWebsocket = () => {
     await channel.subscribe("planning", (message: Notification<any>) => {
       handlePlanningEvent(message);
     });
+
+    const workCenterChannel = realtime.channels.get(`notifications.DET`);
+
+    await workCenterChannel.subscribe(
+      "common",
+      (message: Notification<any>) => {
+        console.log(message);
+      },
+    );
   }
 
   function handlePlanningEvent(message: Notification<any>) {

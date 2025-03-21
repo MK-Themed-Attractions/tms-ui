@@ -19,7 +19,7 @@ import {
 } from "@/composables/usePaginate";
 
 export const usePlanStore = defineStore("plans", () => {
-  const baseUrl = import.meta.env.VITE_PLANNING_URL;
+  const baseUrl = import.meta.env.VITE_PLANNING;
   const bearerToken = useStorage(
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
@@ -151,7 +151,6 @@ export const usePlanStore = defineStore("plans", () => {
         const foundBatchIndex = plan.value.batches.findIndex(
           (b) => b.id === res.data.id,
         );
-        console.log(foundBatchIndex);
         if (foundBatchIndex !== -1) {
           plan.value.batches[foundBatchIndex] = res.data;
         }

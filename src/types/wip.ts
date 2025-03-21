@@ -30,6 +30,7 @@ export interface WipTask {
   };
   qc_failed_at?: string;
   qc_passed_at?: string;
+  product_data?: Product;
 }
 
 export type TaskStatus =
@@ -54,6 +55,7 @@ export type WipPlanProduct = Pick<
   "sku" | "title" | "updated_at" | "created_at" | "id"
 > & {
   thumbnail: string;
+  parent_code?: string;
 };
 
 export type WipBatch = Omit<
