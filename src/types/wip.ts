@@ -30,6 +30,7 @@ export interface WipTask {
   };
   qc_failed_at?: string;
   qc_passed_at?: string;
+  product_data?: Product;
 }
 
 export type TaskStatus =

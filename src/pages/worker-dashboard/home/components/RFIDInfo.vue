@@ -1,10 +1,27 @@
 <script setup lang="ts">
-import { CheckCircle, Nfc, XCircle } from 'lucide-vue-next';
+import { CheckCircle, Nfc, Search, XCircle } from 'lucide-vue-next';
 import IconContainer from '../../components/IconContainer.vue';
+import type { RFIDState } from '../..';
+import { computed } from 'vue';
 
 const props = defineProps<{
-    rfid: string
+    state: RFIDState
 }>()
+
+const rfidStateData = computed(() => {
+    switch (props.state) {
+        case 'detected':
+            return {
+                icon: CheckCircle,
+                text: 'Detected'
+            }
+        case 'scanning':
+            return { icon: Search, text: 'Scanning' }
+        case 'not-detected':
+            return { icon: XCircle, text: 'Not Detected' }
+    }
+})
+
 </script>
 <template>
     <div class="border shadow-sm rounded-md p-4 min-h-[5rem] flex items-center gap-4 w-fit">
@@ -18,10 +35,9 @@ const props = defineProps<{
         </div>
 
         <div class="text-center text-muted-foreground">
-            <CheckCircle class="mx-auto" v-if="rfid" />
-            <XCircle class="mx-auto" v-else />
+            <component :is="rfidStateData.icon" class="mx-auto"/>
             <span class="text-xs font-medium ">
-                {{ rfid ? 'Detected' : 'Not detected' }}
+                {{ rfidStateData.text }}
             </span>
         </div>
     </div>

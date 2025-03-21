@@ -10,6 +10,7 @@ export interface Worker {
   id: string;
   full_name: string;
   department?: WorkerDepartment;
+  work_centers?: string[];
   is_active: boolean;
 }
 

@@ -98,6 +98,22 @@ export const useWorkerStore = defineStore("workers", () => {
       return res.data;
     }
   }
+
+  /**
+   * Get worker by RFID with work centers from where
+   * his/her tasks are came from
+   * @param rfid
+   * @returns Worker
+   */
+  async function getWorkerByRfidWithWorkCenters(rfid: string) {
+    const res = await get<{ data: Worker }>(
+      `/api/task/get-worker-tasks/${rfid}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
   /**
    * Get individual worker and automatically includes relationships
    * @param workerId worker UUID rfid_card Employee RFID card
@@ -156,15 +172,13 @@ export const useWorkerStore = defineStore("workers", () => {
     });
   }
 
-
-  async function getWorkerTasks(workerRfid: string) {
-    
-  }
+  async function getWorkerTasks(workerRfid: string) {}
 
   return {
     getWorkers,
     getWorker,
     getWorkerByRfid,
+    getWorkerByRfidWithWorkCenters,
     errors,
     loading,
     workers,
