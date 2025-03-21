@@ -24,6 +24,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { getS3Link } from "@/lib/utils";
 import { ButtonApp } from "@/components/app/button";
 import { useRouter } from "vue-router";
+import { Loader } from "@/components/app/loader";
 
 const main = templateRef("main");
 const { y } = useScroll(main);
@@ -141,7 +142,9 @@ provide(mainScrollerKey, useMainScroller);
               <component :is="Component"></component>
 
               <!-- loading state -->
-              <template #fallback> Loading... </template>
+              <template #fallback> 
+                <Loader class="min-h-[70vh]" description="Loading, please wait..."/>
+              </template>
             </Suspense>
           </template>
         </RouterView>

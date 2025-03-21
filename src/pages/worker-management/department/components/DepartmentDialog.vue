@@ -166,6 +166,7 @@ onUpdated(async () => {
     setFieldValue("code", props.workerDepartment.code);
     setFieldValue("description", props.workerDepartment.description);
     setFieldValue("name", props.workerDepartment.name);
+    setFieldValue("ms_url", props.workerDepartment.ms_url);
 
     setFieldValue(
       "work_centers",
