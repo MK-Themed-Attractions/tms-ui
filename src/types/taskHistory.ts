@@ -1,6 +1,6 @@
 import type { User } from "./auth";
 import type { TimeStamp } from "./general";
-import type { PlanBatch, PlanData } from "./planning";
+import type { BatchTask, PlanBatch, PlanData } from "./planning";
 import type {
   Product,
   ProductRouting,
@@ -13,11 +13,16 @@ export interface TaskHistory extends TimeStamp {
   id: string;
   user_data: User;
   product_data: Product;
-  batches: (NonNullable<PlanBatch["tasks"]>[number] & {
-    histories: History[];
-  })[];
+  batches: TaskHistoryBatch[];
 }
 
+export type TaskHistoryBatch = Omit<PlanBatch, "tasks"> & {
+  tasks: TaskHistoryTask[];
+};
+
+export type TaskHistoryTask = BatchTask & {
+  histories: History[];
+};
 export interface History {
   task_id: string;
   id: string;

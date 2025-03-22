@@ -7,11 +7,9 @@ const icon = inject(emptyResourceIconKey)
 </script>
 
 <template>
-    <div>
-        <slot>
-            {{ icon }}
-        </slot>
-    </div>
+    <component :is="icon">
+        <slot />
+    </component>
 </template>
 
 

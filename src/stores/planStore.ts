@@ -184,7 +184,7 @@ export const usePlanStore = defineStore("plans", () => {
     );
   }
 
-  async function getTaskHistory(params: TaskHistoryParams) {
+  async function getTaskHistory(params: Partial<TaskHistoryParams>) {
     const res = await get<{ data: TaskHistory[] }>("/api/task-history", {
       params,
     });
