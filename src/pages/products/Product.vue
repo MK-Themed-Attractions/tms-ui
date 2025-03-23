@@ -120,7 +120,7 @@ onActivated(() => {
   <div class="space-y-6">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Products</h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-sm">
         List of all available products of MK themed attractions
       </p>
     </div>

@@ -17,11 +17,17 @@ provide(emptyResourceIconKey, computed(() => props.icon))
 
 <template>
     <div class="min-h-[30rem] rounded-md border border-dashed grid place-content-center text-center">
-        <EmptyResourceIcon class="mx-auto" v-if="icon">
-            <component :is="icon" />
-        </EmptyResourceIcon>
-        <EmptyResourceTitle v-if="title">{{ props.title }}</EmptyResourceTitle>
-        <EmptyResourceDescription v-if="description">{{ props.description }}</EmptyResourceDescription>
+        <slot name="icon">
+            <EmptyResourceIcon class="mx-auto" v-if="icon">
+                <component :is="icon" />
+            </EmptyResourceIcon>
+        </slot>
+        <slot name="title">
+            <EmptyResourceTitle v-if="title">{{ props.title }}</EmptyResourceTitle>
+        </slot>
+        <slot name="description">
+            <EmptyResourceDescription v-if="description">{{ props.description }}</EmptyResourceDescription>
+        </slot>
         <slot> </slot>
     </div>
 </template>

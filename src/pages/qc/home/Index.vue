@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
     <div class="space-y-6 container">
         <div>
             <h1 class="text-lg font-semibold md:text-2xl">Quality Control</h1>
-            <p class="text-muted-foreground">
+            <p class="text-muted-foreground text-sm">
                 Inspect items and mark them as pass or fail based on quality. If failed, add details using predefined
                 KPIs.
             </p>

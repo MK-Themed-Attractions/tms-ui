@@ -7,11 +7,7 @@ import type {
 } from "./products";
 
 export interface Plan {
-  plan_data: {
-    code: string;
-    is_prototype: boolean;
-    description: string;
-  };
+  plan_data: PlanData;
   product_data: PlanProductData;
   updated_at: string;
   created_at: string;
@@ -19,6 +15,12 @@ export interface Plan {
   status_code: PlanStatusCode;
   user_data?: User;
   batches?: PlanBatch[];
+}
+
+export interface PlanData {
+  code: string;
+  is_prototype: boolean;
+  description: string;
 }
 
 export type PlanProductData = Pick<Product, "routings" | "sku" | "title"> & {
@@ -37,7 +39,7 @@ export interface PlanBatch {
   updated_at: string;
   user_data?: User;
   tasks?: BatchTask[];
-  routes?: ProductRouting[]
+  routes?: ProductRouting[];
 }
 
 export interface BatchTask {

@@ -12,7 +12,7 @@ export interface InputFilterProps {
 }
 
 export interface InputFilterDropdownData {
-  key: "product-sku" | "plan-code";
+  key: string;
   value: string;
 }
 
