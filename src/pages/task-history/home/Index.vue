@@ -21,6 +21,7 @@ const planStore = usePlanStore()
 const { handleFetchHistory, inputFilter, search, taskHistories, historyLoading } = useHistory()
 
 function useHistory() {
+
     const filterQueryParams = useRouteQuery('filter', inputFilterData[0].key)
     const inputFilter = ref(inputFilterData.find(i => i.key === filterQueryParams.value) || inputFilterData[0])
 
@@ -40,6 +41,24 @@ function useHistory() {
         params[filterQueryParams.value] = search.value
 
         taskHistories.value = await planStore.getTaskHistory(params)
+
+        orderByDescContents()
+    }
+
+    /**
+     * Reverse the order of the contents property to
+     * to make the every last entry appear at the top of the list
+     */
+    function orderByDescContents() {
+        taskHistories.value?.map(taskHistory => {
+            return taskHistory.batches.map(batch => {
+                return batch.tasks.map(task => {
+                    return task.histories.map(history => {
+                        return history.contents.reverse()
+                    })
+                })
+            })
+        })
     }
 
     return {
@@ -50,6 +69,12 @@ function useHistory() {
         historyLoading
     }
 }
+
+
+/* INIT */
+/* when search and inputfilter has a value, fetch imidiately */
+if (inputFilter.value.key && search.value.trim() !== '')
+    await handleFetchHistory()
 
 </script>
 <template>
@@ -89,7 +114,8 @@ function useHistory() {
             </TaskHistoryCard>
             <EmptyResource v-else-if="taskHistories && !taskHistories.length" :icon="FolderOpen"
                 title="No History found" description="we can&apos;t find any data. Please try another search term." />
-            <EmptyResource v-else :icon="Search" title="Explore Task History"
+
+            <EmptyResource v-else-if="!historyLoading" :icon="Search" title="Explore Task History"
                 description="Search for tasks to review their progress and history." />
 
 

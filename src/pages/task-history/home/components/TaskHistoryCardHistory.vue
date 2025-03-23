@@ -36,7 +36,7 @@ const props = defineProps<{
                 </div>
             </StepperItem>
         </Stepper>
-        <EmptyResource class="min-h-12" :icon="FolderOpen" description="This tasks has no history yet" v-else>
+        <EmptyResource class="!min-h-[4rem]" :icon="FolderOpen" description="This tasks has no history yet" v-else>
             <template #icon>
                 <EmptyResourceIcon class="size-4 mx-auto"></EmptyResourceIcon>
             </template>
