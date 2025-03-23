@@ -73,8 +73,9 @@ function useHistory() {
 
 /* INIT */
 /* when search and inputfilter has a value, fetch imidiately */
-if (inputFilter.value.key && search.value.trim() !== '')
+if (inputFilter.value?.key && typeof search.value !== 'undefined' && search.value?.trim() !== '') {
     await handleFetchHistory()
+}
 
 </script>
 <template>
