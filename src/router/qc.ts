@@ -6,6 +6,9 @@ export const qc: RouteRecordRaw[] = [
     name: "qc",
     component: () => import("@/pages/qc/Index.vue"),
     redirect: { name: "qcIndex" },
+    meta: {
+      requiresAuth: true,
+    },
     children: [
       {
         path: "",

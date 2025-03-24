@@ -5,6 +5,9 @@ export const users: RouteRecordRaw[] = [
     path: "user-management",
     name: "users",
     component: () => import("@/pages/user-management/Index.vue"),
+    meta: {
+      requiresAuth: true,
+    },
     children: [
       {
         path: "",

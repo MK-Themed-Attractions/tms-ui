@@ -139,3 +139,7 @@ export function getIconByTaskStatus(status: TaskStatus) {
       return Pause;
   }
 }
+
+export function msTeamLink() {
+  return `https://teams.microsoft.com/l/chat/0/0?users=${import.meta.env.VITE_DEV_TEAM_EMAIL}`;
+}

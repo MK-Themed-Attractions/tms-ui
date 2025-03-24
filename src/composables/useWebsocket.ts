@@ -7,9 +7,9 @@ import { useRoute } from "vue-router";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
+  const route = useRoute();
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
-  const route = useRoute();
 
   async function init() {
     const authStore = useAuthStore();

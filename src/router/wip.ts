@@ -5,6 +5,9 @@ export const wip: RouteRecordRaw[] = [
     name: "wip",
     redirect: { name: "wipIndex" },
     component: () => import("@/pages/wip/Index.vue"),
+    meta: {
+      requiresAuth: true,
+    },
     children: [
       {
         path: "",

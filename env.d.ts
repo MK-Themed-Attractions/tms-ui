@@ -16,6 +16,7 @@ interface ImportMetaEnv {
   readonly VITE_QC_BEARER_TOKEN_KEY: string;
   readonly VITE_ABLY_PUBLIC_KEY: string;
   readonly VITE_S3_ENDPOINT: string;
+  readonly VITE_DEV_TEAM_EMAIL: string;
 }
 
 interface ImportMeta {
