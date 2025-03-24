@@ -10,6 +10,7 @@ import type {
   RolePayload,
   Token,
   User,
+  UserChangePassPayload,
   UserPayload,
   UserPermissionAttachPayload,
   UserRole,
@@ -167,6 +168,17 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function changePassword(
+    userId: string,
+    payload: UserChangePassPayload,
+  ) {
+    const res = await put(`/api/user/change-password/${userId}`, payload);
+
+    if (res) {
+      return res;
+    }
+  }
+
   async function attachRoleToUser(
     userId: string,
     payload: UserRoleAttachPayload,
@@ -261,6 +273,7 @@ export const useAuthStore = defineStore("auth", () => {
     updateUser,
     getUsers,
     resetPassword,
+    changePassword,
     attachRoleToUser,
     attachPermissionsToUser,
     getUserRole,

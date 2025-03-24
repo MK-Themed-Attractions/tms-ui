@@ -54,6 +54,10 @@ export interface LoginResponse {
   };
 }
 
+export interface UserChangePassPayload {
+  current_password: string;
+  new_password: string;
+}
 export interface UserPayload {
   mail: string;
   password?: string;

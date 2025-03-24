@@ -29,7 +29,7 @@ import { Loader, LoaderDescription } from '@/components/app/loader';
                     <Roles />
 
                     <template #fallback>
-                        <Loader>
+                        <Loader class="min-h-[50vh]">
                             <LoaderDescription>Loading, please wait...</LoaderDescription>
                         </Loader>
                     </template>
@@ -39,7 +39,7 @@ import { Loader, LoaderDescription } from '@/components/app/loader';
                 <Suspense :timeout="0" suspensible>
                     <Permissions />
                     <template #fallback>
-                        <Loader>
+                        <Loader class="min-h-[50vh]">
                             <LoaderDescription>Loading, please wait...</LoaderDescription>
                         </Loader>
                     </template>
