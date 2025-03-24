@@ -8,8 +8,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { msTeamLink } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
-import { CircleUser } from "lucide-vue-next";
+import { CircleUser, LifeBuoy, LogOut, User } from "lucide-vue-next";
 
 const authStore = useAuthStore();
 async function handleLogout() {
@@ -25,15 +26,26 @@ async function handleLogout() {
         <span class="sr-only">Toggle user menu</span>
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
+    <DropdownMenuContent align="end" class="min-w-[10rem]">
       <DropdownMenuLabel>My Account</DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <DropdownMenuItem>Settings</DropdownMenuItem>
-      <DropdownMenuItem>Support</DropdownMenuItem>
+      <DropdownMenuItem as-child>
+        <RouterLink :to="{ name: 'profile' }">
+          <User />
+          Profile
+        </RouterLink>
+      </DropdownMenuItem>
+      <DropdownMenuItem as-child>
+        <a :href="msTeamLink()" target="_blank">
+          <LifeBuoy />
+          Support
+        </a>
+      </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem class="cursor-pointer" @click="handleLogout"
-        >Logout</DropdownMenuItem
-      >
+      <DropdownMenuItem class="cursor-pointer" @click="handleLogout">
+        <LogOut />
+        Logout
+      </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>

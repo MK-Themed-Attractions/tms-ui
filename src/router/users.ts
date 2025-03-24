@@ -22,4 +22,12 @@ export const users: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: "profile",
+    name: "profile",
+    component: () => import("@/pages/user-management/profile/Index.vue"),
+    meta: {
+      requiresAuth: true,
+    },
+  },
 ];

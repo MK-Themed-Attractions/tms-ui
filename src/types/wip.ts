@@ -54,7 +54,7 @@ export type WipPlanProduct = Pick<
   Product,
   "sku" | "title" | "updated_at" | "created_at" | "id"
 > & {
-  thumbnail: string;
+  thumbnail?: string;
   parent_code?: string;
 };
 
