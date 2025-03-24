@@ -67,9 +67,9 @@ if (user.value) {
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Account</p>
-            <Separator />
+            <Separator class="!mt-2"/>
 
-            <div class="flex gap-2 items-center">
+            <div class="flex gap-4 items-center">
                 <div class="rounded-full bg-muted size-[5rem] relative isolate">
                     <span
                         class="absolute text-[2em] text-muted-foreground font-bold inset-0 place-content-center grid pb-2">{{
@@ -84,7 +84,7 @@ if (user.value) {
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Role</p>
-            <Separator />
+            <Separator class="!mt-2"/>
             <div>
                 <p class="font-medium">{{ userRole?.name }}</p>
                 <em class="text-sm">{{ userRole?.description }}</em>
@@ -97,7 +97,7 @@ if (user.value) {
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Security</p>
-            <Separator />
+            <Separator class="!mt-2"/>
             <ChangePasswordDialog :loading="authLoading" @submit="handleChangePassword" :errors="authErrors">
                 <ButtonApp :prepend-icon="Lock">Change password</ButtonApp>
             </ChangePasswordDialog>

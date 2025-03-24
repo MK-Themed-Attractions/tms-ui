@@ -41,7 +41,8 @@ export function formatReadableDate(isoDateString: string) {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   };
 
   // Format the date to a readable string

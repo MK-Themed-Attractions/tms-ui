@@ -34,6 +34,7 @@ const router = createRouter({
           component: () => import("@/pages/products/Index.vue"),
           meta: {
             requiresAuth: true,
+            permissionKey: "products-can-get-products",
           },
           children: [
             {
@@ -74,7 +75,7 @@ const router = createRouter({
       ],
     },
     ...auth,
-    ...workerDashboard
+    ...workerDashboard,
   ],
 });
 
@@ -91,11 +92,18 @@ function checkUser(
   from: RouteLocationNormalizedGeneric,
 ) {
   const authStore = useAuthStore();
-  const { user } = storeToRefs(authStore);
-
-  if (to.meta.requiresAuth && !user.value) {
+  const { user, userPermissionSet } = storeToRefs(authStore);
+  const { requiredAuth, permissionKey } = to.meta;
+  if (requiredAuth && !user.value) {
     return { name: "login" };
   }
+
+  // if (
+  //   permissionKey &&
+  //   !userPermissionSet.value.includes(permissionKey as string)
+  // ) {
+  //   return { name: "login" };
+  // }
 }
 
 export default router;
