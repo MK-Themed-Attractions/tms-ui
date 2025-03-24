@@ -16,7 +16,6 @@ import type {
   UserRoleAttachPayload,
 } from "@/types/auth";
 import {
-  get,
   StorageSerializers,
   useStorage,
   type MaybeRefOrGetter,
@@ -121,7 +120,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function logout() {
     await post(
-      "api/auth/logout",
+      "/api/auth/logout",
       { id: user.value.id },
       {
         headers: {
@@ -130,15 +129,15 @@ export const useAuthStore = defineStore("auth", () => {
       },
     );
     invalidate();
-    localStorage.clear();
 
     /* invalidate other store to clear their bearer tokens and data */
-    // useProductStore().invalidate();
-    // useWorkerDepartmentStore().invalidate();
-    // useWorkerStore().invalidate();
-    // usePlanStore().invalidate();
-    // useWipStore().invalidate();
-    // useQcStore().invalidate();
+    useProductStore().invalidate();
+    useWorkerDepartmentStore().invalidate();
+    useWorkerStore().invalidate();
+    usePlanStore().invalidate();
+    useWipStore().invalidate();
+    useQcStore().invalidate();
+    localStorage.clear();
 
     router.push({ name: "login" });
   }
