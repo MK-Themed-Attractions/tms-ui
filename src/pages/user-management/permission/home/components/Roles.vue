@@ -2,7 +2,7 @@
 import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
 import RolesDataTable from './RolesDataTable.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import type { PermissionAttachPayload, Role, RolePayload } from '@/types/auth';
 import { ButtonApp } from '@/components/app/button';
 import { Plus, Shield } from 'lucide-vue-next';
@@ -15,12 +15,15 @@ import { EmptyResource } from '@/components/app/empty-resource';
 import RolesPermissionAttachDialog from './RolesPermissionAttachDialog.vue';
 import RolePermissionAttachForm from './RolePermissionAttachForm.vue';
 import { Loader } from '@/components/app/loader';
+import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
+import { useSimplePaginate } from '@/composables/usePaginate';
+import { useRoute } from 'vue-router';
 
 
+const route = useRoute()
 const authStore = useAuthStore()
 const { errors: authErrors, loading: authLoading } = storeToRefs(authStore)
 const { fetchRoles,
-    roles,
     selectedRole,
     handleRoleCreateSubmit,
     handleRoleDeleteSubmit,
@@ -34,6 +37,8 @@ const { fetchRoles,
 const { handleShowRolePermissionAttachDialog,
     showRolesPermissionAttachDialog,
     handlePermissionAttachSubmit } = usePermissions()
+
+const { hasNextPage, hasPrevPage, roles, rolesPaginate, page, perPage } = usePaginate()
 
 function useRoles() {
     const roles = ref<Role[]>()
@@ -51,8 +56,11 @@ function useRoles() {
         selectedRole.value = role
     }
 
-    async function fetchRoles() {
-        roles.value = await authStore.getRoles()
+    async function fetchRoles(query?: Partial<PaginationQuery>) {
+        rolesPaginate.value = await authStore.getRoles({
+            page: <string>query?.page || page.value,
+            pages: <string>query?.perPage || perPage.value
+        })
     }
 
     async function handleRoleCreateSubmit(payload: RolePayload) {
@@ -156,6 +164,21 @@ function usePermissions() {
 
 }
 
+function usePaginate() {
+    const { hasNextPage, hasPrevPage, items: roles, paginate: rolesPaginate } = useSimplePaginate<Role>()
+    const page = computed(() => <string>route.query.page || '1')
+    const perPage = computed(() => <string>route.query.pages || '30')
+
+    return {
+        hasNextPage,
+        hasPrevPage,
+        roles,
+        rolesPaginate,
+        page,
+        perPage
+    }
+}
+
 await fetchRoles()
 </script>
 <template>
@@ -165,6 +188,10 @@ await fetchRoles()
             <template #actions="{ item }">
                 <RolesDataTableDropdown @edit="handleShowRoleEditDialog(item)" @delete="handleRoleDeleteSubmit(item)"
                     @attach="handleShowRolePermissionAttachDialog(item)" />
+            </template>
+            <template #footer>
+                <PaginationApp per-page-name="pages" @change:query="fetchRoles" :disable-prev="!hasPrevPage"
+                    :disable-next="!hasNextPage" />
             </template>
         </RolesDataTable>
         <EmptyResource v-else :icon="Shield" title="No role found"

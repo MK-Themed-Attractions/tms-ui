@@ -6,8 +6,10 @@ import type {
   Permission,
   PermissionAttachPayload,
   PermissionPayload,
+  PermissionQueryParams,
   Role,
   RolePayload,
+  RoleQueryParams,
   Token,
   User,
   UserChangePassPayload,
@@ -212,12 +214,13 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function getPermissions() {
+  async function getPermissions(params?: Partial<PermissionQueryParams>) {
     const res = await get<{ permissions: SimplePaginate<Permission> }>(
       "/api/permission",
+      { params },
     );
 
-    if (res) return res.permissions.data;
+    if (res) return res.permissions;
   }
 
   async function addPermission(payload: PermissionPayload) {
@@ -235,10 +238,12 @@ export const useAuthStore = defineStore("auth", () => {
     const res = await destroy(`/api/permission/${permissionId}`);
   }
 
-  async function getRoles() {
-    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
+  async function getRoles(params?: Partial<RoleQueryParams>) {
+    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role", {
+      params,
+    });
 
-    if (res) return res.roles.data;
+    if (res) return res.roles;
   }
 
   async function addRole(payload: RolePayload) {

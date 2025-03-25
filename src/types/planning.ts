@@ -1,4 +1,5 @@
-import type { QueryParams, User } from "./auth";
+import type { User } from "./auth";
+import type { QueryParams } from "./general";
 import type {
   Product,
   ProductRouting,
