@@ -40,7 +40,7 @@ function useRole() {
     const userRoles = ref<Role[]>()
 
     async function fetchRoles() {
-        const data = await authStore.getRoles({ pages: '-1' })
+        const data = await authStore.getRoles({ pages: '999999' })
         paginate.value = data;
     }
 

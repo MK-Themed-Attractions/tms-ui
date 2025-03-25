@@ -51,7 +51,7 @@ function usePaginate() {
 
     async function fetchPermissions() {
         paginate.value = await authStore.getPermissions({
-            pages: '-1'
+            pages: '999999'
         })
     }
 
