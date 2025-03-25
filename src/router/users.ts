@@ -13,12 +13,18 @@ export const users: RouteRecordRaw[] = [
         path: "",
         name: "userIndex",
         component: () => import("@/pages/user-management/home/Index.vue"),
+        meta: {
+          permissionKey: import.meta.env.VITE_USERS_KEY,
+        },
       },
       {
         path: "roles-and-permissions",
         name: "permissionIndex",
         component: () =>
           import("@/pages/user-management/permission/home/Index.vue"),
+        meta: {
+          permissionKey: import.meta.env.VITE_USERS_PERMISSION_KEY,
+        },
       },
     ],
   },

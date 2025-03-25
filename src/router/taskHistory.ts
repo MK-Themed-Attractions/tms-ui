@@ -7,6 +7,7 @@ export const taskHistory: RouteRecordRaw[] = [
     component: () => import("@/pages/task-history/Index.vue"),
     meta: {
       requiresAuth: true,
+      permissionKey: import.meta.env.VITE_TASK_HISTORY_KEY,
     },
     children: [
       {

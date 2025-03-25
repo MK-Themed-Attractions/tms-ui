@@ -13,6 +13,9 @@ export const wip: RouteRecordRaw[] = [
         path: "",
         name: "wipIndex",
         component: () => import("@/pages/wip/home/Index.vue"),
+        meta: {
+          permissionKey: import.meta.env.VITE_WIP_KEY,
+        },
       },
     ],
   },

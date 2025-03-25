@@ -17,6 +17,19 @@ interface ImportMetaEnv {
   readonly VITE_ABLY_PUBLIC_KEY: string;
   readonly VITE_S3_ENDPOINT: string;
   readonly VITE_DEV_TEAM_EMAIL: string;
+
+  readonly VITE_PRODUCTS_KEY: string;
+  readonly VITE_TASK_HISTORY_KEY: string;
+  readonly VITE_WIP_KEY: string;
+  readonly VITE_QC_KEY: string;
+  readonly VITE_QC_KPI_KEY: string;
+  readonly VITE_WORKERS_KEY: string;
+  readonly VITE_WORKER_DEPARTMENTS_KEY: string;
+  readonly VITE_PLANNING_KEY: string;
+  readonly VITE_USERS_KEY: string;
+  readonly VITE_USERS_PERMISSION_KEY: string;
+
+  readonly VITE_SUPERADMIN_IDS: string;
 }
 
 interface ImportMeta {
