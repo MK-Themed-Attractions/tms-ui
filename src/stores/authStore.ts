@@ -6,8 +6,10 @@ import type {
   Permission,
   PermissionAttachPayload,
   PermissionPayload,
+  PermissionQueryParams,
   Role,
   RolePayload,
+  RoleQueryParams,
   RolePermission,
   Token,
   User,
@@ -24,12 +26,6 @@ import {
 } from "@vueuse/core";
 
 import { defineStore } from "pinia";
-import { useProductStore } from "./productStore";
-import { useWorkerDepartmentStore } from "./workerDepartmentStore";
-import { useWorkerStore } from "./workerStore";
-import { usePlanStore } from "./planStore";
-import { useWipStore } from "./wipStore";
-import { useQcStore } from "./qcStore";
 import { useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import type { SimplePaginate } from "@/types/pagination";
@@ -41,17 +37,10 @@ export const useAuthStore = defineStore("auth", () => {
   const user = useStorage<User>("user", null, undefined, {
     serializer: StorageSerializers.object,
   });
-  const role = useStorage<Role>("role", null, undefined, {
+  const roles = useStorage<Role[]>("roles", null, undefined, {
     serializer: StorageSerializers.object,
   });
-  const roleWithPermission = useStorage<Role>(
-    "role-with-permission",
-    null,
-    undefined,
-    {
-      serializer: StorageSerializers.object,
-    },
-  );
+  const rolesWithPermission = useStorage<Role[]>("roles-with-permission", []);
   const userDirectPermissions = useStorage<RolePermission[]>(
     "direct-permissions",
     null,
@@ -95,9 +84,15 @@ export const useAuthStore = defineStore("auth", () => {
       );
     }
 
-    const rolePermissions = getPermissions(
-      roleWithPermission.value?.role_permissions,
-    );
+    if (!rolesWithPermission.value.length) return [""];
+
+    let rolePermissions: string[] = [];
+
+    rolesWithPermission.value.forEach((rWithP) => {
+      const permissions = getPermissions(rWithP.role_permissions);
+      rolePermissions = [...rolePermissions, ...permissions];
+    });
+
     const userPermissions = getPermissions(userDirectPermissions.value);
 
     return [...rolePermissions, ...userPermissions];
@@ -107,8 +102,8 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = null;
     accessToken.value = null;
     refreshToken.value = null;
-    role.value = null;
-    roleWithPermission.value = null;
+    roles.value = null;
+    rolesWithPermission.value = null;
     userDirectPermissions.value = null;
   }
 
@@ -124,19 +119,25 @@ export const useAuthStore = defineStore("auth", () => {
     accessToken.value = res.token.access_token;
     refreshToken.value = res.token.refresh_token;
 
-    /* get user role */
-    role.value = await getUserRole(user.value.id, {
+    /* get user roles */
+    roles.value = await getUserRole(user.value.id, {
       headers: {
         "Access-Token": accessTokenValue.value,
       },
     });
-    if (!role.value) return;
+    if (!roles.value) return;
 
-    /* get role permissions */
-    roleWithPermission.value = await getRolePermissions(role.value.id, {
-      headers: {
-        "Access-Token": accessTokenValue.value,
-      },
+    /* loop through each roles and get each role permissions */
+    roles.value.forEach(async (role) => {
+      const rolePermissions = await getRolePermissions(role.id, {
+        headers: {
+          "Access-Token": accessTokenValue.value,
+        },
+      });
+
+      if (rolePermissions) {
+        rolesWithPermission.value.push(rolePermissions);
+      }
     });
 
     /* get user direct permissions */
@@ -182,14 +183,6 @@ export const useAuthStore = defineStore("auth", () => {
       },
     );
     invalidate();
-
-    /* invalidate other store to clear their bearer tokens and data */
-    useProductStore().invalidate();
-    useWorkerDepartmentStore().invalidate();
-    useWorkerStore().invalidate();
-    usePlanStore().invalidate();
-    useWipStore().invalidate();
-    useQcStore().invalidate();
     localStorage.clear();
 
     await router.push({ name: "login" });
@@ -264,16 +257,17 @@ export const useAuthStore = defineStore("auth", () => {
     );
 
     if (res?.data?.roles) {
-      return res.data.roles[0];
+      return res.data.roles;
     }
   }
 
-  async function getPermissions() {
+  async function getPermissions(params?: Partial<PermissionQueryParams>) {
     const res = await get<{ permissions: SimplePaginate<Permission> }>(
       "/api/permission",
+      { params },
     );
 
-    if (res) return res.permissions.data;
+    if (res) return res.permissions;
   }
 
   async function addPermission(payload: PermissionPayload) {
@@ -291,10 +285,12 @@ export const useAuthStore = defineStore("auth", () => {
     const res = await destroy(`/api/permission/${permissionId}`);
   }
 
-  async function getRoles() {
-    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role");
+  async function getRoles(params?: Partial<RoleQueryParams>) {
+    const res = await get<{ roles: SimplePaginate<Role> }>("/api/role", {
+      params,
+    });
 
-    if (res) return res.roles.data;
+    if (res) return res.roles;
   }
 
   async function addRole(payload: RolePayload) {
@@ -357,7 +353,7 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     invalidate,
     userPermissionSet,
-    role,
-    roleWithPermission,
+    roles,
+    rolesWithPermission,
   };
 });

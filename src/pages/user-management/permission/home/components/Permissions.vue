@@ -5,18 +5,20 @@ import PermissionsDataTable from './PermissionsDataTable.vue';
 import { ButtonApp } from '@/components/app/button';
 import { Plus, Shield } from 'lucide-vue-next';
 import PermissionsDialog from './PermissionsDialog.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import PermissionsForm from './PermissionsForm.vue';
 import { storeToRefs } from 'pinia';
 import type { Permission, PermissionPayload } from '@/types/auth';
 import { toast } from 'vue-sonner';
 import { EmptyResource } from '@/components/app/empty-resource';
 import PermissionsDataTableDropdown from './PermissionsDataTableDropdown.vue';
+import { useSimplePaginate } from '@/composables/usePaginate';
+import { useRoute } from 'vue-router';
+import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
 
+const route = useRoute()
 const authStore = useAuthStore()
 const { loading: permissionLoading, errors: authErrors } = storeToRefs(authStore)
-const permissions = ref<Permission[]>()
-
 
 const { handleShowPermissionDialog,
     showPermissionDialog,
@@ -28,14 +30,19 @@ const { handleShowPermissionDialog,
     handlePermissionUpdateSubmit,
     handlePermissionDeleteSubmit } = usePermission()
 
+const { hasNextPage, hasPrevPage, permissionPaginate, permissions, page, perPage } = usePaginate()
+
 
 function usePermission() {
     const showPermissionDialog = ref(false)
     const showPermissionEditDialog = ref(false)
     const selectedPermission = ref<Permission>()
 
-    async function fetchPermissions() {
-        permissions.value = await authStore.getPermissions()
+    async function fetchPermissions(query?: Partial<PaginationQuery>) {
+        permissionPaginate.value = await authStore.getPermissions({
+            pages: <string>query?.perPage || perPage.value || '30',
+            page: <string>query?.page || page.value || '1'
+        })
     }
     function handleShowPermissionDialog() {
         showPermissionDialog.value = true
@@ -110,6 +117,20 @@ function usePermission() {
     }
 }
 
+function usePaginate() {
+    const { hasNextPage, hasPrevPage, items: permissions, paginate: permissionPaginate } = useSimplePaginate<Permission>()
+    const page = computed(() => <string>route.query.page)
+    const perPage = computed(() => <string>route.query.pages)
+    return {
+        hasNextPage,
+        hasPrevPage,
+        permissions,
+        permissionPaginate,
+        page,
+        perPage
+    }
+}
+
 
 /* INIT */
 await fetchPermissions()
@@ -121,6 +142,10 @@ await fetchPermissions()
             <template #actions="{ item }">
                 <PermissionsDataTableDropdown @edit="handleShowPermissionEditDialog(item)"
                     @delete="handlePermissionDeleteSubmit(item)" />
+            </template>
+            <template #footer>
+                <PaginationApp per-page-name="pages" :disable-next="!hasNextPage" :disable-prev="!hasPrevPage"
+                    @change:query="fetchPermissions" />
             </template>
         </PermissionsDataTable>
 

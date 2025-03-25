@@ -3,7 +3,7 @@ import { ButtonApp } from '@/components/app/button';
 import { SectionHeader } from '@/components/app/section-header';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
-import type { Permission, Role, RolePermission, UserChangePassPayload } from '@/types/auth';
+import type { UserChangePassPayload } from '@/types/auth';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import ChangePasswordDialog from './ChangePasswordDialog.vue';
@@ -12,20 +12,13 @@ import { toast } from 'vue-sonner';
 
 const authStore = useAuthStore()
 
-const { initialName, user, getUserRole, userRole, authLoading, authErrors, handleChangePassword, userPermissionSet } = useUser()
+const { initialName, user, roles, authLoading, authErrors, handleChangePassword, userPermissionSet } = useUser()
 
 
 function useUser() {
-    const { user, loading: authLoading, errors: authErrors, userPermissionSet } = storeToRefs(authStore)
-    const userRole = ref<Role>()
+    const { user, loading: authLoading, errors: authErrors, userPermissionSet, roles } = storeToRefs(authStore)
 
     const initialName = computed(() => `${user.value.given_name[0]} ${user.value.last_name[0]}`)
-
-    async function getUserRole() {
-        const role = await authStore.getUserRole(user.value.id)
-        if (role)
-            userRole.value = await authStore.getRolePermissions(role?.id)
-    }
 
     async function handleChangePassword(payload: UserChangePassPayload) {
         await authStore.changePassword(user.value.id, payload)
@@ -41,16 +34,12 @@ function useUser() {
     return {
         user,
         initialName,
-        userRole,
-        getUserRole,
         authLoading,
         authErrors,
         handleChangePassword,
-        userPermissionSet
+        userPermissionSet,
+        roles
     }
-}
-if (user.value) {
-    await getUserRole()
 }
 </script>
 <template>
@@ -77,12 +66,15 @@ if (user.value) {
         </div>
 
         <div class="space-y-4">
-            <p class="text-sm font-medium text-muted-foreground">Role</p>
+            <p class="text-sm font-medium text-muted-foreground">Roles</p>
             <Separator class="!mt-2" />
-            <div>
-                <p class="font-medium">{{ userRole?.name }}</p>
-                <em class="text-sm">{{ userRole?.description }}</em>
-            </div>
+
+            <ul class="flex flex-wrap gap-4">
+                <li v-for="userRole in roles" :key="userRole.id" class="pl-2 border-l-2">
+                    <p class="font-medium">{{ userRole?.name }}</p>
+                    <em class="text-sm">{{ userRole?.description }}</em>
+                </li>
+            </ul>
             <ul class="rounded-md bg-muted/50 text-xs flex flex-wrap gap-2 shadow-sm p-2">
                 <li v-for="permission in userPermissionSet" :key=permission class="font-medium bg-white p-2 rounded-md">
                     {{

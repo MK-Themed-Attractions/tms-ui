@@ -20,11 +20,27 @@ export const users: RouteRecordRaw[] = [
       {
         path: "roles-and-permissions",
         name: "permissionIndex",
+        redirect: { name: "roles" },
         component: () =>
           import("@/pages/user-management/permission/home/Index.vue"),
-        meta: {
-          permissionKey: import.meta.env.VITE_USERS_PERMISSION_KEY,
-        },
+        children: [
+          {
+            path: "roles",
+            name: "roles",
+            component: () =>
+              import(
+                "@/pages/user-management/permission/home/components/Roles.vue"
+              ),
+          },
+          {
+            path: "permissions",
+            name: "permissions",
+            component: () =>
+              import(
+                "@/pages/user-management/permission/home/components/Permissions.vue"
+              ),
+          },
+        ],
       },
     ],
   },

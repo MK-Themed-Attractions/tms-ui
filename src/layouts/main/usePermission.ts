@@ -8,7 +8,7 @@ export function usePermission() {
   const { userPermissionSet, user } = storeToRefs(authStore);
 
   function hasPermission(key?: string) {
-    if (!key || !user.value) return false;
+    if (!key || !user.value || !userPermissionSet.value) return false;
 
     const adminKeys = <string[]>JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS);
 

@@ -39,6 +39,9 @@ const props = defineProps<{
                 <slot name="actions" :item="item" />
             </TableCell>
         </template>
+        <template #footer>
+            <slot name="footer"></slot>
+        </template>
     </DataTable>
 </template>
 
