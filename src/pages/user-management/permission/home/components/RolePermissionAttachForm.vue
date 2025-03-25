@@ -26,7 +26,6 @@ const formSchema = toTypedSchema(z.object({
     }))
 }))
 const authStore = useAuthStore()
-const { fetchPermissions, permissions } = usePermission()
 const { fetchRolepermissions, roleWithPermissions, rolePermissionsToForm } = useRole()
 
 
@@ -40,18 +39,6 @@ const { handleSubmit, errors } = useForm({
 const submit = handleSubmit((values) => {
     emits('submit', values)
 })
-
-function usePermission() {
-    const permissions = ref<Permission[]>()
-
-    async function fetchPermissions() {
-        permissions.value = await authStore.getPermissions()
-    }
-    return {
-        permissions,
-        fetchPermissions,
-    }
-}
 
 function useRole() {
     const roleWithPermissions = ref<Role>()
@@ -83,9 +70,6 @@ function useRole() {
 
 
 /* INIT */
-if (!permissions.value) {
-    await fetchPermissions()
-}
 if (!roleWithPermissions.value) {
     await fetchRolepermissions()
 }
@@ -98,8 +82,8 @@ if (!roleWithPermissions.value) {
             <FormItem>
                 <FormLabel>Microservices and permissions</FormLabel>
                 <FormControl>
-                    <RolePermissionAttachSelectInput v-if="permissions" v-bind="componentField"
-                        :role-permissions="rolePermissionsToForm" :permissions="permissions" />
+                    <RolePermissionAttachSelectInput v-bind="componentField"
+                        :role-permissions="rolePermissionsToForm" />
                 </FormControl>
                 <FormMessage class="text-center" />
             </FormItem>

@@ -179,7 +179,10 @@ function usePaginate() {
     }
 }
 
-await fetchRoles()
+await fetchRoles({
+    page: '1',
+    perPage: '30'
+})
 </script>
 <template>
     <Card class="p-4 space-y-4">
