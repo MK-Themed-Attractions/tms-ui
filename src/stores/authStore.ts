@@ -10,6 +10,7 @@ import type {
   Role,
   RolePayload,
   RoleQueryParams,
+  RolePermission,
   Token,
   User,
   UserChangePassPayload,
@@ -19,7 +20,6 @@ import type {
   UserRoleAttachPayload,
 } from "@/types/auth";
 import {
-  get,
   StorageSerializers,
   useStorage,
   type MaybeRefOrGetter,
@@ -33,8 +33,9 @@ import { usePlanStore } from "./planStore";
 import { useWipStore } from "./wipStore";
 import { useQcStore } from "./qcStore";
 import { useRouter } from "vue-router";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { SimplePaginate } from "@/types/pagination";
+import type { AxiosRequestConfig } from "axios";
 
 export const useAuthStore = defineStore("auth", () => {
   const router = useRouter();
@@ -42,6 +43,25 @@ export const useAuthStore = defineStore("auth", () => {
   const user = useStorage<User>("user", null, undefined, {
     serializer: StorageSerializers.object,
   });
+  const role = useStorage<Role>("role", null, undefined, {
+    serializer: StorageSerializers.object,
+  });
+  const roleWithPermission = useStorage<Role>(
+    "role-with-permission",
+    null,
+    undefined,
+    {
+      serializer: StorageSerializers.object,
+    },
+  );
+  const userDirectPermissions = useStorage<RolePermission[]>(
+    "direct-permissions",
+    null,
+    undefined,
+    {
+      serializer: StorageSerializers.object,
+    },
+  );
   const accessToken = useStorage<Token | null>(
     "access-token",
     null,
@@ -66,10 +86,32 @@ export const useAuthStore = defineStore("auth", () => {
   const accessTokenValue = computed(() => accessToken.value?.token);
   setHeader("Access-Token", accessTokenValue);
 
+  /* collection of user permissionkeys with microservices attached with it 
+     NOTE: USE THIS to authorize user
+  */
+  const userPermissionSet = computed(() => {
+    function getPermissions(permissions?: RolePermission[]): string[] {
+      if (!permissions) return [];
+      return permissions.flatMap((rp) =>
+        rp.permissions.map((p) => `${rp.microservice}-${p.name}`),
+      );
+    }
+
+    const rolePermissions = getPermissions(
+      roleWithPermission.value?.role_permissions,
+    );
+    const userPermissions = getPermissions(userDirectPermissions.value);
+
+    return [...rolePermissions, ...userPermissions];
+  });
+
   function invalidate() {
     user.value = null;
     accessToken.value = null;
     refreshToken.value = null;
+    role.value = null;
+    roleWithPermission.value = null;
+    userDirectPermissions.value = null;
   }
 
   async function login(payload: LoginCredential) {
@@ -78,9 +120,33 @@ export const useAuthStore = defineStore("auth", () => {
       payload,
     );
 
-    user.value = res?.data;
-    accessToken.value = res?.token.access_token;
-    refreshToken.value = res?.token.refresh_token;
+    if (!res || errors.value) return;
+
+    user.value = res.data;
+    accessToken.value = res.token.access_token;
+    refreshToken.value = res.token.refresh_token;
+
+    /* get user role */
+    role.value = await getUserRole(user.value.id, {
+      headers: {
+        "Access-Token": accessTokenValue.value,
+      },
+    });
+    if (!role.value) return;
+
+    /* get role permissions */
+    roleWithPermission.value = await getRolePermissions(role.value.id, {
+      headers: {
+        "Access-Token": accessTokenValue.value,
+      },
+    });
+
+    /* get user direct permissions */
+    userDirectPermissions.value = await getUserPermissions(user.value.id, {
+      headers: {
+        "Access-Token": accessTokenValue.value,
+      },
+    });
   }
 
   async function checkTokenValidity(
@@ -93,22 +159,7 @@ export const useAuthStore = defineStore("auth", () => {
         {
           access_token: accessToken.value?.token ?? "",
           user_id: user.value.id,
-          permissions: [
-            "can-save-workers",
-            "can-get-departments",
-            "can-create-product",
-            "can-update-product",
-            "can-attach-user-permission",
-            "can-attach-user-role",
-            "can-update-role",
-            "can-update-permission",
-            "can-create-worker",
-            "can-update-worker",
-            "can-create-department",
-            "can-update-department",
-            "can-set-worker-department",
-            "can-unset-worker-department",
-          ],
+          permissions: userPermissionSet.value,
         },
         {
           headers: {
@@ -124,7 +175,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function logout() {
     await post(
-      "api/auth/logout",
+      "/api/auth/logout",
       { id: user.value.id },
       {
         headers: {
@@ -133,17 +184,17 @@ export const useAuthStore = defineStore("auth", () => {
       },
     );
     invalidate();
-    localStorage.clear();
 
     /* invalidate other store to clear their bearer tokens and data */
-    // useProductStore().invalidate();
-    // useWorkerDepartmentStore().invalidate();
-    // useWorkerStore().invalidate();
-    // usePlanStore().invalidate();
-    // useWipStore().invalidate();
-    // useQcStore().invalidate();
+    useProductStore().invalidate();
+    useWorkerDepartmentStore().invalidate();
+    useWorkerStore().invalidate();
+    usePlanStore().invalidate();
+    useWipStore().invalidate();
+    useQcStore().invalidate();
+    localStorage.clear();
 
-    router.push({ name: "login" });
+    await router.push({ name: "login" });
   }
 
   async function getUsers() {
@@ -194,9 +245,13 @@ export const useAuthStore = defineStore("auth", () => {
   ) {
     const res = await patch(`/api/user/attach-permission/${userId}`, payload);
   }
-  async function getUserPermissions(userId: string) {
+  async function getUserPermissions(
+    userId: string,
+    config?: AxiosRequestConfig,
+  ) {
     const res = await get<{ data: User }>(
       `/api/user/get-user-permission/${userId}`,
+      config,
     );
 
     if (res?.data?.user_permissions) {
@@ -204,9 +259,10 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function getUserRole(userId: string) {
+  async function getUserRole(userId: string, config?: AxiosRequestConfig) {
     const res = await get<{ data: UserRole }>(
       `/api/user/get-attached-roles/${userId}`,
+      config,
     );
 
     if (res?.data?.roles) {
@@ -262,9 +318,13 @@ export const useAuthStore = defineStore("auth", () => {
     const res = await patch("/api/role/attach-permissions", payload);
   }
 
-  async function getRolePermissions(roleId: string) {
+  async function getRolePermissions(
+    roleId: string,
+    config?: AxiosRequestConfig,
+  ) {
     const res = await get<{ data: Role }>(
       `/api/role/get-permissions/${roleId}`,
+      config,
     );
 
     if (res) {
@@ -301,5 +361,8 @@ export const useAuthStore = defineStore("auth", () => {
     checkTokenValidity,
     logout,
     invalidate,
+    userPermissionSet,
+    role,
+    roleWithPermission,
   };
 });

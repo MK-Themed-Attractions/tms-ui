@@ -12,20 +12,14 @@ import { toast } from 'vue-sonner';
 
 const authStore = useAuthStore()
 
-const { initialName, user, getUserRole, userRole, permissions, authLoading, authErrors, handleChangePassword } = useUser()
+const { initialName, user, getUserRole, userRole, authLoading, authErrors, handleChangePassword, userPermissionSet } = useUser()
 
 
 function useUser() {
-    const { user, loading: authLoading, errors: authErrors } = storeToRefs(authStore)
+    const { user, loading: authLoading, errors: authErrors, userPermissionSet } = storeToRefs(authStore)
     const userRole = ref<Role>()
 
     const initialName = computed(() => `${user.value.given_name[0]} ${user.value.last_name[0]}`)
-    const permissions = computed(() => {
-        return userRole.value?.role_permissions?.reduce<Permission[]>((acc, rp) => {
-            acc.push(...rp.permissions)
-            return acc;
-        }, [])
-    })
 
     async function getUserRole() {
         const role = await authStore.getUserRole(user.value.id)
@@ -49,10 +43,10 @@ function useUser() {
         initialName,
         userRole,
         getUserRole,
-        permissions,
         authLoading,
         authErrors,
-        handleChangePassword
+        handleChangePassword,
+        userPermissionSet
     }
 }
 if (user.value) {
@@ -67,9 +61,9 @@ if (user.value) {
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Account</p>
-            <Separator />
+            <Separator class="!mt-2" />
 
-            <div class="flex gap-2 items-center">
+            <div class="flex gap-4 items-center">
                 <div class="rounded-full bg-muted size-[5rem] relative isolate">
                     <span
                         class="absolute text-[2em] text-muted-foreground font-bold inset-0 place-content-center grid pb-2">{{
@@ -84,20 +78,21 @@ if (user.value) {
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Role</p>
-            <Separator />
+            <Separator class="!mt-2" />
             <div>
                 <p class="font-medium">{{ userRole?.name }}</p>
                 <em class="text-sm">{{ userRole?.description }}</em>
             </div>
             <ul class="rounded-md bg-muted/50 text-xs flex flex-wrap gap-2 shadow-sm p-2">
-                <li v-for="permission in permissions" :key=permission.id class="font-medium bg-white p-2 rounded-md">{{
-                    permission.name }}</li>
+                <li v-for="permission in userPermissionSet" :key=permission class="font-medium bg-white p-2 rounded-md">
+                    {{
+                        permission }}</li>
             </ul>
         </div>
 
         <div class="space-y-4">
             <p class="text-sm font-medium text-muted-foreground">Security</p>
-            <Separator />
+            <Separator class="!mt-2" />
             <ChangePasswordDialog :loading="authLoading" @submit="handleChangePassword" :errors="authErrors">
                 <ButtonApp :prepend-icon="Lock">Change password</ButtonApp>
             </ChangePasswordDialog>
