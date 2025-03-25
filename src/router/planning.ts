@@ -12,6 +12,7 @@ export const planning: RouteRecordRaw[] = [
     component: () => import("@/pages/planning/Index.vue"),
     meta: {
       requiresAuth: true,
+      permissionKey: import.meta.env.VITE_PLANNING_KEY,
     },
     children: [
       {
