@@ -66,12 +66,12 @@ function useWip() {
 
         //if theres no search keyword refetch the selected department 
         if (!data.search.trim() && workCenters) {
-            await getTasksByWorkCenters({ filterBy: filter.value.key, keyword: search.value })
+            await getTasksByWorkCenters({ filterBy: <"product-sku" | "plan-code">filter.value.key, keyword: search.value })
             return;
         }
 
         //reset the page to 1 everytime filter is applied
-        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: filter.value.key })
+        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: <"product-sku" | "plan-code">filter.value.key })
         if (res) wipTaskGrouped.value = res;
     }
 
@@ -259,6 +259,7 @@ onBeforeUnmount(() => {
 
             <InfiniteScrollTrigger />
         </InfiniteScroll>
+        
         <!-- fallback for undefined wipTaskGrouped -->
         <div v-else-if="!wipTaskGrouped"
             class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">

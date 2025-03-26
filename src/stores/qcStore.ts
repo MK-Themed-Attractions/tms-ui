@@ -15,9 +15,10 @@ import type { SimplePaginateAPIResource } from "@/types/pagination";
 export const useQcStore = defineStore("qc", () => {
   const baseUrl = import.meta.env.VITE_QC;
   const bearerToken = useStorage(import.meta.env.VITE_QC_BEARER_TOKEN_KEY, "");
-  const { get, errors, loading, setHeader, post, patch, put } = useAxios({
-    baseURL: baseUrl,
-  });
+  const { get, errors, loading, setHeader, post, patch, put, destroy } =
+    useAxios({
+      baseURL: baseUrl,
+    });
   setHeader("Bearer-Token", bearerToken);
 
   const departmentKPIs = ref<DepartmentKPI[]>();
@@ -100,6 +101,15 @@ export const useQcStore = defineStore("qc", () => {
     await put(`/api/key-point/${kpiId}`, payload);
   }
 
+  async function deleteKpi(kpiId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await destroy(`/api/key-point/${kpiId}`);
+  }
+
   return {
     invalidate,
     loading,
@@ -110,6 +120,7 @@ export const useQcStore = defineStore("qc", () => {
     getKPIs,
     addKpi,
     editKpi,
+    deleteKpi,
     kpiPaginated,
     kpis,
     hasNextPage,

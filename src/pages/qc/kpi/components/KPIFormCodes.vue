@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { FilterApp } from '@/components/app/filter';
-import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
-import type { WorkerDepartment } from '@/types/workers';
+import { MultiSelect } from '@/components/app/multi-select/Index';
+import { useProductStore } from '@/stores/productStore';
 import { storeToRefs } from 'pinia';
 
 
-const departmentsModel = defineModel<WorkerDepartment[]>({ default: [] })
-const workerDepartmentStore = useWorkerDepartmentStore()
-const { departments } = storeToRefs(workerDepartmentStore)
+const workCenterCodes = defineModel<string[]>({ default: [] })
+const productStore = useProductStore()
+const { workCenters } = storeToRefs(productStore)
 
 
-if (!departments.value) {
-    await workerDepartmentStore.getDepartments()
+if (!workCenters.value) {
+    await productStore.getWorkCenters()
 }
 
 </script>
 
 <template>
-    <FilterApp v-if="departments" :items="departments" text="Departments" v-model="departmentsModel">
-    </FilterApp>
+    <MultiSelect v-if="workCenters" :items="workCenters" v-model="workCenterCodes" return-key="no" value-key="no" 
+        placeholder="Select Workcenters...">
+    </MultiSelect>
 </template>
 
 
