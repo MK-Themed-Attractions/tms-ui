@@ -4,6 +4,7 @@ import { TableCell } from "@/components/ui/table";
 import { formatReadableDate, getIconByPlanStatus, getS3Link } from "@/lib/utils";
 import { type Plan } from "@/types/planning";
 import {
+  History,
   LoaderCircle,
   Menu,
   Pencil,
@@ -12,7 +13,7 @@ import {
   Trash,
 } from "lucide-vue-next";
 import PlanDataTableDropdown from "./PlanDataTableDropdown.vue";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import type { Router } from "vue-router";
 import PlanEditDialog from "../../show/components/PlanEditDialog.vue";
 import { ref } from "vue";
@@ -128,6 +129,14 @@ function useActions() {
     <template #item.actions="{ item }">
       <TableCell>
         <PlanDataTableDropdown>
+
+          <DropdownMenuItem as-child>
+            <RouterLink :to="{ name: 'taskHistoryIndex', query: { q: item.plan_data.code, filter: 'plan_code' } }"
+              target="_blank">
+              <History />
+              View history
+            </RouterLink>
+          </DropdownMenuItem>
           <DropdownMenuItem @click="handleShowAddBatchDialog(item)">
             <Plus />
             Add batch
@@ -136,7 +145,9 @@ function useActions() {
             <Pencil />
             Update plan
           </DropdownMenuItem>
-          <DropdownMenuItem @click="handleShowDeletePlanConfirmDialog(item)">
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Danger zone</DropdownMenuLabel>
+          <DropdownMenuItem @click="handleShowDeletePlanConfirmDialog(item)" class="text-destructive">
             <Trash />
             Delete plan
           </DropdownMenuItem>
