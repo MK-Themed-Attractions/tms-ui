@@ -68,11 +68,7 @@ export const useWebsocket = () => {
   function notifyPlanCreate(message: Notification<Plan>) {
     if (route.name === "planningShow" && message.data.status) {
       if (message.data.data)
-        planStore
-          .getPlan(message.data.data.id, {
-            includes: "batches",
-          })
-          .then(() => showToast());
+        planStore.getPlan(message.data.data.id).then(() => showToast());
     } else {
       planStore.getPlans().then(() => showToast());
     }
