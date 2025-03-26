@@ -14,7 +14,6 @@ import { useProductStore } from "@/stores/productStore";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
 } from "@/components/ui/popover";
 import { storeToRefs } from "pinia";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,11 +22,17 @@ import { ImageApp } from "@/components/app/image";
 import { PopoverAnchor } from "radix-vue";
 import { useAuthStore } from "@/stores/authStore";
 import { getS3Link } from "@/lib/utils";
+import { ButtonApp } from "@/components/app/button";
+import { useRouter } from "vue-router";
+import { Loader } from "@/components/app/loader";
 
 const main = templateRef("main");
 const { y } = useScroll(main);
 const productStore = useProductStore();
 const { handleSearch, loading, products, productPopover } = useSearch();
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
+const router = useRouter()
 
 function useMainScroller() {
   function scrollMainTo(yScroll: number) {
@@ -69,6 +74,10 @@ function useSearch() {
     products,
     productPopover,
   };
+}
+
+function gotoLogin() {
+  router.push({ name: "login" })
 }
 
 /* INIT */
@@ -121,7 +130,8 @@ provide(mainScrollerKey, useMainScroller);
             </PopoverContent>
           </Popover>
         </div>
-        <UserMenu />
+        <UserMenu v-if="user" />
+        <ButtonApp v-else variant="outline" @click="gotoLogin">Login</ButtonApp>
       </header>
 
       <main class="flex max-h-[91vh] flex-1 flex-col gap-4 overflow-auto p-4 lg:gap-6 lg:p-6" ref="main">
@@ -132,7 +142,9 @@ provide(mainScrollerKey, useMainScroller);
               <component :is="Component"></component>
 
               <!-- loading state -->
-              <template #fallback> Loading... </template>
+              <template #fallback> 
+                <Loader class="min-h-[70vh]" description="Loading, please wait..."/>
+              </template>
             </Suspense>
           </template>
         </RouterView>

@@ -41,7 +41,8 @@ export function formatReadableDate(isoDateString: string) {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   };
 
   // Format the date to a readable string
@@ -138,4 +139,8 @@ export function getIconByTaskStatus(status: TaskStatus) {
     case "paused":
       return Pause;
   }
+}
+
+export function msTeamLink() {
+  return `https://teams.microsoft.com/l/chat/0/0?users=${import.meta.env.VITE_DEV_TEAM_EMAIL}`;
 }

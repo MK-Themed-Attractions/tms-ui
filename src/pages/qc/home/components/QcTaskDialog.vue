@@ -64,18 +64,18 @@ async function handleSubmit() {
         }
 
         await wipStore.changeTaskQCStatus(props.task.id, payload)
+    }
 
-        if (!wipErrors.value) {
-            toast.info('QC Info', {
-                description: 'Task has been successfully inspected.'
-            })
-            dialog.value = false;
-            emits('success')
-        } else {
-            toast.error('QC Info', {
-                description: 'Something went wrong while inspecting the task.'
-            })
-        }
+    if (!wipErrors.value) {
+        toast.info('QC Info', {
+            description: 'Task has been successfully inspected.'
+        })
+        dialog.value = false;
+        emits('success')
+    } else {
+        toast.error('QC Info', {
+            description: 'Something went wrong while inspecting the task.'
+        })
     }
 }
 

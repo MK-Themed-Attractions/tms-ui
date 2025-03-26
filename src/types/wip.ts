@@ -30,6 +30,7 @@ export interface WipTask {
   };
   qc_failed_at?: string;
   qc_passed_at?: string;
+  product_data?: Product;
 }
 
 export type TaskStatus =
@@ -53,7 +54,8 @@ export type WipPlanProduct = Pick<
   Product,
   "sku" | "title" | "updated_at" | "created_at" | "id"
 > & {
-  thumbnail: string;
+  thumbnail?: string;
+  parent_code?: string;
 };
 
 export type WipBatch = Omit<
@@ -81,7 +83,8 @@ export interface WipPlanQueryParams {
   work_centers: string[];
   keyword: string;
   filterBy: "product-sku" | "plan-code";
-  pages: number; //per page
+  pages: number | string; //per page
+  page: string | number;
   is_accessible: boolean | number;
 }
 

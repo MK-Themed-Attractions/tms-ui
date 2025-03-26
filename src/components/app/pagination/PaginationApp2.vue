@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { PaginationButtonsApp, PaginationPerPageApp, type PaginationAppProps, type PaginationButtonsAppProps } from '.';
 
-const props = defineProps<PaginationAppProps & PaginationButtonsAppProps>()
+const props = withDefaults(defineProps<PaginationAppProps & PaginationButtonsAppProps>(), {
+    perPageName: 'pages',
+    pageName: 'page'
+})
 
 const perPage = defineModel('pages', { default: '30' })
 const page = defineModel('page', { default: '1' })

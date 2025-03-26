@@ -23,7 +23,7 @@ const title = computed(() => {
   <Card :is="RouterLink"
     class="flex min-h-[6rem] items-center gap-2 p-2 text-sm duration-300 hover:-translate-y-1 hover:shadow-lg">
     <div class="min-w-[5rem] max-w-[5rem]">
-      <ImageApp :image="getS3Link(imageThumbnail, 'thumbnail')" class="mx-auto aspect-square max-w-full object-cover"
+      <ImageApp :image="getS3Link(imageThumbnail, 'small')" class="mx-auto aspect-square max-w-full object-cover"
         :class="{ 'w-5': !imageThumbnail }" />
     </div>
     <div>

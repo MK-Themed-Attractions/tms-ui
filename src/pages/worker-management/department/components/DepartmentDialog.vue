@@ -41,6 +41,7 @@ const formSchema = toTypedSchema(
     name: z.string().max(255).min(1),
     description: z.string().optional(),
     work_centers: z.array(z.string()).nonempty("Required"),
+    ms_url: z.string().nonempty('Required')
   }),
 );
 
@@ -165,6 +166,7 @@ onUpdated(async () => {
     setFieldValue("code", props.workerDepartment.code);
     setFieldValue("description", props.workerDepartment.description);
     setFieldValue("name", props.workerDepartment.name);
+    setFieldValue("ms_url", props.workerDepartment.ms_url);
 
     setFieldValue(
       "work_centers",
@@ -245,6 +247,17 @@ onUpdated(async () => {
                 <FormDescription>Select at least 1 work center</FormDescription>
                 <FormMessage />
               </div>
+            </FormItem>
+          </FormField>
+          <FormField v-slot="{ componentField }" name="ms_url">
+            <FormItem class="">
+              <FormLabel class="text-right">Microservice .ENV key</FormLabel>
+              <FormControl>
+                <Input type="text" class="col-span-3" v-bind="componentField" />
+              </FormControl>
+              <FormDescription>Point this department to your microservice URL Key. This will determine which routing
+                microservice this department should go.
+              </FormDescription>
             </FormItem>
           </FormField>
 

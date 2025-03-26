@@ -32,8 +32,8 @@ const selectedWorkerIds = ref<string[]>([])
 const taskIds = computed(() => props.batch.taskIds)
 
 function handleWorkerSelect(workers: Worker[]) {
-    const workerIds = workers.reduce<string[]>((acc, cur) => {
-        acc.push(cur.id)
+    const workerIds = workers.reduce<string[]>((acc, worker) => {
+        acc.push(worker.id)
         return acc;
     }, [])
 

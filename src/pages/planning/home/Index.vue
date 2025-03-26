@@ -12,7 +12,6 @@ import { PaginationApp, type PaginationQuery } from "@/components/app/pagination
 import type { PlanQueryParams } from "@/types/planning";
 import { useRoute } from "vue-router";
 import { Input } from "@/components/ui/input";
-import PlanEditDialog from "../show/components/PlanEditDialog.vue";
 
 const planStore = usePlanStore();
 const route = useRoute()
@@ -55,7 +54,7 @@ await getPlans();
   <div class="container space-y-6">
     <div>
       <h1 class="text-lg font-semibold md:text-2xl">Planning</h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-sm">
         Create production plan, cancel or override specific tasks.
       </p>
     </div>
@@ -65,7 +64,6 @@ await getPlans();
         <template #prepend>
           <Input placeholder="Search plan..." class="h-9 w-[clamp(10rem,50vw,20rem)]" v-model="search"
             @keydown.enter="getPlans()" />
-          <!-- <FilterApp v-model="filter" text="Status" :items="planStatuses"></FilterApp> -->
         </template>
         <template #append>
           <Button as-child>

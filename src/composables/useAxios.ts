@@ -4,14 +4,15 @@ import Axios, {
   type CreateAxiosDefaults,
 } from "axios";
 import { ref, watchEffect, type MaybeRefOrGetter } from "vue";
-import { useAxiosErrorRedirects } from "./useAxiosErrorRedirects";
 import { useAuthStore } from "@/stores/authStore";
-import { storeToRefs } from "pinia";
 
 /* global error instance */
 const errors = ref<AxiosResponseError | null>(null);
 
 export const useAxios = (config: CreateAxiosDefaults) => {
+  const loading = ref(false);
+  const authStore = useAuthStore();
+
   const axios = Axios.create({
     headers: {
       "Content-Type": "application/json",
@@ -26,8 +27,7 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     },
     async (error) => {
       if (error.status === 401) {
-        await useAuthStore().logout();
-        await redirectToLoginPage();
+        await authStore.logout();
       }
       return Promise.reject({
         status: error.status,
@@ -35,10 +35,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
       });
     },
   );
-
-  const loading = ref(false);
-  const { redirectToLoginPage } = useAxiosErrorRedirects();
-  const authStore = useAuthStore();
 
   /**
    * use to set the axios header
@@ -144,5 +140,6 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     setHeader,
     destroy,
     patch,
+    axios,
   };
 };

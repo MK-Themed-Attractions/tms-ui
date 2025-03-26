@@ -9,6 +9,7 @@ import { storeToRefs } from "pinia";
 import { ButtonApp } from "@/components/app/button";
 import LoginErrorAlert from "./LoginErrorAlert.vue";
 import { useRouter } from "vue-router";
+import { msTeamLink } from "@/lib/utils";
 
 const form = ref<LoginCredential>({
   email: "",
@@ -51,20 +52,12 @@ async function login() {
         <form class="grid gap-4" @submit.prevent="login">
           <div class="grid gap-2">
             <Label for="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              v-model="form.email"
-            />
+            <Input id="email" type="email" placeholder="m@example.com" v-model="form.email" />
           </div>
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Password</Label>
-              <a
-                href="/forgot-password"
-                class="ml-auto inline-block text-sm underline"
-              >
+              <a :href="msTeamLink()" class="ml-auto inline-block text-sm underline">
                 Forgot your password?
               </a>
             </div>
@@ -75,8 +68,8 @@ async function login() {
           </ButtonApp>
         </form>
         <div class="mt-4 text-center text-sm">
-          Don't have an account?
-          <a href="#" class="underline"> Sign up </a>
+          Don't have an account? Contact the
+          <a class="font-medium" :href="msTeamLink()">Dev team</a>
         </div>
       </div>
     </div>

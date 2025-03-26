@@ -4,7 +4,7 @@ import type { WorkerDepartment } from "@/types/workers";
 import { displayColumns } from "../data";
 import { TableCell } from "@/components/ui/table";
 import { ButtonApp } from "@/components/app/button";
-import { Ellipsis } from "lucide-vue-next";
+import { Bolt, Ellipsis } from "lucide-vue-next";
 import DepartmentDataTableAction from "./DepartmentDataTableAction.vue";
 import { ref } from "vue";
 import DepartmentDialog from "./DepartmentDialog.vue";
@@ -58,6 +58,14 @@ function useUpdate() {
               <Ellipsis class="stroke-muted-foreground" />
             </ButtonApp>
           </DepartmentDataTableAction>
+        </TableCell>
+      </template>
+
+      <template #item.ms_url="{ item }">
+        <TableCell v-if="item.ms_url">
+          <span class="border rounded-md p-1 flex items-center gap-1 text-xs">
+            <Bolt class="size-4 text-muted-foreground" /> {{ item.ms_url }}
+          </span>
         </TableCell>
       </template>
 

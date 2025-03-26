@@ -10,6 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { usePermission } from "../usePermission";
 
 export type NavItemProps = {
   icon?: Component;
@@ -19,6 +20,7 @@ export type NavItemProps = {
 const props = defineProps<NavItemProps>();
 
 const route = useRoute();
+const { hasPermission } = usePermission()
 
 /**
  * for giving the parent a style
@@ -57,7 +59,8 @@ const isChildRouteSelected = computed(() => {
         <template v-for="child in children" :key="child.name">
           <RouterLink v-if="child.to" :to="child.to"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-            exact-active-class="bg-muted text-primary">
+            exact-active-class="bg-muted text-primary"
+            v-show="!child.permissionKey ? true : hasPermission(child.permissionKey)">
             <slot name="icon">
               <component v-if="child.icon" :is="child.icon" class="h-6 w-6 lg:h-4 lg:w-4" />
             </slot>

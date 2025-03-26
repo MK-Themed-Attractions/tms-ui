@@ -17,9 +17,10 @@ import {
   useSimplePaginate,
   useSimplePaginateAPIResource,
 } from "@/composables/usePaginate";
+import type { TaskHistory, TaskHistoryParams } from "@/types/taskHistory";
 
 export const usePlanStore = defineStore("plans", () => {
-  const baseUrl = import.meta.env.VITE_PLANNING_URL;
+  const baseUrl = import.meta.env.VITE_PLANNING;
   const bearerToken = useStorage(
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
@@ -151,7 +152,6 @@ export const usePlanStore = defineStore("plans", () => {
         const foundBatchIndex = plan.value.batches.findIndex(
           (b) => b.id === res.data.id,
         );
-        console.log(foundBatchIndex);
         if (foundBatchIndex !== -1) {
           plan.value.batches[foundBatchIndex] = res.data;
         }
@@ -168,6 +168,7 @@ export const usePlanStore = defineStore("plans", () => {
 
     const res = await post(`api/plan/${planId}/batch/append`, form);
   }
+
   async function appendTask(
     planId: string,
     batchId: string,
@@ -181,6 +182,16 @@ export const usePlanStore = defineStore("plans", () => {
       `api/plan/${planId}/batch/${batchId}/task/append`,
       form,
     );
+  }
+
+  async function getTaskHistory(params: Partial<TaskHistoryParams>) {
+    const res = await get<{ data: TaskHistory[] }>("/api/task-history", {
+      params,
+    });
+
+    if (res) {
+      return res.data;
+    }
   }
 
   return {
@@ -200,6 +211,7 @@ export const usePlanStore = defineStore("plans", () => {
     updatePlanBatch,
     appendBatch,
     appendTask,
+    getTaskHistory,
     errors,
     loading,
   };

@@ -2,8 +2,8 @@
 import { useWipStore } from '@/stores/wipStore';
 import Toolbar from './components/Toolbar.vue';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
-import type { WipBatch, WipTask, WipTaskGrouped } from '@/types/wip';
+import { computed, onBeforeMount, onBeforeUnmount, ref, watchEffect } from 'vue';
+import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
 import { getS3Link } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -19,50 +19,77 @@ import { useQcStore } from '@/stores/qcStore';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import { useTaskControls } from '@/composables/useTaskControls';
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from '@/components/app/input-filter';
+import { InfiniteScroll, InfiniteScrollTrigger } from '@/components/app/infinite-scroll';
+import type { WorkerDepartment } from '@/types/workers';
 
 const wipStore = useWipStore()
-const { getTasksByWorkCenters, wipTaskGrouped, wipLoading, handleGetBatchWip, selectedDepartmentId, handleFetchBatchWip, getTasksByWorkCentersWithFilter, filter, search } = useWip()
+const {
+    getTasksByWorkCenters,
+    wipTaskGrouped,
+    wipLoading,
+    handleGetBatchWip,
+    selectedDepartment,
+    handleFetchBatchWip,
+    getTasksByWorkCentersWithFilter,
+    filter,
+    search,
+    page,
+    getNextTaskByWorkCenters,
+    selectedBatch,
+    workCenters } = useWip()
 const { handleFail, handlePass, selectedQCTask, showQCTaskDialog, departmentKPIs, getDepartmentKPIs } = useQC()
 const { hadInspected } = useTaskControls()
 const workerDepartmentStore = useWorkerDepartmentStore()
 
 function useWip() {
 
-    const selectedDepartmentId = ref<string>()
+    const selectedDepartment = ref<WorkerDepartment>()
     const wipTaskGrouped = ref<WipTaskGrouped[]>()
     const selectedBatch = ref<WipBatch>()
     const search = ref<string>()
     const filter = ref<InputFilterDropdownData>(searchFilterData[0])
+    const page = ref(1)
 
     const { loading: wipLoading } = storeToRefs(wipStore)
+    const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
 
     //Get all DONE plans > batches > tasks  
-    async function getTasksByWorkCenters(workCenters: string[]) {
-        const res = await wipStore.getWipPlansByWorkCenters({ filter: 'done', work_centers: workCenters })
-        if (res) wipTaskGrouped.value = res;
+    async function getTasksByWorkCenters(params?: Partial<WipPlanQueryParams>) {
+        const res = await wipStore.getWipPlansByWorkCenters({ work_centers: workCenters.value, filter: 'done', page: page.value, ...params })
+        if (res) wipTaskGrouped.value?.push(...res)
+
+        return res
     }
 
     //get all DONE plans > batches > tabs with filtering
     async function getTasksByWorkCentersWithFilter(data: InputFilterSearchData) {
 
-        const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
-
         //if theres no search keyword refetch the selected department 
         if (!data.search.trim() && workCenters) {
-            await getTasksByWorkCenters(workCenters)
+            await getTasksByWorkCenters({ filterBy: filter.value.key, keyword: search.value })
             return;
         }
 
-        const res = await wipStore.getWipPlansByWorkCenters({ filter: 'done', work_centers: workCenters, keyword: search.value, filterBy: filter.value.key })
+        //reset the page to 1 everytime filter is applied
+        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: filter.value.key })
         if (res) wipTaskGrouped.value = res;
+    }
+
+    async function getNextTaskByWorkCenters(cb: (canAddMore: boolean) => void) {
+        const res = await getTasksByWorkCenters({
+            page: ++page.value
+        })
+
+        if (res && !res.length) {
+            cb(false)
+        }
     }
 
     //Get all done tasks for a batch
     async function fetchBatchWip(batch: WipBatch) {
-        const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value || '')
         const res = await wipStore.getTasksByBatchId(batch.batch_id, {
             filter: 'done',
-            operation_code: workCenters
+            operation_code: workCenters.value
         })
 
         if (res) {
@@ -92,12 +119,15 @@ function useWip() {
         wipLoading,
         getTasksByWorkCenters,
         getTasksByWorkCentersWithFilter,
+        getNextTaskByWorkCenters,
         handleGetBatchWip,
-        selectedDepartmentId,
+        selectedDepartment,
         selectedBatch,
         handleFetchBatchWip,
         search,
         filter,
+        page,
+        workCenters
     }
 }
 
@@ -109,7 +139,8 @@ function useQC() {
     const showQCTaskDialog = ref(false)
     const selectedQCTask = ref<{ task: WipTask, verdict: QCTaskVerdict }>()
 
-    function handlePass(task: WipTask) {
+    function handlePass(task: WipTask, batch: WipBatch) {
+        selectedBatch.value = batch;
         selectedQCTask.value = {
             task,
             verdict: 'pass'
@@ -117,7 +148,8 @@ function useQC() {
 
         showQCTaskDialog.value = true;
     }
-    function handleFail(task: WipTask) {
+    function handleFail(task: WipTask, batch: WipBatch) {
+        selectedBatch.value = batch;
         selectedQCTask.value = {
             task,
             verdict: 'fail'
@@ -141,16 +173,22 @@ function useQC() {
     }
 }
 
-async function handleDepartmentChange(workCenterIds: string[]) {
-    await getTasksByWorkCenters(workCenterIds)
-    await getDepartmentKPIs(workCenterIds)
+async function handleDepartmentChange(department: WorkerDepartment) {
+    selectedDepartment.value = department;
+    wipStore.pointToMicroservice(department.ms_url)
+    
+    //reset the page and taskGroup everytime the department changes
+    wipTaskGrouped.value = []
+    page.value = 1;
+    await getTasksByWorkCenters({ work_centers: workCenters.value })
+    await getDepartmentKPIs(workCenters.value || [])
 }
 
 onBeforeMount(() => {
-    wipStore.reset()
+    wipTaskGrouped.value = []
 })
 onBeforeUnmount(() => {
-    wipStore.reset()
+    wipTaskGrouped.value = []
 })
 
 </script>
@@ -158,25 +196,26 @@ onBeforeUnmount(() => {
     <div class="space-y-6 container">
         <div>
             <h1 class="text-lg font-semibold md:text-2xl">Quality Control</h1>
-            <p class="text-muted-foreground">
+            <p class="text-muted-foreground text-sm">
                 Inspect items and mark them as pass or fail based on quality. If failed, add details using predefined
                 KPIs.
             </p>
         </div>
 
-        <Toolbar v-model="selectedDepartmentId" @change="handleDepartmentChange" :loading="wipLoading">
+        <Toolbar v-model="selectedDepartment" @change="handleDepartmentChange" :loading="wipLoading">
             <template #append>
                 <InputFilter v-model:filter="filter" v-model:search="search" :dropdown-data="searchFilterData"
-                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartmentId">
+                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartment">
                 </InputFilter>
             </template>
         </Toolbar>
 
-        <div class="flex flex-wrap gap-4" v-if="wipTaskGrouped && wipTaskGrouped.length" :key="selectedDepartmentId">
+        <InfiniteScroll class="flex flex-wrap gap-4" v-if="wipTaskGrouped && wipTaskGrouped.length"
+            @trigger="getNextTaskByWorkCenters" :key="selectedDepartment?.id">
             <template v-for="wipTask in wipTaskGrouped" :key="wipTask.id">
                 <template v-for="product in wipTask.product_data" :key="product.id">
                     <div v-for="plan in product.plan_data" :key="plan.id"
-                        class="border rounded-md p-4 shadow-sm basis-[30rem] grow space-y-2">
+                        class="border rounded-md p-4 shadow-sm grow space-y-2">
                         <div class="flex justify-between">
                             <CardInfo :image="getS3Link(product.thumbnail)" label="Product SKU">
                                 <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }"
@@ -193,11 +232,11 @@ onBeforeUnmount(() => {
                         <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
                             <template #default="{ batch }">
                                 <QCTasksDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                                    @navigate-to="handlePass">
+                                    @navigate-to="(task) => handlePass(task, batch)">
                                     <template #item.actions="{ item }">
                                         <TableCell>
-                                            <QCTaskDropdownMenu @pass="handlePass(item)" @fail="handleFail(item)"
-                                                v-if="!hadInspected(item.status)">
+                                            <QCTaskDropdownMenu @pass="handlePass(item, batch)"
+                                                @fail="handleFail(item, batch)" v-if="!hadInspected(item.status)">
                                                 <Ellipsis
                                                     class="size-4 text-muted-foreground group-hover:visible invisible" />
                                             </QCTaskDropdownMenu>
@@ -217,7 +256,9 @@ onBeforeUnmount(() => {
                 </template>
 
             </template>
-        </div>
+
+            <InfiniteScrollTrigger />
+        </InfiniteScroll>
         <!-- fallback for undefined wipTaskGrouped -->
         <div v-else-if="!wipTaskGrouped"
             class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">

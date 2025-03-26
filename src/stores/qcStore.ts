@@ -13,7 +13,7 @@ import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 
 export const useQcStore = defineStore("qc", () => {
-  const baseUrl = import.meta.env.VITE_QC_URL;
+  const baseUrl = import.meta.env.VITE_QC;
   const bearerToken = useStorage(import.meta.env.VITE_QC_BEARER_TOKEN_KEY, "");
   const { get, errors, loading, setHeader, post, patch, put } = useAxios({
     baseURL: baseUrl,

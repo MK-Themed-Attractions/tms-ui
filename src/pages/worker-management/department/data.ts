@@ -18,6 +18,10 @@ export const displayColumns: DataTableColumns[] = [
     title: "Work centers",
   },
   {
+    key: "ms_url",
+    title: "Pointing to MS",
+  },
+  {
     key: "actions",
     title: "",
   },

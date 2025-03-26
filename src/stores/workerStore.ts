@@ -8,9 +8,9 @@ import type { SimplePaginateAPIResource } from "@/types/pagination";
 import { computed } from "@vue/reactivity";
 
 export const useWorkerStore = defineStore("workers", () => {
-  const baseUrl = import.meta.env.VITE_WORKERS_URL;
+  const baseUrl = import.meta.env.VITE_WORKERS;
   const bearerToken = useStorage(
-    import.meta.env.VITE_WORKER_BEARER_TOKEN_KEY,
+    import.meta.env.VITE_WORKERS_BEARER_TOKEN_KEY,
     "",
   );
 
@@ -40,6 +40,23 @@ export const useWorkerStore = defineStore("workers", () => {
   const hasPrevPage = computed(() => {
     return paginatedResponse.value?.links.prev ? true : false;
   });
+
+  /**
+   * Get filtered workers based on their workCenters and active status
+   * @param workCenters
+   * @returns Array of workers with matching workCenters and active status
+   */
+  function assignableWorkers(workCenters: string[]) {
+    return computed(() =>
+      workers.value?.filter((worker) => {
+        return (
+          worker.department?.work_centers.some((center) =>
+            workCenters.includes(center),
+          ) && worker.is_active
+        );
+      }),
+    );
+  }
 
   /* ACTIONS */
 
@@ -81,6 +98,22 @@ export const useWorkerStore = defineStore("workers", () => {
       return res.data;
     }
   }
+
+  /**
+   * Get worker by RFID with work centers from where
+   * his/her tasks are came from
+   * @param rfid
+   * @returns Worker
+   */
+  async function getWorkerByRfidWithWorkCenters(rfid: string) {
+    const res = await get<{ data: Worker }>(
+      `/api/task/get-worker-tasks/${rfid}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
   /**
    * Get individual worker and automatically includes relationships
    * @param workerId worker UUID rfid_card Employee RFID card
@@ -98,6 +131,7 @@ export const useWorkerStore = defineStore("workers", () => {
       return res.data;
     }
   }
+
   async function createWorker(form: WorkerForm) {
     await authStore.checkTokenValidity(
       `${baseUrl}/api/auth/bearer-token`,
@@ -138,13 +172,17 @@ export const useWorkerStore = defineStore("workers", () => {
     });
   }
 
+  async function getWorkerTasks(workerRfid: string) {}
+
   return {
     getWorkers,
     getWorker,
     getWorkerByRfid,
+    getWorkerByRfidWithWorkCenters,
     errors,
     loading,
     workers,
+    assignableWorkers,
     paginatedResponse,
     createWorker,
     updateWorker,

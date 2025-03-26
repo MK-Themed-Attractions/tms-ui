@@ -7,9 +7,9 @@ import { useRoute } from "vue-router";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
+  const route = useRoute();
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
-  const route = useRoute();
 
   async function init() {
     const authStore = useAuthStore();
@@ -31,6 +31,15 @@ export const useWebsocket = () => {
     await channel.subscribe("planning", (message: Notification<any>) => {
       handlePlanningEvent(message);
     });
+
+    const workCenterChannel = realtime.channels.get(`notifications.DET`);
+
+    await workCenterChannel.subscribe(
+      "common",
+      (message: Notification<any>) => {
+        console.log(message);
+      },
+    );
   }
 
   function handlePlanningEvent(message: Notification<any>) {

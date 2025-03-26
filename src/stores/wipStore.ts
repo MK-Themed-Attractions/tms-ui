@@ -3,7 +3,7 @@ import type { SimplePaginate, SimplePaginateObject } from "@/types/pagination";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import type {
   WipTask,
   WipTaskGrouped,
@@ -14,13 +14,22 @@ import type {
 import type { DepartmentKPIPayload } from "@/types/qc";
 
 export const useWipStore = defineStore("wips", () => {
-  const baseUrl = import.meta.env.VITE_COMMON_URL;
-  const bearerToken = useStorage(
+  const baseUrl = ref(import.meta.env.VITE_COMMON);
+  let bearerToken = useStorage(
     import.meta.env.VITE_COMMON_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, patch } = useAxios({
-    baseURL: baseUrl,
+
+  const {
+    get,
+    errors,
+    loading,
+    setHeader,
+    post,
+    patch,
+    axios: axiosInstance,
+  } = useAxios({
+    baseURL: baseUrl.value,
   });
 
   const paginatedResponse = ref<SimplePaginate<WipTaskGrouped>>();
@@ -36,6 +45,22 @@ export const useWipStore = defineStore("wips", () => {
     bearerToken.value = null;
     paginatedResponse.value = undefined;
   }
+
+  /**
+   * Point all API functions to a specific microservice, when not set, it will use the base
+   * URL that was set on this store.
+   * @param ms_url VITE ENV key
+   */
+  function pointToMicroservice(ms_url: string | undefined) {
+    if (!ms_url || typeof ms_url === "undefined") return;
+
+    axiosInstance.defaults.baseURL = import.meta.env[ms_url];
+    baseUrl.value = import.meta.env[ms_url];
+    const selectedBearerTokenKey = ms_url + "_BEARER_TOKEN_KEY";
+    bearerToken = useStorage(import.meta.env[selectedBearerTokenKey], "");
+    setHeader("Bearer-Token", bearerToken);
+  }
+
   function reset() {
     paginatedResponse.value = undefined;
   }
@@ -44,7 +69,7 @@ export const useWipStore = defineStore("wips", () => {
     params?: Partial<WipPlanQueryParams>,
   ) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -68,7 +93,7 @@ export const useWipStore = defineStore("wips", () => {
     params?: Partial<WipTaskQueryParams>,
   ) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -87,11 +112,11 @@ export const useWipStore = defineStore("wips", () => {
   }
 
   async function assignWorkersToTasks(payload: {
-    workers: string[];
     tasks: string[];
+    workers: string[];
   }) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -103,7 +128,7 @@ export const useWipStore = defineStore("wips", () => {
     tasks: string[];
   }) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -120,7 +145,7 @@ export const useWipStore = defineStore("wips", () => {
    */
   async function getWipTask(planTaskId: string) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -142,7 +167,7 @@ export const useWipStore = defineStore("wips", () => {
     payload: { status: TaskStatus | "start" | "pause" },
   ) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -157,7 +182,7 @@ export const useWipStore = defineStore("wips", () => {
     tasks: string[];
   }) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
@@ -169,11 +194,31 @@ export const useWipStore = defineStore("wips", () => {
     payload: DepartmentKPIPayload,
   ) {
     await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
+      `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
     await patch(`/api/tasks/qc-change-status/${taskId}`, payload);
+  }
+
+  async function getWorkerTasks(workerId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl.value}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: { [batchId: string]: WipTask[] } }>(
+      `/api/tasks/get-tasks/workers-tasks/${workerId}`,
+      {
+        params: {
+          filter: "all",
+        },
+      },
+    );
+
+    if (res) {
+      return res.data;
+    }
   }
 
   return {
@@ -191,5 +236,7 @@ export const useWipStore = defineStore("wips", () => {
     changeTaskStatusArray,
     changeTaskQCStatus,
     reset,
+    pointToMicroservice,
+    getWorkerTasks,
   };
 });
