@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/stores/authStore";
 import { usePlanStore } from "@/stores/planStore";
+import { useToastUIStore } from "@/stores/ui/toastUIStore";
 import type { Notification } from "@/types/notification";
 import type { Plan, PlanBatch } from "@/types/planning";
 import { storeToRefs } from "pinia";
@@ -10,6 +11,7 @@ export const useWebsocket = () => {
   const route = useRoute();
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
+  const toastStore = useToastUIStore();
 
   async function init() {
     const authStore = useAuthStore();
@@ -51,9 +53,13 @@ export const useWebsocket = () => {
       case "batch create":
         notifyBatchCreate(message);
         break;
-
       case "task create":
         notifyTaskCreate(message);
+      case "plan delete": {
+        toastStore.dismissLastAddedToast();
+        notifyPlanCreate(message);
+        break;
+      }
       default:
         break;
     }
