@@ -21,6 +21,7 @@ export const useWebsocket = () => {
     }
 
     // Connect to Ably with your API key
+    // @ts-ignore
     const realtime = new Ably.Realtime.Promise(
       import.meta.env.VITE_ABLY_PUBLIC_KEY,
     );

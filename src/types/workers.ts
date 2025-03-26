@@ -1,4 +1,4 @@
-import type { QueryParams } from "./auth";
+import type { QueryParams } from "./general";
 
 export interface Worker {
   worker_number: string;

@@ -1,4 +1,4 @@
-import type { QueryParams } from "./auth";
+import type { QueryParams } from "./general";
 
 export interface Product {
   created_at: string;

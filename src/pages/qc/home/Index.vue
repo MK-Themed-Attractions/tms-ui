@@ -176,7 +176,7 @@ function useQC() {
 async function handleDepartmentChange(department: WorkerDepartment) {
     selectedDepartment.value = department;
     wipStore.pointToMicroservice(department.ms_url)
-    
+
     //reset the page and taskGroup everytime the department changes
     wipTaskGrouped.value = []
     page.value = 1;
@@ -217,7 +217,7 @@ onBeforeUnmount(() => {
                     <div v-for="plan in product.plan_data" :key="plan.id"
                         class="border rounded-md p-4 shadow-sm grow space-y-2">
                         <div class="flex justify-between">
-                            <CardInfo :image="getS3Link(product.thumbnail)" label="Product SKU">
+                            <CardInfo :image="getS3Link(product.thumbnail || '', 'small')" label="Product SKU">
                                 <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }"
                                     target="_blank">
                                     {{ product.sku }}
