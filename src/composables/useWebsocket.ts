@@ -60,18 +60,24 @@ export const useWebsocket = () => {
   }
 
   function notifyPlanCreate(message: Notification<Plan>) {
-    if (route.name === "planningShow") {
-      console.log(message);
-      // planStore.getPlan()
+    if (route.name === "planningShow" && message.data.status) {
+      if (message.data.data)
+        planStore
+          .getPlan(message.data.data.id, {
+            includes: "batches",
+          })
+          .then(() => showToast());
+    } else {
+      planStore.getPlans().then(() => showToast());
     }
 
-    planStore.getPlans().then(() => {
+    function showToast() {
       if (message.data.status) {
         toast.info("Plan notice", {
           description: message.data.message,
         });
       } else notifyPlanCreateFailed(message);
-    });
+    }
   }
 
   function notifyPlanCreateFailed(message: Notification<Plan>) {
