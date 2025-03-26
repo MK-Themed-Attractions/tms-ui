@@ -59,9 +59,9 @@ function usePaginate() {
     }
 }
 
-if (!kpis.value) {
-    await fetchKPIs()
-}
+
+await fetchKPIs()
+
 </script>
 
 <template>

@@ -16,7 +16,7 @@ if (!workCenters.value) {
 </script>
 
 <template>
-    <MultiSelect v-if="workCenters" :items="workCenters" v-model="workCenterCodes" return-key="no" value-key="name"
+    <MultiSelect v-if="workCenters" :items="workCenters" v-model="workCenterCodes" return-key="no" value-key="no" 
         placeholder="Select Workcenters...">
     </MultiSelect>
 </template>

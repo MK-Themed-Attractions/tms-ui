@@ -16,6 +16,7 @@ import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import KpiDropdown from './components/KpiDropdown.vue';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { toast } from 'vue-sonner';
+import { Loader } from '@/components/app/loader';
 
 const route = useRoute()
 const { handleFormSubmit,
@@ -27,11 +28,15 @@ const { handleFormSubmit,
     handleDeptEditKpi,
     handleGetKpiOnDeptMode,
     handleShowConfirmation,
-    handleDeleteKpi } = useKPI()
+    handleDeleteKpi,
+    handleDeptDeleteKpi,
+    handleShowDeptConfirmation } = useKPI()
+
 const selectedDepartmentId = ref<string>()
 const showEditDialog = ref(false)
-const showDeptEditDialog = ref(false)
 const showConfirmDialog = ref(false)
+const showDeptEditDialog = ref(false)
+const showDeptConfirmDialog = ref(false)
 
 function useKPI() {
     const qcStore = useQcStore()
@@ -39,6 +44,7 @@ function useKPI() {
     const workerDepartmentStore = useWorkerDepartmentStore()
     const { errors } = storeToRefs(qcStore)
 
+    /* for ALL departments */
     async function handleFormSubmit(payload: KPIPayload, callback: (res: boolean) => Promise<void>) {
         await qcStore.addKpi(payload)
         const success = !errors.value ? true : false
@@ -46,17 +52,6 @@ function useKPI() {
 
         if (success) {
             await qcStore.getKPIs(route.query)
-        }
-    }
-
-    async function handleDeptFormSubmit(payload: KPIPayload, callback: (res: boolean) => Promise<void>) {
-        await qcStore.addKpi(payload)
-        const success = !errors.value ? true : false
-        await callback(success);
-
-        if (success && selectedDepartmentId.value) {
-            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
-            await qcStore.getDepartmentKPIs({ codes: workCenters })
         }
     }
 
@@ -72,20 +67,8 @@ function useKPI() {
         }
     }
 
-    async function handleDeptEditFormSubmit(payload: KPIPayload, callback: (res: boolean) => Promise<void>) {
-        if (!selectedKpi.value) return;
-
-        await qcStore.editKpi(selectedKpi.value.id, payload)
-        const success = !errors.value ? true : false
-        await callback(success);
-
-        if (success && selectedDepartmentId.value) {
-            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
-            await qcStore.getDepartmentKPIs({ codes: workCenters })
-        }
-    }
-
     async function handleDeleteKpi() {
+
         if (!selectedKpi.value) return;
 
         await qcStore.deleteKpi(selectedKpi.value.id)
@@ -102,6 +85,54 @@ function useKPI() {
             })
         }
     }
+    /* end - for all departments */
+
+
+    /* for specific department */
+    async function handleDeptEditFormSubmit(payload: KPIPayload, callback: (res: boolean) => Promise<void>) {
+        if (!selectedKpi.value) return;
+
+        await qcStore.editKpi(selectedKpi.value.id, payload)
+        const success = !errors.value ? true : false
+        await callback(success);
+
+        if (success && selectedDepartmentId.value) {
+            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
+            await qcStore.getDepartmentKPIs({ codes: workCenters })
+        }
+    }
+
+    async function handleDeptFormSubmit(payload: KPIPayload, callback: (res: boolean) => Promise<void>) {
+        await qcStore.addKpi(payload)
+        const success = !errors.value ? true : false
+        await callback(success);
+
+        if (success && selectedDepartmentId.value) {
+            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
+            await qcStore.getDepartmentKPIs({ codes: workCenters })
+        }
+    }
+
+    async function handleDeptDeleteKpi() {
+        if (!selectedKpi.value || !selectedDepartmentId.value) return;
+
+        await qcStore.deleteKpi(selectedKpi.value.id)
+
+        if (!errors.value) {
+            const workCenters = workerDepartmentStore.getWorkCentersByDeptId(selectedDepartmentId.value)
+            await qcStore.getDepartmentKPIs({ codes: workCenters })
+            toast.info('KPI info', {
+                description: 'KPI successfully deleted.'
+            })
+        } else {
+            toast.error('KPI error', {
+                description: 'Something went wrong while deleting the KPI'
+            })
+        }
+    }
+    /* end - for specific department */
+
+
 
     function handleEditKpi(kpi: KPI) {
         selectedKpi.value = kpi
@@ -134,6 +165,10 @@ function useKPI() {
         showConfirmDialog.value = true
     }
 
+    function handleShowDeptConfirmation(kpi: KPI) {
+        selectedKpi.value = kpi;
+        showDeptConfirmDialog.value = true
+    }
 
     return {
         handleFormSubmit,
@@ -143,9 +178,11 @@ function useKPI() {
         handleDeptEditFormSubmit,
         handleGetKpiOnDeptMode,
         handleShowConfirmation,
+        handleShowDeptConfirmation,
         handleDeleteKpi,
         selectedKpi,
-        handleEditKpi
+        handleEditKpi,
+        handleDeptDeleteKpi
     }
 }
 </script>
@@ -176,22 +213,30 @@ function useKPI() {
                         <ButtonApp :prepend-icon="Plus">Add KPI</ButtonApp>
                     </KPIFormDialog>
                     <div class="border rounded-md overflow-hidden">
-                        <KPIDataTable>
-                            <template #actions="{ item }">
-                                <TableCell>
-                                    <KpiDropdown @edit="handleEditKpi(item)" @delete="handleShowConfirmation(item)">
-                                        <ButtonApp class="size-6 group-hover:visible invisible" size="icon"
-                                            variant="ghost">
-                                            <Ellipsis class="size-4" />
-                                        </ButtonApp>
-                                    </KpiDropdown>
-                                </TableCell>
+                        <Suspense>
+                            <KPIDataTable>
+                                <template #actions="{ item }">
+                                    <TableCell>
+                                        <KpiDropdown @edit="handleEditKpi(item)" @delete="handleShowConfirmation(item)">
+                                            <ButtonApp class="size-6 group-hover:visible invisible" size="icon"
+                                                variant="ghost">
+                                                <Ellipsis class="size-4" />
+                                            </ButtonApp>
+                                        </KpiDropdown>
+                                    </TableCell>
+                                </template>
+                            </KPIDataTable>
+
+                            <template #fallback>
+                                <Loader description="Loading KPI..." class="min-h-[50vh]" />
                             </template>
-                        </KPIDataTable>
+                        </Suspense>
                     </div>
                 </Card>
                 <KPIFormDialog v-if="selectedKpi" v-model="showEditDialog" mode="edit" :kpi="selectedKpi"
                     @submit="handleFormEditSubmit"></KPIFormDialog>
+
+                <ConfirmationDialog v-model="showConfirmDialog" @yes="handleDeleteKpi"></ConfirmationDialog>
 
             </TabsContent>
 
@@ -207,7 +252,7 @@ function useKPI() {
                         <template #actions="{ item }">
                             <TableCell>
                                 <KpiDropdown @edit="handleDeptEditKpi(item.kpi, item.departmentKpi)"
-                                    @delete="handleShowConfirmation(item.kpi)">
+                                    @delete="handleShowDeptConfirmation(item.kpi)">
                                     <ButtonApp class="size-6 group-hover:visible invisible" size="icon" variant="ghost">
                                         <Ellipsis class="size-4" />
                                     </ButtonApp>
@@ -220,10 +265,10 @@ function useKPI() {
 
                 <KPIFormDialog v-if="selectedKpi" v-model="showDeptEditDialog" mode="edit" :kpi="selectedKpi"
                     @submit="handleDeptEditFormSubmit"></KPIFormDialog>
+
+                <ConfirmationDialog v-model="showDeptConfirmDialog" @yes="handleDeptDeleteKpi"></ConfirmationDialog>
             </TabsContent>
         </Tabs>
-
-        <ConfirmationDialog v-model="showConfirmDialog" @yes="handleDeleteKpi"></ConfirmationDialog>
     </div>
 </template>
 
