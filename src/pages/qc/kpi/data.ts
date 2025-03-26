@@ -15,7 +15,7 @@ export const kpiDataTableColumns: DataTableColumns[] = [
   },
   {
     key: "departments",
-    title: "Department",
+    title: "Work Centers",
   },
   {
     key: "actions",
