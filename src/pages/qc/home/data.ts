@@ -3,7 +3,7 @@ import type { InputFilterDropdownData } from "@/components/app/input-filter";
 export type QCTaskVerdict = "pass" | "fail";
 
 export const qcTaskDataTableColumn: DataTableColumns[] = [
-  { key: "task_index", title: "Sequence" },
+  { key: "operation_code", title: "Work center" },
   { key: "status", title: "Status" },
   { key: "qc_passed_at", title: "Passed at" },
   { key: "qc_failed_at", title: "Already failed at" },
