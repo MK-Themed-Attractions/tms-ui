@@ -92,3 +92,6 @@ export interface PlanBatchForm {
 }
 
 export interface PlanQueryParams extends QueryParams {}
+export interface PlanDeletePayload {
+  user_id: string;
+}
