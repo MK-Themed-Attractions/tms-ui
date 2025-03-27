@@ -17,10 +17,12 @@ import { toast } from 'vue-sonner';
 import WorkerAssignDialog from './WorkerAssignDialog.vue';
 import type { RouteLocationAsRelativeGeneric } from 'vue-router';
 import { computed } from '@vue/reactivity';
+import type { ProductRoutingWorkCenterType } from '@/types/products';
 
 const dialog = defineModel({ default: false })
 
 const props = defineProps<{
+    operationCode: ProductRoutingWorkCenterType
     batch: WipBatch,
     taskId: string
 }>()
@@ -66,6 +68,7 @@ const trackHistory = computed(() => {
 })
 
 function useWorker() {
+
     const showWorkerRemoveConfirmDialog = ref(false)
     const selectedWorker = ref<Worker>()
     const showWorkerAssignDialog = ref(false)
@@ -175,10 +178,10 @@ async function handleFinishTask(task: WipTask) {
 }
 
 async function fetchTask() {
-    task.value = await wipStore.getWipTask(props.taskId)
+    task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
 }
 /* INITIALIZE */
-task.value = await wipStore.getWipTask(props.taskId)
+task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
 
 </script>
 <template>

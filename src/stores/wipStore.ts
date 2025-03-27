@@ -12,6 +12,7 @@ import type {
   TaskStatus,
 } from "@/types/wip";
 import type { DepartmentKPIPayload } from "@/types/qc";
+import type { ProductRoutingWorkCenterType } from "@/types/products";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = ref(import.meta.env.VITE_COMMON);
@@ -143,14 +144,17 @@ export const useWipStore = defineStore("wips", () => {
    * Get fully detailed task
    * @param planTaskId - task id on Plan microservice
    */
-  async function getWipTask(planTaskId: string) {
+  async function getWipTask(
+    planTaskId: string,
+    workCenters: ProductRoutingWorkCenterType,
+  ) {
     await authStore.checkTokenValidity(
       `${baseUrl.value}/api/auth/bearer-token`,
       bearerToken,
     );
 
     const res = await get<{ data: WipTask }>(
-      `/api/tasks/get-task-details-by-plan-task/${planTaskId}`,
+      `/api/tasks/get-task-details-by-plan-task/${planTaskId}/${workCenters}`,
     );
 
     if (res) {
