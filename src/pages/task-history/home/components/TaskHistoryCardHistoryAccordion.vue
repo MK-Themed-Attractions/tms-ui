@@ -51,7 +51,7 @@ const getIconByContentType = (type: HistoryContentType) => {
 </script>
 
 <template>
-    <Accordion type="single" :default-value="<string>route.query.workCenter">
+    <Accordion type="single" collapsible :default-value="<string>route.query.workCenter">
         <AccordionItem :value="workCenter">
             <AccordionTrigger class="py-1 gap-2 justify-start">Open history</AccordionTrigger>
             <AccordionContent class="space-y-4 mt-2">
