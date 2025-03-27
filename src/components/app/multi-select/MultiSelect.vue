@@ -109,8 +109,8 @@ const excludedItemsCount = computed(() => model.value.length - includedItems.val
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandList>
                     <CommandGroup>
-                        <CommandItem v-for="item in items as T[]" :key="item[idKey]" :value="item[valueKey]"
-                            class="flex gap-2" @click="handleSelect(item)">
+                        <CommandItem v-for="item in items as T[]" :key="item[idKey]"
+                            :value="item[valueKey] || item[idKey]" class="flex gap-2" @click="handleSelect(item)">
                             <CheckIcon class="h-4 w-4 invisible" :class="{ '!visible': itemExists(item) }" />
                             {{ item[valueKey] }}
                         </CommandItem>

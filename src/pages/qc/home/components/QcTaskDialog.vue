@@ -31,8 +31,8 @@ const { hadInspected } = useTaskControls()
 const dialog = defineModel({ default: false })
 const showConfirmationDialog = ref(false)
 const finalVerdict = ref<QCTaskVerdict>('pass')
-const checkedKpisPass = ref<DepartmentKPIForm[]>()
-const checkedKpisFail = ref<DepartmentKPIForm[]>()
+const checkedKpisPass = ref<DepartmentKPIForm>()
+const checkedKpisFail = ref<DepartmentKPIForm>()
 
 const wipStore = useWipStore()
 const { errors: wipErrors } = storeToRefs(wipStore)
@@ -41,19 +41,17 @@ async function handleSubmit() {
     if (!checkedKpisPass.value || !checkedKpisFail.value) return;
 
     if (finalVerdict.value === 'pass')
-        checkedKpisPass.value.forEach(changeTaskStatus);
-    else checkedKpisFail.value.forEach(changeTaskStatus)
+        changeTaskStatus(checkedKpisPass.value);
+    else changeTaskStatus(checkedKpisFail.value);
 
     //function for looping through each work center
     async function changeTaskStatus(dept: DepartmentKPIForm) {
-
         //collect the KPI id in an array
         const kpiArray = dept.kpi.reduce<string[]>((acc, kpi) => {
             if (kpi.checked)
                 acc.push(kpi.id)
             return acc;
         }, [])
-
 
         //contruct the payload
         const payload: DepartmentKPIPayload = {
@@ -86,19 +84,19 @@ function handleQCEvaluate(verdict: QCTaskVerdict) {
 
 
 watchEffect(() => {
-    const updatedKpi = props.departmentKpis.map(dept => {
-        return {
-            ...dept,
-            kpi: dept.kpi.map(k => {
-                return {
-                    ...k,
-                    checked: true
-                }
-            })
-        }
-    })
-    checkedKpisFail.value = JSON.parse(JSON.stringify(updatedKpi));
-    checkedKpisPass.value = JSON.parse(JSON.stringify(updatedKpi));
+    const departmentKpi = props.departmentKpis.find((dept) => dept.department.toLowerCase() === props.task.operation_code.toLowerCase())
+    const departmentKpiForm = {
+        ...departmentKpi,
+        kpi: departmentKpi?.kpi.map(kpi => {
+            return {
+                ...kpi,
+                checked: true
+            }
+        }),
+        comment: ''
+    }
+    checkedKpisFail.value = JSON.parse(JSON.stringify(departmentKpiForm));
+    checkedKpisPass.value = JSON.parse(JSON.stringify(departmentKpiForm));
 })
 </script>
 <template>

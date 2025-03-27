@@ -6,7 +6,7 @@ import {
   type PaginationAppProps,
   type PaginationQuery,
 } from ".";
-import { ref, watch, watchEffect, type Ref } from "vue";
+import { ref, watch } from "vue";
 import { nextTick } from "vue";
 
 const props = withDefaults(

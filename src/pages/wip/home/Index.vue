@@ -444,7 +444,7 @@ function useTaskStatusFilter() {
     /* refetch plans with applied filters */
     await fetchWipPlans({
       work_centers: workCenters.value,
-      filterBy: filter.value?.key,
+      filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
       keyword: search.value,
       page: page.value
     })
@@ -576,7 +576,7 @@ onBeforeMount(() => {
 
             <!-- show parent code only on the first index -->
             <div class="flex gap-2 items-start justify-center" v-if="index === 0">
-              <CardInfo :image="getS3Link(parentProduct.thumbnail, 'thumbnail')" label="Based on product SKU">
+              <CardInfo :image="getS3Link(parentProduct.thumbnail || '', 'thumbnail')" label="Based on product SKU">
                 {{
                   parentProduct.sku }} </CardInfo>
 
@@ -585,7 +585,8 @@ onBeforeMount(() => {
               <div v-for="plan in product.plan_data" :key="plan.id"
                 class="border rounded-md p-4 space-y-2 basis-[30rem] flex-1">
                 <div class="flex gap-4">
-                  <CardInfo :image="getS3Link(product.thumbnail, 'thumbnail')" label="Product SKU">{{ product.sku }}
+                  <CardInfo :image="getS3Link(product.thumbnail || '', 'thumbnail')" label="Product SKU">{{ product.sku
+                  }}
                   </CardInfo>
                   <CardInfo label="Plan code">{{ plan.code }}</CardInfo>
                   <div class="ml-auto flex flex-col justify-center gap-2">

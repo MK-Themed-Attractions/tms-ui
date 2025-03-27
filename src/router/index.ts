@@ -13,6 +13,7 @@ import { qc } from "./qc";
 import { taskHistory } from "./taskHistory";
 import { users } from "./users";
 import { workerDashboard } from "./workerDashboard";
+import { errorPages } from "./errorPages";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +35,7 @@ const router = createRouter({
           component: () => import("@/pages/products/Index.vue"),
           meta: {
             requiresAuth: true,
+            permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
           },
           children: [
             {
@@ -55,6 +57,7 @@ const router = createRouter({
           component: () => import("@/pages/worker-management/Index.vue"),
           meta: {
             requiresAuth: true,
+            permissionKey: import.meta.env.VITE_WORKERS_KEY,
           },
         },
         {
@@ -64,6 +67,7 @@ const router = createRouter({
             import("@/pages/worker-management/department/Index.vue"),
           meta: {
             requiresAuth: true,
+            permissionKey: import.meta.env.VITE_WORKER_DEPARTMENTS_KEY,
           },
         },
         ...planning,
@@ -71,10 +75,11 @@ const router = createRouter({
         ...qc,
         ...taskHistory,
         ...users,
+        ...errorPages,
       ],
     },
     ...auth,
-    ...workerDashboard
+    ...workerDashboard,
   ],
 });
 
@@ -91,10 +96,28 @@ function checkUser(
   from: RouteLocationNormalizedGeneric,
 ) {
   const authStore = useAuthStore();
-  const { user } = storeToRefs(authStore);
+  const { user, userPermissionSet } = storeToRefs(authStore);
+  const { requiredAuth, permissionKey } = to.meta;
 
-  if (to.meta.requiresAuth && !user.value) {
+  /* checking for authenticated user */
+  if (requiredAuth && !user.value) {
     return { name: "login" };
+  }
+
+  /* checking for user permission */
+  const superAdmins = JSON.parse(
+    import.meta.env.VITE_SUPERADMIN_IDS,
+  ) as string[];
+
+  if (permissionKey && user.value) {
+    const hasPermission = userPermissionSet.value.includes(
+      permissionKey as string,
+    );
+    const isSuperAdmin = superAdmins.includes(user.value.id);
+
+    if (!hasPermission && !isSuperAdmin) {
+      return { name: "notFound" };
+    }
   }
 }
 

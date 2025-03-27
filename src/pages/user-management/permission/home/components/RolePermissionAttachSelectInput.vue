@@ -2,21 +2,23 @@
 import { ButtonApp } from '@/components/app/button';
 import { MultiSelect } from '@/components/app/multi-select/Index';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSimplePaginate } from '@/composables/usePaginate';
 import { routingMicroservices } from '@/microservice';
+import { useAuthStore } from '@/stores/authStore';
 import type { Permission, PermissionAttachMicroservicePayload } from '@/types/auth';
 import { Plus, Trash } from 'lucide-vue-next';
 import { ref, watchEffect } from 'vue';
 
 const props = defineProps<{
     modelValue?: PermissionAttachMicroservicePayload[],
-    permissions: Permission[],
     rolePermissions?: PermissionAttachMicroservicePayload[]
 }>()
 const emits = defineEmits<{
     (e: 'update:modelValue', model: PermissionAttachMicroservicePayload[]): void
 }>()
-
+const authStore = useAuthStore()
 const inputs = ref<(PermissionAttachMicroservicePayload & { id?: string })[]>([])
+const { fetchPermissions, permissions } = usePaginate()
 
 /* if role permissions already exists */
 if (props.rolePermissions) {
@@ -43,6 +45,26 @@ function removeInput(id: string | undefined) {
     if (!id) return;
     inputs.value = inputs.value.filter(input => input.id !== id)
 }
+
+function usePaginate() {
+    const { items: permissions, paginate } = useSimplePaginate<Permission>()
+
+    async function fetchPermissions() {
+        paginate.value = await authStore.getPermissions({
+            pages: '999999'
+        })
+    }
+
+    return {
+        permissions,
+        fetchPermissions
+    }
+}
+
+/* INIT */
+if (!permissions.value) {
+    await fetchPermissions()
+}
 </script>
 
 <template>
@@ -60,8 +82,8 @@ function removeInput(id: string | undefined) {
                     </SelectItem>
                 </SelectContent>
             </Select>
-            <MultiSelect v-model="input.permissions" :items="permissions" value-key="name" return-key="id"
-                placeholder="Select permissions" class="flex-1">
+            <MultiSelect v-if="permissions" v-model="input.permissions" :items="permissions" value-key="name"
+                return-key="id" placeholder="Select permissions" class="flex-1">
             </MultiSelect>
             <ButtonApp size="icon" variant="ghost" class="ml-auto" @click="removeInput(input.id)">
                 <Trash />

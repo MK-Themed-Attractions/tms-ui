@@ -32,21 +32,8 @@ const { handleSubmit, errors: formErrors } = useForm({
 const submit = handleSubmit((values) => {
     props.onSubmit(props.user.id, values)
 })
-const { fetchPermissions, permissions } = usePermission()
 const { fetchUserPermissions, userPermissions, userPermissionsToForm } = useUser()
 
-function usePermission() {
-
-    const permissions = ref<Permission[]>()
-
-    async function fetchPermissions() {
-        permissions.value = await authStore.getPermissions()
-    }
-    return {
-        permissions,
-        fetchPermissions,
-    }
-}
 
 function useUser() {
     const userPermissions = ref<RolePermission[]>()
@@ -75,9 +62,6 @@ function useUser() {
 }
 
 /* INIT */
-if (!permissions.value) {
-    await fetchPermissions()
-}
 if (!userPermissions.value) {
     await fetchUserPermissions()
 }
@@ -88,8 +72,8 @@ if (!userPermissions.value) {
             <FormItem>
                 <FormLabel>Microservices and permissions</FormLabel>
                 <FormControl>
-                    <RolePermissionAttachSelectInput v-if="permissions" v-bind="componentField"
-                        :role-permissions="userPermissionsToForm" :permissions="permissions" />
+                    <RolePermissionAttachSelectInput v-bind="componentField"
+                        :role-permissions="userPermissionsToForm" />
                 </FormControl>
                 <FormMessage class="text-center" />
             </FormItem>

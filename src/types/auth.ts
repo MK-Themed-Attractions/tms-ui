@@ -1,4 +1,5 @@
 import type { RoutingMicroserviceType } from "@/microservice";
+import type { QueryParams } from "./general";
 
 export interface LoginCredential {
   email: string;
@@ -54,6 +55,10 @@ export interface LoginResponse {
   };
 }
 
+export interface UserChangePassPayload {
+  current_password: string;
+  new_password: string;
+}
 export interface UserPayload {
   mail: string;
   password?: string;
@@ -95,16 +100,9 @@ export interface BearerTokenResponse {
   validity: string;
 }
 
-export interface QueryParams {
-  q: string;
-  page: number | string;
-  per_page: number | string;
-  includes: string;
-  filters: FilterQueryParams[];
-}
+/* QUERY PARAMS */
+export type PermissionQueryParams = Omit<QueryParams, "per_page"> & {
+  pages: string;
+};
 
-export interface FilterQueryParams {
-  column: string;
-  values: string[];
-  operation?: "and" | "or";
-}
+export type RoleQueryParams = PermissionQueryParams;

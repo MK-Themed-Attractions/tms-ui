@@ -10,6 +10,8 @@ import { useForm } from 'vee-validate';
 import { ref } from 'vue';
 import { z } from 'zod';
 import type { UserDialogRoleAttachSubmit } from '..';
+import { useSimplePaginate } from '@/composables/usePaginate';
+import { MultiSelect } from '@/components/app/multi-select/Index';
 
 const props = defineProps<{
     user: User
@@ -17,41 +19,41 @@ const props = defineProps<{
     loading?: boolean
 }>()
 const formSchema = toTypedSchema(z.object({
-    roles: z.string()
+    roles: z.array(z.string())
 }))
 
 const { handleSubmit, setFieldValue } = useForm({
     validationSchema: formSchema
 })
 const submit = handleSubmit((values) => {
-    const payload = { roles: [values.roles] }
+    const payload = values
 
     props.onSubmit(props.user.id, payload, (success: boolean) => {
     });
 
 })
-const { fetchRoles, roles, getUserRole, userRole } = useRole()
+const { fetchRoles, roles, getUserRole, userRoles } = useRole()
 
 function useRole() {
     const authStore = useAuthStore()
-    const roles = ref<Role[]>()
-    const userRole = ref<Role>()
+    const { items: roles, paginate } = useSimplePaginate<Role>()
+    const userRoles = ref<Role[]>()
 
     async function fetchRoles() {
-        const data = await authStore.getRoles()
-        roles.value = data;
+        const data = await authStore.getRoles({ pages: '999999' })
+        paginate.value = data;
     }
 
     async function getUserRole() {
         const data = await authStore.getUserRole(props.user.id)
-        userRole.value = data;
+        userRoles.value = data;
     }
 
     return {
         roles,
         fetchRoles,
         getUserRole,
-        userRole
+        userRoles
     }
 }
 
@@ -61,8 +63,12 @@ if (!roles.value) {
 }
 
 await getUserRole()
-if (userRole.value) {
-    setFieldValue('roles', userRole.value.id)
+
+if (userRoles.value) {
+    setFieldValue('roles', userRoles.value.reduce<string[]>((acc, role) => {
+        acc.push(role.id)
+        return acc;
+    }, []))
 }
 
 </script>
@@ -72,20 +78,9 @@ if (userRole.value) {
             <FormItem>
                 <FormLabel>Role</FormLabel>
                 <FormControl>
-                    <Select v-bind="componentField">
-                        <SelectTrigger>
-                            <SelectValue placeholder="select a role..." class="capitalize"></SelectValue>
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectLabel>Roles</SelectLabel>
-                                <SelectItem v-for="role in roles" :key="role.id" :value="role.id" class="capitalize">{{
-                                    role.name }}
-                                </SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    <MultiSelect v-if="roles" :items="roles" v-bind="componentField" return-key="id" value-key="name"
+                        placeholder="Select roles" :max-display-count="4" class="w-full">
+                    </MultiSelect>
                 </FormControl>
                 <FormMessage />
             </FormItem>

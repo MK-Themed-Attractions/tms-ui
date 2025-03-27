@@ -7,9 +7,9 @@ import { useRoute } from "vue-router";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
+  const route = useRoute();
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
-  const route = useRoute();
 
   async function init() {
     const authStore = useAuthStore();
@@ -21,6 +21,7 @@ export const useWebsocket = () => {
     }
 
     // Connect to Ably with your API key
+    // @ts-ignore
     const realtime = new Ably.Realtime.Promise(
       import.meta.env.VITE_ABLY_PUBLIC_KEY,
     );

@@ -26,6 +26,7 @@ function useKPI() {
     const { errors, loading } = storeToRefs(qcStore)
 
     async function handleKPISubmit(payload: KPIPayload) {
+        
         emits('submit', payload, async (res: boolean) => {
             if (res) {
                 toast.info('KPI info', {

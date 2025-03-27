@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Roles from './components/Roles.vue';
-import Permissions from './components/Permissions.vue';
-import { Loader, LoaderDescription } from '@/components/app/loader';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader, } from '@/components/app/loader';
+
+
 
 
 </script>
@@ -11,40 +11,41 @@ import { Loader, LoaderDescription } from '@/components/app/loader';
     <div class="container space-y-6">
         <div>
             <h1 class="text-lg font-semibold md:text-2xl">Roles & Permissions</h1>
-            <p class="text-muted-foreground">
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis amet explicabo pariatur rerum
-                recusandae veritatis, incidunt suscipit praesentium? Dicta omnis laboriosam quos ullam atque expedita
-                consequatur sit, in amet eum!
+            <p class="text-muted-foreground text-sm">
+                Manage roles and permissions: View, add, edit, or delete roles and permissions with ease.
             </p>
         </div>
 
         <Tabs default-value="roles">
-            <TabsList class="w-full *:grow">
-                <TabsTrigger value="roles">Roles</TabsTrigger>
-                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            <TabsList class="w-full">
+                <RouterLink :to="{ name: 'roles' }" class="grow">
+                    <TabsTrigger value="roles" class="w-full">
+                        Roles
+                    </TabsTrigger>
+                </RouterLink>
+                <RouterLink :to="{ name: 'permissions' }" class="grow">
+                    <TabsTrigger value="permissions" class="w-full">
+                        Permissions
+                    </TabsTrigger>
+                </RouterLink>
             </TabsList>
 
-            <TabsContent value="roles">
-                <Suspense :timeout="0" suspensible>
-                    <Roles />
+            <div class="mt-2">
+                <RouterView v-slot="{ Component }">
+                    <template v-if="Component">
+                        <Suspense timeout="0">
+                            <!-- main content -->
+                            <component :is="Component"></component>
 
-                    <template #fallback>
-                        <Loader>
-                            <LoaderDescription>Loading, please wait...</LoaderDescription>
-                        </Loader>
+                            <!-- loading state -->
+                            <template #fallback>
+                                <Loader class="min-h-[20vh]" description="Loading, please wait..." />
+                            </template>
+                        </Suspense>
                     </template>
-                </Suspense>
-            </TabsContent>
-            <TabsContent value="permissions">
-                <Suspense :timeout="0" suspensible>
-                    <Permissions />
-                    <template #fallback>
-                        <Loader>
-                            <LoaderDescription>Loading, please wait...</LoaderDescription>
-                        </Loader>
-                    </template>
-                </Suspense>
-            </TabsContent>
+                </RouterView>
+            </div>
+
         </Tabs>
     </div>
 </template>
