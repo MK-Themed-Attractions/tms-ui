@@ -2,18 +2,20 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toOrdinal } from '@/lib/utils';
 import type { TaskHistoryBatch } from '@/types/taskHistory';
-import { Badge } from '@/components/ui/badge';
 import { ClipboardList, Dot, Layers } from 'lucide-vue-next';
 import TaskHistoryBadge from '../../components/TaskHistoryBadge.vue';
+import { useRoute } from 'vue-router';
 
 
+const route = useRoute() 
 const props = defineProps<{
     batches: TaskHistoryBatch[]
 }>()
+
 </script>
 <template>
     <div class="px-4">
-        <Accordion type="multiple">
+        <Accordion type="multiple" :default-value="[<string>route.query.batch]">
             <AccordionItem v-for="batch in batches" :key="batch.id" :value="batch.id">
                 <AccordionTrigger class="py-2 gap-4">
                     <div class="flex gap-2">

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Stepper, StepperDescription, StepperItem, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
+import { Stepper, StepperDescription, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
 import type { TaskHistoryTask } from '@/types/taskHistory';
-import { Box, Check, Circle, Dot, FolderOpen } from 'lucide-vue-next';
+import { Check, Circle, Dot, FolderOpen } from 'lucide-vue-next';
 import TaskHistoryCardHistoryAccordion from './TaskHistoryCardHistoryAccordion.vue';
 import { EmptyResource, EmptyResourceIcon } from '@/components/app/empty-resource';
+import type { ProductRoutingWorkCenterType } from '@/types/products';
 
 
 const props = defineProps<{
@@ -15,23 +15,26 @@ const props = defineProps<{
 
 <template>
     <div>
-        <Stepper orientation="vertical" class="flex flex-col items-start" v-if="task.histories.length">
+        <Stepper orientation="vertical" class="flex flex-col items-start gap-4" v-if="task.histories.length">
             <StepperItem v-for="(history, index) in task.histories" :key="history.id" :step="index" #="{ state }"
-                class="items-start">
+                class="items-start relative">
+                <StepperSeparator v-if="index !== task.histories.length - 1"
+                    class="absolute left-[18px] top-[38px] block h-[105%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary" />
+
                 <StepperTrigger as-child>
-                    <Button as="div" :variant="state === 'completed' || state === 'active' ? 'default' : 'outline'"
-                        size="icon" class="z-10 rounded-full shrink-0 pointer-events-none" tabindex="-1"
-                        :class="[state === 'active' && 'ring-2 ring-ring ring-offset-2 ring-offset-background']">
+                    <Button as="div" :variant="state === 'completed' ? 'default' : 'outline'" size="icon"
+                        class="z-10 rounded-full shrink-0 pointer-events-none" tabindex="-1">
                         <Check v-if="state === 'completed'" class="size-5" />
-                        <Circle v-if="state === 'active'" />
-                        <Dot v-if="state === 'inactive'" />
+                        <Dot v-if="state !== 'completed'" />
                     </Button>
                 </StepperTrigger>
 
                 <div>
                     <StepperTitle>{{ history.operation_data.operation_code }}</StepperTitle>
                     <StepperDescription>
-                        <TaskHistoryCardHistoryAccordion :contents="history.contents"></TaskHistoryCardHistoryAccordion>
+                        <TaskHistoryCardHistoryAccordion
+                            :work-center="<ProductRoutingWorkCenterType>history.operation_data.operation_code"
+                            :contents="history.contents"></TaskHistoryCardHistoryAccordion>
                     </StepperDescription>
                 </div>
             </StepperItem>
