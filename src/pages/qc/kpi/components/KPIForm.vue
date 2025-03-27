@@ -11,9 +11,9 @@ import { ButtonApp } from '@/components/app/button';
 import type { KPI, KPIPayload } from '@/types/qc';
 import { computed } from 'vue';
 import KPIFormCodes from './KPIFormCodes.vue';
-import type { WorkerDepartment } from '@/types/workers';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import { storeToRefs } from 'pinia';
+import { Loader } from '@/components/app/loader';
 
 
 const emits = defineEmits<{
@@ -29,7 +29,7 @@ const formSchema = toTypedSchema(
         title: z.string().nonempty("Required"),
         description: z.string().nonempty('Required'),
         is_default: z.boolean(),
-        codes: z.array(z.custom<WorkerDepartment>()).optional()
+        codes: z.array(z.string()).optional()
     })
         .superRefine((data, ctx) => {
             if (!data.is_default && (!data.codes || data.codes.length === 0)) {
@@ -60,7 +60,7 @@ const defaultValues = computed(() => {
         title: defaults.title,
         description: defaults.description,
         is_default: defaults.is_default,
-        codes: workerDepartmentStore.getDepartmentByWorkCenters(departments || [])
+        codes: departments
     }
 })
 const { handleSubmit, handleReset, values } = useForm({
@@ -74,18 +74,7 @@ const { handleSubmit, handleReset, values } = useForm({
 const isDefault = computed(() => values.is_default)
 
 const submit = handleSubmit((values) => {
-    //transform the codes to only include the work centers as an array
-    const workCenters = values.codes?.reduce<string[]>((acc, dept) => {
-        acc.push(...dept.work_centers)
-        return acc;
-    }, [])
-
-    emits('submit', {
-        is_default: values.is_default,
-        title: values.title,
-        description: values.description,
-        codes: workCenters
-    })
+    emits('submit', values)
     handleReset()
 })
 
@@ -121,7 +110,12 @@ const submit = handleSubmit((values) => {
         <FormField #default="{ componentField }" name="codes" v-if="!isDefault">
             <FormItem class="mt-4">
                 <FormControl>
-                    <KPIFormCodes v-bind="componentField" />
+                    <Suspense>
+                        <KPIFormCodes v-bind="componentField" class="w-full" />
+                        <template #fallback>
+                            <Loader description="Getting workcenters..." />
+                        </template>
+                    </Suspense>
                 </FormControl>
                 <FormMessage />
             </FormItem>

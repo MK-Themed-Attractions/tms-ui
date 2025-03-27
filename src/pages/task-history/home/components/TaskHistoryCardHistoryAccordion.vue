@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { formatReadableDate } from '@/lib/utils';
+import type { ProductRoutingWorkCenterType } from '@/types/products';
 import type { HistoryContent, HistoryContentType } from '@/types/taskHistory';
 import { CheckCircle, Dot, Pause, Play, PlusCircle, RefreshCw, ShieldCheck, ShieldX, UserCheck, UserX, XCircle } from 'lucide-vue-next';
+import { useRoute } from 'vue-router';
 
 
+const route = useRoute()
 const props = defineProps<{
+    workCenter: ProductRoutingWorkCenterType
     contents: HistoryContent[]
 }>()
 const getIconByContentType = (type: HistoryContentType) => {
@@ -47,8 +51,8 @@ const getIconByContentType = (type: HistoryContentType) => {
 </script>
 
 <template>
-    <Accordion type="multiple">
-        <AccordionItem value="2">
+    <Accordion type="single" collapsible :default-value="<string>route.query.workCenter">
+        <AccordionItem :value="workCenter">
             <AccordionTrigger class="py-1 gap-2 justify-start">Open history</AccordionTrigger>
             <AccordionContent class="space-y-4 mt-2">
                 <div v-for="(content, index) in contents" :key="content.created_at" class="flex relative gap-4">

@@ -21,8 +21,8 @@ import {
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { storeToRefs } from "pinia";
 import type { WorkerDepartment } from "@/types/workers";
-import type { FilterQueryParams } from "@/types/auth";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
+import type { FilterQueryParams } from "@/types/general";
 
 const emits = defineEmits<{
   (e: "search", search: string): void;

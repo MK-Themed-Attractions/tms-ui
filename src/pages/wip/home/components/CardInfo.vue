@@ -12,7 +12,9 @@ const props = defineProps<{
             <ImageApp :image="image" class="max-w-full max-h-full" />
         </div>
         <div>
-            <p class="font-medium"><slot /></p>
+            <p class="font-medium">
+                <slot />
+            </p>
             <span class="text-sm text-muted-foreground">{{ label }}</span>
         </div>
     </div>

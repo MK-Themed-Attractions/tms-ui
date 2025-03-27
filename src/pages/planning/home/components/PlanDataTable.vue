@@ -4,6 +4,7 @@ import { TableCell } from "@/components/ui/table";
 import { formatReadableDate, getIconByPlanStatus, getS3Link } from "@/lib/utils";
 import { type Plan } from "@/types/planning";
 import {
+  History,
   LoaderCircle,
   Menu,
   Pencil,
@@ -12,17 +13,28 @@ import {
   Trash,
 } from "lucide-vue-next";
 import PlanDataTableDropdown from "./PlanDataTableDropdown.vue";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import type { Router } from "vue-router";
 import PlanEditDialog from "../../show/components/PlanEditDialog.vue";
 import { ref } from "vue";
 import BatchAddDialog from "../../show/components/BatchAddDialog.vue";
 import { ImageApp } from "@/components/app/image";
+import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 
 const props = defineProps<{
   plans: Plan[];
 }>();
-const { handleShowUpdatePlanDialog, selectedPlan, showPlanEditDialog, handleShowAddBatchDialog, showAddBatchDialog } = useActions()
+const emits = defineEmits<{
+  (e: 'delete', plan: Plan): void
+}>()
+
+const { handleShowUpdatePlanDialog,
+  selectedPlan,
+  showPlanEditDialog,
+  handleShowAddBatchDialog,
+  showAddBatchDialog,
+  handleShowDeletePlanConfirmDialog,
+  showDeleteConfirmDialog } = useActions()
 
 function getPlanTypeIcon(status: "regular" | "prototype") {
   switch (status) {
@@ -41,6 +53,7 @@ function useActions() {
   const selectedPlan = ref<Plan>()
   const showPlanEditDialog = ref(false)
   const showAddBatchDialog = ref(false)
+  const showDeleteConfirmDialog = ref(false)
 
   function handleShowUpdatePlanDialog(plan: Plan) {
     selectedPlan.value = plan;
@@ -51,21 +64,30 @@ function useActions() {
     showAddBatchDialog.value = true
   }
 
+  function handleShowDeletePlanConfirmDialog(plan: Plan) {
+    selectedPlan.value = plan;
+    showDeleteConfirmDialog.value = true
+  }
+
   return {
     selectedPlan,
     showPlanEditDialog,
     showAddBatchDialog,
+    showDeleteConfirmDialog,
     handleShowUpdatePlanDialog,
-    handleShowAddBatchDialog
+    handleShowAddBatchDialog,
+    handleShowDeletePlanConfirmDialog
   }
 }
+
+
 </script>
 
 <template>
   <DataTable :items="plans" @navigate-to="gotoShow">
     <template #item.image="{ item }">
       <TableCell>
-        <ImageApp :image="getS3Link(item.product_data?.image?.filename || '', 'small')" class="max-w-10"/>
+        <ImageApp :image="getS3Link(item.product_data?.image?.filename || '', 'small')" class="max-w-10" />
       </TableCell>
     </template>
     <template #item.plan_data.code="{ item }">
@@ -92,7 +114,7 @@ function useActions() {
         </div>
       </TableCell>
     </template>
-    
+
     <template #item.product_data.sku="{ item }">
       <TableCell v-if="!item.product_data">
         <LoaderCircle class="mx-auto animate-spin stroke-muted-foreground" :size="15" />
@@ -107,6 +129,14 @@ function useActions() {
     <template #item.actions="{ item }">
       <TableCell>
         <PlanDataTableDropdown>
+
+          <DropdownMenuItem as-child>
+            <RouterLink :to="{ name: 'taskHistoryIndex', query: { q: item.plan_data.code, filter: 'plan_code' } }"
+              target="_blank">
+              <History />
+              View history
+            </RouterLink>
+          </DropdownMenuItem>
           <DropdownMenuItem @click="handleShowAddBatchDialog(item)">
             <Plus />
             Add batch
@@ -115,7 +145,9 @@ function useActions() {
             <Pencil />
             Update plan
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Danger zone</DropdownMenuLabel>
+          <DropdownMenuItem @click="handleShowDeletePlanConfirmDialog(item)" class="text-destructive">
             <Trash />
             Delete plan
           </DropdownMenuItem>
@@ -126,7 +158,18 @@ function useActions() {
     <template #footer>
       <PlanEditDialog v-model="showPlanEditDialog" v-if="selectedPlan" :plan="selectedPlan" />
       <BatchAddDialog v-model="showAddBatchDialog" v-if="selectedPlan" :plan="selectedPlan" />
-      <slot name="footer"></slot>
+
+      <ConfirmationDialog v-if="selectedPlan" v-model="showDeleteConfirmDialog" @yes="$emit('delete', selectedPlan)"
+        title="Attention">
+        <div class="text-sm space-y-2">
+          <p>By deleting this plan, you agree that all of its data including batches, task in <strong>
+              work-in-progress</strong> and reports will be deleted.</p>
+          <p> Plan history will be saved.</p>
+        </div>
+
+      </ConfirmationDialog>
+      <slot name=" footer">
+      </slot>
 
     </template>
 

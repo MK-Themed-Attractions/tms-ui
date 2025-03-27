@@ -5,6 +5,7 @@ import type {
   PlanBatchesForm,
   PlanBatchForm,
   PlanDataForm,
+  PlanDeletePayload,
   PlanForm,
   PlanQueryParams,
 } from "@/types/planning";
@@ -25,7 +26,7 @@ export const usePlanStore = defineStore("plans", () => {
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, put } = useAxios({
+  const { get, errors, loading, setHeader, post, put, destroy } = useAxios({
     baseURL: baseUrl,
   });
   const {
@@ -101,6 +102,19 @@ export const usePlanStore = defineStore("plans", () => {
     const res = await put(`/api/plan/${planId}`, {
       user_id: user.value.id,
       ...form,
+    });
+  }
+
+  async function deletePlan(planId: string, payload: PlanDeletePayload) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await post(`/api/plan/${planId}`, payload, {
+      params: {
+        _method: "DELETE",
+      },
     });
   }
 
@@ -203,6 +217,7 @@ export const usePlanStore = defineStore("plans", () => {
     batch,
     getPlans,
     getPlan,
+    deletePlan,
     getBatch,
     invalidate,
     createPlan,

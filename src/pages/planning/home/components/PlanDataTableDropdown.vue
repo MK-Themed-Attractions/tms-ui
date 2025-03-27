@@ -5,7 +5,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical } from "lucide-vue-next";
@@ -17,11 +16,9 @@ import { EllipsisVertical } from "lucide-vue-next";
         <EllipsisVertical />
       </ButtonApp>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
+    <DropdownMenuContent align="end" class="min-w-[10rem]">
       <DropdownMenuGroup>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-
         <slot />
       </DropdownMenuGroup>
     </DropdownMenuContent>

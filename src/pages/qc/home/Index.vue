@@ -66,12 +66,12 @@ function useWip() {
 
         //if theres no search keyword refetch the selected department 
         if (!data.search.trim() && workCenters) {
-            await getTasksByWorkCenters({ filterBy: filter.value.key, keyword: search.value })
+            await getTasksByWorkCenters({ filterBy: <"product-sku" | "plan-code">filter.value.key, keyword: search.value })
             return;
         }
 
         //reset the page to 1 everytime filter is applied
-        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: filter.value.key })
+        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: <"product-sku" | "plan-code">filter.value.key })
         if (res) wipTaskGrouped.value = res;
     }
 
@@ -176,7 +176,7 @@ function useQC() {
 async function handleDepartmentChange(department: WorkerDepartment) {
     selectedDepartment.value = department;
     wipStore.pointToMicroservice(department.ms_url)
-    
+
     //reset the page and taskGroup everytime the department changes
     wipTaskGrouped.value = []
     page.value = 1;
@@ -217,7 +217,7 @@ onBeforeUnmount(() => {
                     <div v-for="plan in product.plan_data" :key="plan.id"
                         class="border rounded-md p-4 shadow-sm grow space-y-2">
                         <div class="flex justify-between">
-                            <CardInfo :image="getS3Link(product.thumbnail)" label="Product SKU">
+                            <CardInfo :image="getS3Link(product.thumbnail || '', 'small')" label="Product SKU">
                                 <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }"
                                     target="_blank">
                                     {{ product.sku }}
@@ -259,6 +259,7 @@ onBeforeUnmount(() => {
 
             <InfiniteScrollTrigger />
         </InfiniteScroll>
+        
         <!-- fallback for undefined wipTaskGrouped -->
         <div v-else-if="!wipTaskGrouped"
             class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
