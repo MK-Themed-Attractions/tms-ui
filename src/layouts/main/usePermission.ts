@@ -1,6 +1,5 @@
 import { useAuthStore } from "@/stores/authStore";
 import { storeToRefs } from "pinia";
-import type { NavItemProps } from "./components/NavItem.vue";
 import type { NavItem } from "./components/SideNavigation.vue";
 
 export function usePermission() {
