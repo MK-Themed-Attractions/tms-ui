@@ -21,7 +21,10 @@ import { useTaskControls } from '@/composables/useTaskControls';
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from '@/components/app/input-filter';
 import { InfiniteScroll, InfiniteScrollTrigger } from '@/components/app/infinite-scroll';
 import type { WorkerDepartment } from '@/types/workers';
+import { useAuthStore } from '@/stores/authStore';
 
+const authStore = useAuthStore()
+const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore()
 const {
     getTasksByWorkCenters,
@@ -202,10 +205,10 @@ onBeforeUnmount(() => {
             </p>
         </div>
 
-        <Toolbar v-model="selectedDepartment" @change="handleDepartmentChange" :loading="wipLoading">
+        <Toolbar v-model="selectedDepartment" @change="handleDepartmentChange" :loading="wipLoading || authLoading">
             <template #append>
                 <InputFilter v-model:filter="filter" v-model:search="search" :dropdown-data="searchFilterData"
-                    :loading="wipLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartment">
+                    :loading="wipLoading || authLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartment">
                 </InputFilter>
             </template>
         </Toolbar>
@@ -259,7 +262,7 @@ onBeforeUnmount(() => {
 
             <InfiniteScrollTrigger />
         </InfiniteScroll>
-        
+
         <!-- fallback for undefined wipTaskGrouped -->
         <div v-else-if="!wipTaskGrouped"
             class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
