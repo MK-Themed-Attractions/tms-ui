@@ -7,7 +7,7 @@ import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import { formatReadableDate, getIconByTaskStatus } from '@/lib/utils';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipTask } from '@/types/wip';
-import { AlertCircle, CheckCircle, Delete, Flag, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
+import { AlertCircle, CheckCircle, Delete, Flag, History, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { inject, ref, watch } from 'vue';
 import { useTaskControls } from '../../../../composables/useTaskControls';
@@ -15,6 +15,8 @@ import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import type { Worker } from '@/types/workers';
 import { toast } from 'vue-sonner';
 import WorkerAssignDialog from './WorkerAssignDialog.vue';
+import type { RouteLocationAsRelativeGeneric } from 'vue-router';
+import { computed } from '@vue/reactivity';
 
 const dialog = defineModel({ default: false })
 
@@ -49,6 +51,18 @@ watch(dialog, async () => {
         fetchBatchTasks(props.batch)
         madeChanges.value = false
     }
+})
+
+const trackHistory = computed(() => {
+    return {
+        name: 'taskHistoryIndex',
+        query: {
+            workCenter: task.value?.operation_code,
+            batch: task.value?.batch_id,
+            task: task.value?.task_plan_id,
+            q: task.value?.task_plan_id
+        }
+    } as RouteLocationAsRelativeGeneric
 })
 
 function useWorker() {
@@ -137,6 +151,7 @@ function useWorker() {
         handleWorkerAssignOnSuccess
     }
 }
+
 async function handleStartTask(task: WipTask) {
     const status = await startTask(task)
     await fetchTask()
@@ -176,7 +191,12 @@ task.value = await wipStore.getWipTask(props.taskId)
             </DialogHeader>
             <div v-if="task"
                 class="shadow-sm flex flex-wrap flex-col md:max-h-[12rem] border rounded-md p-4 [&>*:nth-child(even)]:mb-2 [&>*:nth-child(even)]:font-medium [&>*:nth-child(odd)]:text-muted-foreground">
-                <span>UUID:</span> <span class="uppercase">{{ task.task_plan_id }}</span>
+                <span>Track History</span>
+                <RouterLink :to="trackHistory" target="_blank">
+                    <Badge class="px-2 gap-1">
+                        <History class="size-4" /> Go to history
+                    </Badge>
+                </RouterLink>
 
                 <span>Product SKU:</span> <span>{{ task.sku }}</span>
 
