@@ -5,6 +5,7 @@ import Axios, {
 } from "axios";
 import { ref, watchEffect, type MaybeRefOrGetter } from "vue";
 import { useAuthStore } from "@/stores/authStore";
+import { useAxiosErrorRedirects } from "./useAxiosErrorRedirects";
 
 /* global error instance */
 const errors = ref<AxiosResponseError | null>(null);
@@ -12,6 +13,7 @@ const errors = ref<AxiosResponseError | null>(null);
 export const useAxios = (config: CreateAxiosDefaults) => {
   const loading = ref(false);
   const authStore = useAuthStore();
+  const { redirectToNotFoundPage } = useAxiosErrorRedirects();
 
   const axios = Axios.create({
     headers: {
@@ -28,6 +30,8 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     async (error) => {
       if (error.status === 401) {
         await authStore.logout();
+      } else if (error.status === 404) {
+        redirectToNotFoundPage();
       }
       return Promise.reject({
         status: error.status,
