@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { TaskHistoryTask } from '@/types/taskHistory';
-import TaskHistoryBadge from '../../components/TaskHistoryBadge.vue';
-import { Calendar1, CalendarFold, CircleDot, Dot, Hash } from 'lucide-vue-next';
+import { CalendarFold, Dot, Hash } from 'lucide-vue-next';
 import { formatReadableDate } from '@/lib/utils';
+import { useRoute } from 'vue-router';
 
 
+const route = useRoute()
 const props = defineProps<{
     tasks: TaskHistoryTask[]
 }>()
+
 </script>
 <template>
-    <Accordion type="multiple" class="pl-6">
+    <Accordion type="multiple" class="pl-6" :default-value="[<string>route.query.task]">
         <AccordionItem v-for="task in tasks" :key="task.id" :value="task.id">
             <AccordionTrigger class="gap-2 ">
                 <div class="flex gap-2 grow">
