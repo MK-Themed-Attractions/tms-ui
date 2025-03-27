@@ -4,12 +4,25 @@ import { taskColumns } from "./data";
 import type { BatchTask } from "@/types/planning";
 import { DataTable } from "@/components/app/data-table";
 import { TableCell } from "@/components/ui/table";
-import { EllipsisVertical } from "lucide-vue-next";
+import { EllipsisVertical, History } from "lucide-vue-next";
 import { ButtonApp } from "@/components/app/button";
+import type { RouteLocationAsRelativeGeneric } from "vue-router";
 
 const props = defineProps<{
   tasks: BatchTask[];
 }>();
+function taskHistory(item: BatchTask) {
+  return {
+    name: 'taskHistoryIndex',
+    query: {
+      workCenter: item.current_operation_data.operation_code,
+      batch: item.batch_id,
+      task: item.id,
+      q: item.id,
+    }
+  } as RouteLocationAsRelativeGeneric
+}
+
 </script>
 
 <template>
@@ -28,8 +41,10 @@ const props = defineProps<{
 
     <template #item.actions="{ item }">
       <TableCell>
-        <ButtonApp size="icon" variant="ghost" class="h-6 w-6">
-          <EllipsisVertical />
+        <ButtonApp size="icon" variant="ghost" class="h-6 w-6" as-child>
+          <RouterLink :to="taskHistory(item)" target="_blank">
+            <History />
+          </RouterLink>
         </ButtonApp>
       </TableCell>
     </template>
