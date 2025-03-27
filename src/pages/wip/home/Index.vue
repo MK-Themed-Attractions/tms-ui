@@ -36,6 +36,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
+import { RouterLink } from "vue-router";
 
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
@@ -577,18 +578,31 @@ onBeforeMount(() => {
             <!-- show parent code only on the first index -->
             <div class="flex gap-2 items-start justify-center" v-if="index === 0">
               <CardInfo :image="getS3Link(parentProduct.thumbnail || '', 'thumbnail')" label="Based on product SKU">
-                {{
-                  parentProduct.sku }} </CardInfo>
+                <RouterLink :to="{ name: 'productShow', params: { productId: parentProduct.sku } }" target="_blank"
+                  class="hover:underline">
+                  {{
+                    parentProduct.sku }}
+                </RouterLink>
+              </CardInfo>
 
             </div>
             <div class="flex flex-wrap gap-4">
               <div v-for="plan in product.plan_data" :key="plan.id"
                 class="border rounded-md p-4 space-y-2 basis-[30rem] flex-1">
                 <div class="flex gap-4">
-                  <CardInfo :image="getS3Link(product.thumbnail || '', 'thumbnail')" label="Product SKU">{{ product.sku
-                  }}
+                  <CardInfo :image="getS3Link(product.thumbnail || '', 'thumbnail')" label="Product SKU">
+                    <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }" target="_blank"
+                      class="hover:underline">
+                      {{
+                        product.sku }}
+                    </RouterLink>
                   </CardInfo>
-                  <CardInfo label="Plan code">{{ plan.code }}</CardInfo>
+                  <CardInfo label="Plan code">
+                    <RouterLink :to="{ name: 'taskHistoryIndex', query: { q: plan.code, filter: 'plan_code' } }"
+                      target="_blank" class="hover:underline">
+                      {{ plan.code }}
+                    </RouterLink>
+                  </CardInfo>
                   <div class="ml-auto flex flex-col justify-center gap-2">
                     <Badge class="ml-auto capitalize gap-1">
                       <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
