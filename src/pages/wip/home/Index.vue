@@ -37,7 +37,11 @@ import { Label } from "@/components/ui/label";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
 import { RouterLink } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
+import type { ProductRoutingWorkCenterType } from "@/types/products";
 
+const authStore = useAuthStore()
+const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
 
@@ -51,7 +55,8 @@ const { fetchWipPlans,
   fetchBatchWip,
   handleShowMultipleTaskAssignDialog,
   selectedTaskPlanId,
-  handleShowSingleTaskAssignDialog } = useWip();
+  handleShowSingleTaskAssignDialog,
+  selectedOperationCode } = useWip();
 const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
 const { handleShowWipDialog, showWipDialog } = useWipShow()
@@ -78,6 +83,9 @@ function useWip() {
   const selectedTaskIds = ref<string[]>([])
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
+
+  //task operation for single task show
+  const selectedOperationCode = ref<ProductRoutingWorkCenterType>()
 
   const wipTasksGrouped = ref<WipTaskGrouped[]>([]);
 
@@ -140,6 +148,7 @@ function useWip() {
     selectedTaskIds.value.push(task.id)
 
     selectedTaskPlanId.value = task.task_plan_id
+    selectedOperationCode.value = <ProductRoutingWorkCenterType>task.operation_code;
   }
 
   /**
@@ -182,6 +191,7 @@ function useWip() {
     assigningBatch,
     selectedTaskIds,
     selectedTaskPlanId,
+    selectedOperationCode,
     handleSingleTaskAssign,
     handleMultipleTaskAssign,
     handleShowSingleTaskAssignDialog,
@@ -547,20 +557,22 @@ onBeforeMount(() => {
     </div>
 
     <section>
-      <Toolbar v-model="selectedDepartment" @change="handleDepartmentSelectionChange" :loading="wipLoading">
+      <Toolbar v-model="selectedDepartment" @change="handleDepartmentSelectionChange"
+        :loading="wipLoading || authLoading">
         <template #append>
           <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
-            :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
+            :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading || authLoading">
           </InputFilter>
 
           <div class="basis-full">
-            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartment" />
+            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading || authLoading"
+              :disabled="!selectedDepartment" />
           </div>
 
           <div class="ml-auto">
             <div class="flex items-center gap-2">
               <Label for="task-today">Show today&apos;s tasks</Label>
-              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading" />
+              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading || authLoading" />
             </div>
           </div>
         </template>
@@ -712,8 +724,8 @@ onBeforeMount(() => {
       v-if="assigningBatch" :batch="assigningBatch">
     </WorkerAssignDialog>
 
-    <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch" v-model="showWipDialog" :batch="assigningBatch.batch"
-      :task-id="selectedTaskPlanId">
+    <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
+      :batch="assigningBatch.batch" :task-id="selectedTaskPlanId" :operation-code="selectedOperationCode">
     </WipTaskShowDialog>
 
     <!-- confirmation dialog for batch's tasks change status -->

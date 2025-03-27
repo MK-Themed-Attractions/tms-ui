@@ -97,10 +97,10 @@ function checkUser(
 ) {
   const authStore = useAuthStore();
   const { user, userPermissionSet } = storeToRefs(authStore);
-  const { requiredAuth, permissionKey } = to.meta;
+  const { requiresAuth, permissionKey } = to.meta;
 
   /* checking for authenticated user */
-  if (requiredAuth && !user.value) {
+  if (requiresAuth && !user.value) {
     return { name: "login" };
   }
 
