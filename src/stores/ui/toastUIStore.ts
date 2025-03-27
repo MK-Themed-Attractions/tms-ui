@@ -7,24 +7,26 @@ import { toast } from "vue-sonner";
  * for setting and deleting toast globally
  */
 export const useToastUIStore = defineStore("toastUi", () => {
-  const lastAddedToastId = ref<string | number>();
+  const toastIds = ref<(string | number)[]>([]);
 
   function setToast(toastId: string | number) {
-    lastAddedToastId.value = toastId;
+    toastIds.value.push(toastId);
   }
 
   function dismissLastAddedToast() {
-    if (!lastAddedToastId.value) {
+    if (!toastIds.value.length) {
       console.warn("no toast has been added");
       return;
     }
 
-    toast.dismiss(lastAddedToastId.value);
+    toastIds.value.forEach((toastId) => {
+      toast.dismiss(toastId);
+    });
   }
 
   return {
     setToast,
     dismissLastAddedToast,
-    lastAddedToastId,
+    toastIds,
   };
 });

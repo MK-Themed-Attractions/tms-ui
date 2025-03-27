@@ -46,7 +46,7 @@ function usePlan() {
     await planStore.deletePlan(plan.id, { user_id: user.value.id })
 
     if (!planErrors.value) {
-      const toastId = toast.loading('Plan Notice', {
+      const toastId = toast.loading(`Plan ${plan.plan_data.code} Notice`, {
         description: 'Plan deletion in progress. We will notify you once it is deleted'
       })
 
