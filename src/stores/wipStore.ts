@@ -157,7 +157,12 @@ export const useWipStore = defineStore("wips", () => {
     );
 
     const res = await get<{ data: WipTask }>(
-      `/api/tasks/get-task-details-by-plan-task/${planTaskId}/${workCenters}`,
+      `/api/tasks/get-task-details-by-plan-task/${planTaskId}`,
+      {
+        params: {
+          work_center: workCenters,
+        },
+      },
     );
 
     if (res) {
