@@ -10,9 +10,12 @@ import type {
   WipPlanQueryParams,
   WipTaskQueryParams,
   TaskStatus,
+  WipPlan,
+  WorkerTasksQueryParams,
 } from "@/types/wip";
 import type { DepartmentKPIPayload } from "@/types/qc";
 import type { ProductRoutingWorkCenterType } from "@/types/products";
+import type { PlanQueryParams } from "@/types/planning";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = ref(import.meta.env.VITE_COMMON);
@@ -205,23 +208,24 @@ export const useWipStore = defineStore("wips", () => {
     await patch(`/api/tasks/qc-change-status/${taskId}`, payload);
   }
 
-  async function getWorkerTasks(workerId: string) {
-    await authStore.checkTokenValidity(
-      `${baseUrl.value}/api/auth/bearer-token`,
-      bearerToken,
-    );
+  async function getWorkerTasks(
+    workerId: string,
+    params?: Partial<WorkerTasksQueryParams>,
+  ) {
+    //no need for token verification as this endpoint is open
 
-    const res = await get<{ data: { [batchId: string]: WipTask[] } }>(
-      `/api/tasks/get-tasks/workers-tasks/${workerId}`,
+    const res = await get<SimplePaginate<WipPlan>>(
+      `/api/task-workers/${workerId}`,
       {
         params: {
           filter: "all",
+          ...params,
         },
       },
     );
 
     if (res) {
-      return res.data;
+      return res;
     }
   }
 
