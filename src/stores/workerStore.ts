@@ -87,10 +87,7 @@ export const useWorkerStore = defineStore("workers", () => {
    */
 
   async function getWorkerByRfid(rfid_card: string) {
-    await authStore.checkTokenValidity(
-      `${baseUrl}/api/auth/bearer-token`,
-      bearerToken,
-    );
+    //no need for token verification as this endpoint is open
 
     const res = await get<{ data: Worker }>(`/api/worker/rfid/${rfid_card}`);
 
@@ -172,7 +169,6 @@ export const useWorkerStore = defineStore("workers", () => {
     });
   }
 
-  async function getWorkerTasks(workerRfid: string) {}
 
   return {
     getWorkers,

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { HardHat } from 'lucide-vue-next';
+import { HardHat, LogOut } from 'lucide-vue-next';
 import IconContainer from '../../components/IconContainer.vue';
 import type { Worker } from '@/types/workers';
 import type { WorkerStats } from '../..';
+import { ButtonApp } from '@/components/app/button';
 
 const props = defineProps<{
     worker: Worker
     stats?: Partial<WorkerStats>
+}>()
+const emits = defineEmits<{
+    (e: 'logout'): void
 }>()
 </script>
 <template>
@@ -28,12 +32,13 @@ const props = defineProps<{
                 <p class="font-medium capitalize">{{ worker.department?.name }}</p>
             </div>
             <div>
-                <span class="text-xs text-muted-foreground">Tasks</span>
-                <p class="font-medium">{{ stats?.tasksCount }}</p>
-            </div>
-            <div>
                 <span class="text-xs text-muted-foreground">Points</span>
                 <p class="font-medium">1,598</p>
+            </div>
+            <div class="self-center ml-auto">
+                <ButtonApp size="icon" variant="secondary" @click="$emit('logout')">
+                    <LogOut />
+                </ButtonApp>
             </div>
         </div>
     </div>
