@@ -18,7 +18,7 @@ const { initialName, user, roles, authLoading, authErrors, handleChangePassword,
 function useUser() {
     const { user, loading: authLoading, errors: authErrors, userPermissionSet, roles } = storeToRefs(authStore)
 
-    const initialName = computed(() => `${user.value.given_name[0]} ${user.value.last_name[0]}`)
+    const initialName = computed(() => `${user.value?.given_name[0]} ${user.value?.last_name[0]}`)
 
     async function handleChangePassword(payload: UserChangePassPayload) {
         await authStore.changePassword(user.value.id, payload)

@@ -109,7 +109,7 @@ export const useAuthStore = defineStore("auth", () => {
     accessToken.value = null;
     refreshToken.value = null;
     roles.value = null;
-    rolesWithPermission.value = null;
+    rolesWithPermission.value = [];
     userDirectPermissions.value = null;
   }
 
