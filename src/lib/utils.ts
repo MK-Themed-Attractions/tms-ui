@@ -11,7 +11,6 @@ import {
   Slash,
   ThumbsDown,
   ThumbsUp,
-  XCircle,
 } from "lucide-vue-next";
 import type { Updater } from "@tanstack/vue-table";
 import type { Ref } from "vue";
