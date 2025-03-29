@@ -43,7 +43,7 @@ function useWorker() {
       return {
         id: worker.id,
         value: worker.full_name,
-        points: worker.run_time?.current_month
+        runtime: worker.run_time?.current_month
       }
     })
   })
@@ -55,7 +55,7 @@ function useWorker() {
   }
 }
 
-if (!workers.value) {
+if (!workers.value && user.value) {
   await fetchWorkers()
 }
 </script>
@@ -132,12 +132,9 @@ if (!workers.value) {
     <div class="grid xl:grid-cols-2 gap-6 items-start">
       <TopWorkersChart v-if="topWorkersByPoints" :items="topWorkersByPoints" :display-count="5" category="points"
         name="value" class="basis-[40rem]" title="Top performing employees" />
-      <TopWorkersChart v-if="topWorkersByRunTime" :items="topWorkersByRunTime" :display-count="5" category="points"
+      <TopWorkersChart v-if="topWorkersByRunTime" :items="topWorkersByRunTime" :display-count="5" category="runtime"
         order="asc" name="value" class="basis-[40rem]" title="Top Efficient employees" />
     </div>
-
-
-
   </div>
 
 </template>

@@ -90,7 +90,7 @@ const categoryStepper = computed(() => {
         </TooltipProvider>
         <slot name="footer">
             <em class="col-start-2 text-sm text-muted-foreground">
-                The {{ order === 'desc' ? 'higher' : 'lower' }} the better.
+                The {{ order === 'desc' ? 'higher' : 'lower' }} the {{ category }} the better.
             </em>
         </slot>
     </Card>
