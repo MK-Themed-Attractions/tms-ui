@@ -1,69 +1,98 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { Card } from '@/components/ui/card';
-import type { Worker } from '@/types/workers';
-import { ChartArea } from 'lucide-vue-next';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChartArea, Dot } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 
-const props = defineProps<{
-    workers: Worker[]
-}>()
-
-const workersData = computed(() => {
-    return props.workers.slice(0, 5).map(worker => {
-        return {
-            name: `${worker.given_name} ${worker.last_name[0]}.`,
-            points: worker.run_time ? worker.run_time.current_day : 0,
-            department: worker.department?.name
-        }
-    })
+const props = withDefaults(defineProps<{
+    items: T[],
+    title?: string,
+    category: keyof T,
+    name: keyof T,
+    categoryStep?: number,
+    displayCount?: number
+    order?: 'asc' | 'desc'
+}>(), {
+    order: 'desc',
+    categoryStep: 5,
+    title: 'Chart'
 })
 
-const highPointEmployee = computed(() => [...workersData.value].sort((a, b) => b.points - a.points)[0])
-const maxPoints = computed(() => +highPointEmployee.value.points.toFixed(2))
+const displayCount = computed(() => props.displayCount || props.items.length)
 
-const stepArray = computed(() => {
-    const stepCount = 10
+const sortedItems = computed(() => {
+    return [...props.items].sort((a, b) => {
+        const aCategory = <number>a[props.category]
+        const bCategory = <number>b[props.category]
 
-    if (stepCount < 2) return [maxPoints.value]    // Return only the maxPoints.valueber itself if steps < 2
+        return props.order === 'desc' ? bCategory - aCategory : aCategory - bCategory
+    }).slice(props.order === 'desc' ? 0 : props.items.length - displayCount.value,
+        props.order === 'desc' ? displayCount.value : props.items.length);
+})
 
-    const result = [1]
-    const interval = Math.floor(maxPoints.value / (stepCount - 1))
+const highestCategory = computed(() => {
+    if (props.order === 'desc') {
+        return +(+sortedItems.value[0][props.category]).toFixed(2)
+    }
+    return +(+sortedItems.value[sortedItems.value.length - 1][props.category]).toFixed(2)
+})
 
-    for (let i = 1; i < stepCount - 1; i++) {
+const categoryStepper = computed(() => {
+
+    if (props.categoryStep < 2) return [highestCategory.value]
+
+    const result = []
+    const interval = Math.floor(highestCategory.value / (props.categoryStep - 1))
+    result.push(0)
+    for (let i = 1; i < props.categoryStep - 1; i++) {
         result.push(i * interval)
     }
 
-    result.push(maxPoints.value)                   // Ensure the last value is the target number
-    return result
+    result.push(highestCategory.value)
+    return result;
 })
+
 </script>
 
 <template>
     <Card class="p-4 grid grid-cols-[minmax(5ch,5rem),auto] gap-x-4 gap-y-2 items-center">
         <div class="col-span-full">
-            <h4 class="font-medium flex gap-2">
-                <ChartArea /> Top performing employees
-            </h4>
-            <div class="ml-4">
-                <span class="text-7xl font-bold">{{ maxPoints }}</span> <span class="font-medium">pts.</span>
-                <p class="text-sm text-muted-foreground">Got by {{ highPointEmployee.name }} of {{
-                    highPointEmployee.department }} department</p>
-            </div>
+            <slot name="title">
+                <h4 class="font-medium flex gap-2">
+                    <ChartArea /> {{ title }}
+                </h4>
+            </slot>
         </div>
         <div class="col-start-2  flex justify-between text-xs text-muted-foreground">
-            <span v-for="point in stepArray">{{ point }}</span>
+            <span v-for="step in categoryStepper">{{ step }}</span>
         </div>
-        <template v-for="worker in workersData" :key="worker">
-            <div class="text-sm text-end capitalize">
-                {{ worker.name.toLowerCase() }}
-            </div>
-            <div class="border-b pb-1">
-                <div class="h-4 bg-primary rounded-tl-md rounded-bl-md rounded-tr-full rounded-br-full min-w-1"
-                    :style="{ maxWidth: `${worker.points / maxPoints * 100}%` }">
+        <TooltipProvider :delay-duration="200" :skip-delay-duration="200">
+            <template v-for="item in sortedItems" :key="item[name]">
+                <div class="text-sm text-end capitalize">
+                    {{ (<string>item[name]).toLowerCase() }}
                 </div>
-            </div>
-        </template>
+                <div class="border-b pb-1">
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <div class="h-8 bg-primary rounded-tr-md rounded-br-md min-w-1"
+                                :style="{ maxWidth: `${<number>item[category] / highestCategory * 100}%` }">
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p class="flex gap-2">
+                                <Dot />{{ (+item[category]).toFixed(2) }} {{ category }}
+                            </p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </template>
+        </TooltipProvider>
+        <slot name="footer">
+            <em class="col-start-2 text-sm text-muted-foreground">
+                The {{ order === 'desc' ? 'higher' : 'lower' }} the better.
+            </em>
+        </slot>
     </Card>
 </template>
 
