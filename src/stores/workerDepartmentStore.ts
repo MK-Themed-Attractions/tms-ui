@@ -36,7 +36,7 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
 
   //list of department with applied user permissions
   const departments = computed(() => {
-    if (rawDepartments.value && userUIPermissionSet.value) {
+    if (rawDepartments.value && userUIPermissionSet.value && user.value) {
       const superAdminIds = <string[]>(
         JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS)
       );
