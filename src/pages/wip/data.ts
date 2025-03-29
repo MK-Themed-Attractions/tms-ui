@@ -1,5 +1,6 @@
 import type { DataTableColumns } from "@/components/app/data-table";
 import type { InputFilterDropdownData } from "@/components/app/input-filter";
+import type { WorkerDepartment } from "@/types/workers";
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter } from "vue";
 
 export const wipWorkerDataTableColumns: DataTableColumns[] = [
@@ -30,4 +31,8 @@ export const workerPerPage = 10;
 
 export const workCentersKey = Symbol() as InjectionKey<
   ComputedRef<string[] | undefined>
+>;
+
+export const selectedDepartmentKey = Symbol() as InjectionKey<
+  ComputedRef<WorkerDepartment | undefined>
 >;
