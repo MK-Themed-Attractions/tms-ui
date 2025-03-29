@@ -30,7 +30,7 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
-import { searchFilterData, workCentersKey } from "../data";
+import { searchFilterData, selectedDepartmentKey, workCentersKey } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -535,6 +535,7 @@ async function handleDepartmentSelectionChange(department: WorkerDepartment) {
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
 provide(workCentersKey, workCenters)
+provide(selectedDepartmentKey, computed(() => selectedDepartment.value))
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
