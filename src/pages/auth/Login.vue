@@ -10,6 +10,7 @@ import { ButtonApp } from "@/components/app/button";
 import LoginErrorAlert from "./LoginErrorAlert.vue";
 import { useRouter } from "vue-router";
 import { msTeamLink } from "@/lib/utils";
+import { InputPassword } from "@/components/app/input-password";
 
 const form = ref<LoginCredential>({
   email: "",
@@ -57,11 +58,11 @@ async function login() {
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Password</Label>
-              <a :href="msTeamLink()" class="ml-auto inline-block text-sm underline">
+              <a :href="msTeamLink()" class="ml-auto inline-block text-sm underline" tabindex="-1">
                 Forgot your password?
               </a>
             </div>
-            <Input id="password" type="password" v-model="form.password" />
+            <InputPassword id="password" v-model="form.password" />
           </div>
           <ButtonApp type="submit" class="w-full" :loading="loading">
             Login

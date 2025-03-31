@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ButtonApp } from '@/components/app/button';
+import { InputPassword } from '@/components/app/input-password';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -53,12 +54,12 @@ const submit = handleSubmit((values) => {
                         <AlertTitle>Error</AlertTitle>
                         <AlertDescription>{{ errors.data.message }}</AlertDescription>
                     </Alert>
-                    
+
                     <FormField #="{ componentField }" name="current_password">
                         <FormItem>
                             <FormLabel>Current password</FormLabel>
                             <FormControl>
-                                <Input type="password" v-bind="componentField" />
+                                <InputPassword v-bind="componentField" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -67,7 +68,7 @@ const submit = handleSubmit((values) => {
                         <FormItem>
                             <FormLabel>New password</FormLabel>
                             <FormControl>
-                                <Input type="password" v-bind="componentField" />
+                                <InputPassword v-bind="componentField" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
