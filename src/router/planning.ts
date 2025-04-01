@@ -32,6 +32,11 @@ export const planning: RouteRecordRaw[] = [
         name: "planningCreate",
         component: () => import("@/pages/planning/create/Index.vue"),
       },
+      {
+        path: "calendar",
+        name: "planningCalendar",
+        component: () => import("@/pages/planning/calendar/Index.vue"),
+      },
     ],
   },
 ];
