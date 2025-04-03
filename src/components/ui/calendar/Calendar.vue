@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { type DateValue, getLocalTimeZone, today, isToday } from '@internationalized/date'
+import { type DateValue, getLocalTimeZone, today, isToday, CalendarDate } from '@internationalized/date'
 import { useElementBounding, useVModel } from '@vueuse/core'
 import { CalendarRoot, type CalendarRootEmits, type CalendarRootProps, useDateFormatter, useForwardPropsEmits } from 'reka-ui'
 import { createDecade, createYear, toDate } from 'reka-ui/date'
@@ -45,8 +45,6 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 const formatter = useDateFormatter('en')
 
-
-
 /** Get the computed width and height of the first cell to apply it to the calendar event */
 const cellContentRect = ref({ width: 0, height: 0 })
 
@@ -58,6 +56,75 @@ function checkCell(el: HTMLElement) {
   }
 }
 
+const concreteEvents = computed(() => {
+  if (!props.events || !props.events.length) return [];
+
+  const sortedEvents = [...props.events];
+
+  // Step 1: Sort events by start date first, then by longest span
+  sortedEvents.sort((a, b) => {
+    const startDateComparison = a.startDate.compare(b.startDate);
+    if (startDateComparison !== 0) {
+      return startDateComparison; // Sort by start date ascending
+    }
+    const durationA = a.endDate.compare(a.startDate) + 1;
+    const durationB = b.endDate.compare(b.startDate) + 1;
+    return durationB - durationA; // Sort by duration descending if start dates are equal
+  });
+
+  const result = [];
+
+  // Step 2: Split events when encountering a Saturday
+  function splitEvent(event) {
+    let currentStart = event.startDate;
+
+    while (currentStart.compare(event.endDate) <= 0) {
+      let nextEnd = currentStart;
+
+      // Move to the next Saturday or stop at event.endDate
+      while (nextEnd.compare(event.endDate) <= 0 && nextEnd.toDate().getDay() !== 6) {
+        nextEnd = nextEnd.add({ days: 1 });
+      }
+
+      if (nextEnd.compare(event.endDate) > 0) {
+        nextEnd = event.endDate;
+      }
+
+      result.push({
+        ...event,
+        startDate: currentStart,
+        endDate: nextEnd,
+        intersect: 0, // Will be calculated later
+      });
+
+      currentStart = nextEnd.add({ days: 1 });
+
+      if (currentStart.compare(event.endDate) > 0) break;
+    }
+  }
+
+  sortedEvents.forEach(event => splitEvent(event));
+
+  // Step 3: Calculate the intersect property
+  result.forEach((currentEvent, index) => {
+    let intersectCount = 0;
+    for (let i = 0; i < index; i++) {
+      const higherSpanEvent = result[i];
+      // Check if the current event intersects with the higher span event
+      if (
+        currentEvent.startDate.compare(higherSpanEvent.endDate) <= 0 &&
+        currentEvent.endDate.compare(higherSpanEvent.startDate) >= 0
+      ) {
+        intersectCount++;
+      }
+    }
+
+    // Assign the intersect count
+    currentEvent.intersect = intersectCount;
+  });
+
+  return result;
+});
 </script>
 
 <template>
@@ -128,7 +195,7 @@ function checkCell(el: HTMLElement) {
     </CalendarHeader>
 
     <div class="mt-1 lg:mt-2 overflow-x-auto overflow-y-hidden">
-      <CalendarGrid v-for="month in grid" :key="month.value.toString()" class="w-full mx-auto ">
+      <CalendarGrid v-for="month in grid" :key="month.value.toString()" class="w-full mx-auto overflow-hidden">
         <CalendarGridHead>
           <CalendarGridRow class="flex gap-2 relative">
             <CalendarHeadCell v-for="day in weekDays" :key="day" class="text-start w-full">
@@ -150,13 +217,10 @@ function checkCell(el: HTMLElement) {
                   {{ weekDate.day }}
                 </span>
 
-
-                <div class="flex flex-col absolute z-10 inset-x-0 top-8 gap-1">
-                  <template v-for="event in events" :key="event.data">
-                    <CalendarEvent :anchor="cellContentRect" v-if="event.startDate.compare(weekDate) === 0"
-                      :event="event" />
-                  </template>
-                </div>
+                <template v-for="(event, index) in concreteEvents" :key="`${event.data}-${event.startDate}`">
+                  <CalendarEvent :anchor="cellContentRect" v-if="event.startDate.compare(weekDate) === 0"
+                    :style="{ top: `${(20 * (event.intersect + 1)) + 20}px` }" :event="event" />
+                </template>
               </CalendarCellTrigger>
             </CalendarCell>
           </CalendarGridRow>
