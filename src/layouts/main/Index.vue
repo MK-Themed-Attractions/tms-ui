@@ -2,7 +2,7 @@
 import { navItemData } from "./data";
 
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-vue-next";
+import { Info, Menu } from "lucide-vue-next";
 import SideNavigation from "./components/SideNavigation.vue";
 import SearchForm from "./components/SearchForm.vue";
 import UserMenu from "./components/UserMenu.vue";
@@ -98,27 +98,29 @@ provide(mainScrollerKey, useMainScroller);
         </MobileNavigation>
 
         <div class="w-full flex-1">
+          <!-- <ProductSearchForm /> -->
           <Popover v-model:open="productPopover">
             <PopoverAnchor as-child>
-              <SearchForm class="w-[clamp(10rem,50vw,23rem)]" @submit="handleSearch" :loading="loading" />
+              <SearchForm class="w-[clamp(15rem,50vw,23rem)]" @submit="handleSearch" :loading="loading" />
             </PopoverAnchor>
 
-            <PopoverContent align="start" class="mt-1 w-[clamp(10rem,50vw,23rem)]">
-              <ScrollArea class="max-h-[80vh] overflow-auto">
+            <PopoverContent align="start" class="mt-1 w-[clamp(15rem,50vw,23rem)] p-0">
+              <ScrollArea class=" h-[clamp(20rem,50vh,100rem)] overflow-y-auto p-2" v-if="products && products.length">
                 <ul class="space-y-2">
                   <li v-for="product in products" :key="product.id"
                     class="rounded-md p-1 duration-300 focus-within:bg-secondary hover:bg-secondary">
                     <RouterLink :to="{
                       name: 'productShow',
                       params: { productId: product.sku },
-                    }" class="flex items-center gap-2">
+                    }" class="flex items-center gap-2" @click="productPopover = !productPopover">
                       <div>
                         <ImageApp
                           :image="product.images?.length ? getS3Link(product.images[0].filename, 'thumbnail') : ''"
                           class="max-w-[3rem]" />
                       </div>
                       <div class="text-sm">
-                        <p class="font-medium">{{ product.title }}</p>
+                        <p class="font-medium text-xs line-clamp-2 lg:line-clamp-none lg:text-base">{{ product.title }}
+                        </p>
                         <span class="text-muted-foreground">{{
                           product.sku
                         }}</span>
@@ -127,6 +129,10 @@ provide(mainScrollerKey, useMainScroller);
                   </li>
                 </ul>
               </ScrollArea>
+              <div v-else class="p-4 text-sm flex gap-2">
+                <Info class="text-muted-foreground shrink-0" />
+                <p>We cant find what you're looking for. Try different search terms.</p>
+              </div>
             </PopoverContent>
           </Popover>
         </div>
@@ -142,8 +148,8 @@ provide(mainScrollerKey, useMainScroller);
               <component :is="Component"></component>
 
               <!-- loading state -->
-              <template #fallback> 
-                <Loader class="min-h-[70vh]" description="Loading, please wait..."/>
+              <template #fallback>
+                <Loader class="min-h-[70vh]" description="Loading, please wait..." />
               </template>
             </Suspense>
           </template>

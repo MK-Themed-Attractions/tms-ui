@@ -2,8 +2,8 @@
 
 </script>
 <template>
-    <div class="flex gap-4 flex-wrap p-4">
-        <slot />
+    <div>
+
     </div>
 </template>
 

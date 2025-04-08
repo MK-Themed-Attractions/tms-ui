@@ -2,8 +2,7 @@
 import { InputFilter } from '@/components/app/input-filter';
 import { ref, watchEffect } from 'vue';
 import { inputFilterData } from '.';
-import TaskStepper from '../components/TaskStepper.vue';
-import { Box, FolderOpen, Search } from 'lucide-vue-next';
+import { FolderOpen, Search } from 'lucide-vue-next';
 import { useRouteQuery } from '@vueuse/router';
 import { usePlanStore } from '@/stores/planStore';
 import TaskHistoryCardItem from './components/TaskHistoryCardItem.vue';

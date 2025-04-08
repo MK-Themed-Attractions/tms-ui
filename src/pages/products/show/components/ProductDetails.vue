@@ -25,7 +25,7 @@ const props = defineProps<{
       </CardHeader>
 
       <div
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2"
+        class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2"
       >
         <CardContent
           class="grid grid-cols-[max-content,1fr] gap-2 text-muted-foreground"
@@ -50,6 +50,7 @@ const props = defineProps<{
             {{ product.dimension_width }} cm</span
           >
         </CardContent>
+        
         <CardContent
           class="grid grid-cols-[max-content,1fr] gap-2 text-muted-foreground"
         >

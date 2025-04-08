@@ -1,39 +1,43 @@
 <script setup lang="ts">
-
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuthStore } from '@/stores/authStore';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import RFIDInfo from './components/RFIDInfo.vue';
 import NoTaskFound from './components/NoTaskFound.vue';
 import WorkerInfo from './components/WorkerInfo.vue';
-import WorkerToolbar from './components/WorkerToolbar.vue';
 import type { Worker } from '@/types/workers';
 import { useWorkerStore } from '@/stores/workerStore';
-import type { RFIDScannerEvent, RFIDState, TaskOperationType } from '..';
-import type { TaskStatus, WipTask } from '@/types/wip';
+import { taskDataTableColumns, type RFIDScannerEvent, type RFIDState, type TaskOperationType } from '..';
+import type { TaskStatus, WipPlan, WipPlanQueryParams, WipTask, WorkerTasksQueryParams } from '@/types/wip';
 import { useWipStore } from '@/stores/wipStore';
-import WorkerTaskCard from './components/WorkerTaskCard.vue';
 import { storeToRefs } from 'pinia';
-import WorkerTaskCardItem from './components/WorkerTaskCardItem.vue';
 import Loader from '@/components/app/loader/Loader.vue';
-import WorkerTaskCardToolbar from './components/WorkerTaskCardToolbar.vue';
 import { toast } from 'vue-sonner';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { useTaskControls } from '@/composables/useTaskControls';
-import WorkerTaskCardDropdown from './components/WorkerTaskCardDropdown.vue';
-import { Ellipsis } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
+import type { ProductRoutingWorkCenterType } from '@/types/products';
+import { useSimplePaginate } from '@/composables/usePaginate';
+import { InfiniteScroll } from '@/components/app/infinite-scroll';
+import { Card } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { DataTable } from '@/components/app/data-table';
+import { getIconByTaskStatus, toOrdinal } from '@/lib/utils';
+import { Calendar, CircleCheck, Ellipsis, XCircle } from 'lucide-vue-next';
+import { TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import WorkerDropdown from './components/WorkerDropdown.vue';
+import { ButtonApp } from '@/components/app/button';
+import InfiniteScrollTrigger from '@/components/app/infinite-scroll/InfiniteScrollTrigger.vue';
+import WorkerBatchOperationDropdown from './components/WorkerBatchOperationDropdown.vue';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
-const { fetchWorker, worker } = useWorker()
-const { fetchWorkerTasks, workerTasks, wipLoading, changeTaskStatus, selectedFilterSku, filteredWorkerTasks, tasksCount } = useWip()
-const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation } = useBatchOperation()
+const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
+const { fetchWorker, worker, handleWorkerLogout } = useWorker()
+const { fetchWorkerTasks, wipLoading, changeTaskStatus } = useWip()
+const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
 
 const rfidState = ref<RFIDState>('not-detected')
-
 function useScanner(callBack?: RFIDScannerEvent) {
     const rfid = ref('')
     const scanBuffer = ref(""); // Stores temporary scanned RFID
@@ -80,6 +84,7 @@ function useScanner(callBack?: RFIDScannerEvent) {
 }
 
 function useWorker() {
+
     const worker = ref<Worker>()
     async function fetchWorker(rfid: string) {
         rfidState.value = 'scanning'
@@ -88,61 +93,49 @@ function useWorker() {
         if (data) {
             rfidState.value = 'detected'
             worker.value = data;
-            await fetchWorkerTasks(data)
+            resetInfiniteScroll()
+            await fetchNextWorkerTasks()
             return;
         }
         rfidState.value = 'not-detected'
     }
 
+    function handleWorkerLogout() {
+        worker.value = undefined;
+        rfidState.value = 'not-detected'
+        resetInfiniteScroll()
+    }
+
     return {
         fetchWorker,
-        worker
+        worker,
+        handleWorkerLogout
     }
 }
 
 function useWip() {
-
     const { loading: wipLoading, errors } = storeToRefs(wipStore)
-    const workerTasks = ref<{ [batchId: string]: WipTask[] }>()
     const selectedFilterSku = ref<string>()
+    const { items: workerTasks, paginate } = useSimplePaginate<WipPlan>()
 
-    const filteredWorkerTasks = computed(() => {
-        if (!workerTasks.value || !selectedFilterSku.value) {
-            return workerTasks.value;  // Return original when no filter is applied
-        }
-
-        return Object.entries(workerTasks.value).reduce((acc, [batchId, tasks]) => {
-            const filteredTasks = tasks.filter(t => t.sku === selectedFilterSku.value);
-            if (filteredTasks.length) {
-                acc[batchId] = filteredTasks;
-            }
-            return acc;
-        }, {} as { [batchId: string]: WipTask[] });
-    })
-
-    const tasksCount = computed(() => {
-        if (!workerTasks.value) return 0
-
-        return Object.values(workerTasks.value)
-            .reduce((acc, tasks) => acc + tasks.length, 0);
-    })
-
-    async function fetchWorkerTasks(worker: Worker) {
+    async function fetchWorkerTasks(worker: Worker, params?: Partial<WorkerTasksQueryParams>) {
         const microservice = worker.department?.ms_url
         wipStore.pointToMicroservice(microservice)
 
-        const data = await wipStore.getWorkerTasks(worker.id)
+        const workCenters = <ProductRoutingWorkCenterType[]>worker.department?.work_centers
+        paginate.value = await wipStore.getWorkerTasks(worker.id, { work_centers: workCenters, ...params })
 
-        if (data)
-            workerTasks.value = data
+        return workerTasks.value;
     }
 
     async function changeTaskStatus(taskOperationType: TaskOperationType, taskIds: string[]) {
         await wipStore.changeTaskStatusArray({ status: taskOperationType as TaskStatus, tasks: taskIds })
 
         if (!errors.value) {
-            if (worker.value)
-                await fetchWorkerTasks(worker.value)
+            if (worker.value) {
+                resetInfiniteScroll()
+                await fetchNextWorkerTasks()
+            }
             toast.info('Batch info', {
                 description: 'Batch operation completed successfully.'
             })
@@ -159,8 +152,6 @@ function useWip() {
         wipLoading,
         changeTaskStatus,
         selectedFilterSku,
-        filteredWorkerTasks,
-        tasksCount
     }
 }
 
@@ -170,7 +161,7 @@ function useBatchOperation() {
     const selectedTaskOperationType = ref<TaskOperationType>()
     const showConfirmationDialog = ref(false)
     const confirmationDialogMessage = ref<string>()
-    const { canStart, canFinish, canPause } = useTaskControls()
+    const { canStart, canFinish, canPause, isNotDone } = useTaskControls()
 
     function getTaskValidationByOperation() {
         switch (selectedTaskOperationType.value) {
@@ -183,7 +174,9 @@ function useBatchOperation() {
         }
     }
 
-    function handleBatchOperation(taskOperationType: TaskOperationType, tasks: WipTask[]) {
+    function handleBatchOperation(taskOperationType: TaskOperationType, tasks?: WipTask[]) {
+        if (!tasks) return;
+
         /* set the operation type */
         selectedTaskOperationType.value = taskOperationType;
         /*task status verification. note: selected task operation type should be assigned first */
@@ -243,7 +236,35 @@ function useBatchOperation() {
         confirmationDialogMessage,
         handleBatchOperation,
         handleBatchOperationConfirm,
-        handleTaskOperation
+        handleTaskOperation,
+        isNotDone
+    }
+}
+
+function useInfiniteScroll() {
+    const page = ref(0)
+    const workerTasksInfiniteScroll = ref<WipPlan[]>([])
+
+    async function fetchNextWorkerTasks(cb?: (canAddMore: boolean) => void) {
+        if (!worker.value) return;
+
+        const res = await fetchWorkerTasks(worker.value, { page: ++page.value })
+        if (res && res.length) {
+            workerTasksInfiniteScroll.value.push(...res)
+        } else if (cb) {
+            cb(false)
+        }
+    }
+
+    function resetInfiniteScroll() {
+        page.value = 0;
+        workerTasksInfiniteScroll.value = []
+    }
+
+    return {
+        fetchNextWorkerTasks,
+        resetInfiniteScroll,
+        workerTasksInfiniteScroll
     }
 }
 
@@ -257,40 +278,105 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container p-6 space-y-6 h-screen" v-if="true">
+    <div class="container p-6 space-y-6 h-screen">
         <div>
             <h1 class="text-2xl font-medium">Worker Dashboard</h1>
             <p class="text-sm text-muted-foreground max-w-[78ch]"> Scan your RFID and select your assigned tasks. You
                 can start tasks
                 individually or in batches.
-                You will be automatically logged out after each action or if you remain idle for too long. {{ tasksCount
-                }}</p>
+                You will be automatically logged out after each action or if you remain idle for too long.</p>
         </div>
-        <div class="flex flex-wrap gap-4 flex-col lg:flex-row">
+        <header class="flex flex-wrap gap-4 flex-col lg:flex-row">
             <RFIDInfo :state="rfidState" class="mx-auto lg:m-0" />
-            <WorkerInfo v-if="worker" class="flex-1" :worker="worker" :stats="{ tasksCount }" />
-            <WorkerToolbar v-if="workerTasks" class="grow basis-full" :batch="workerTasks"
-                v-model="selectedFilterSku" />
-        </div>
-        <ScrollArea class="relative isolate h-[62%] overflow-y-auto border rounded-md border-dashed">
-            <WorkerTaskCard v-if="filteredWorkerTasks">
-                <WorkerTaskCardItem v-for="batch in filteredWorkerTasks" :batch="batch" :loading="wipLoading">
-                    <WorkerTaskCardToolbar :tasks="batch" @select="handleBatchOperation">
-                    </WorkerTaskCardToolbar>
-                    <template #actions="{ item }">
-                        <WorkerTaskCardDropdown :task="item" @select="handleTaskOperation">
-                            <Button variant="ghost" size="icon">
-                                <Ellipsis class="size-4" />
-                            </Button>
-                        </WorkerTaskCardDropdown>
-                    </template>
-                </WorkerTaskCardItem>
+            <WorkerInfo v-if="worker" class="flex-1" :worker="worker" @logout="handleWorkerLogout" />
 
-            </WorkerTaskCard>
-            <NoTaskFound v-else-if="!workerTasks && !wipLoading" />
-            <Loader v-else class="border-none mt-auto absolute top-1/2 left-1/2 -translate-x-1/2"
-                description="Loading, please wait..." />
-        </ScrollArea>
+        </header>
+
+        <InfiniteScroll v-if="workerTasksInfiniteScroll && workerTasksInfiniteScroll.length && worker"
+            class="flex flex-wrap !flex-row gap-4" @trigger="fetchNextWorkerTasks">
+            <Card v-for="plan in workerTasksInfiniteScroll" :key="plan.id" class="basis-[30rem] grow p-4">
+                <div class="border rounded-md p-2 bg-muted/20 flex gap-4 text-sm">
+                    <div>
+                        <span class="text-xs text-muted-foreground">Plan code</span>
+                        <p class="font-medium">{{ plan.code }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-muted-foreground">SKU</span>
+                        <p class="font-medium">{{ plan.sku }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-muted-foreground">Status</span>
+                        <p class="font-medium">{{ plan.status_code }}</p>
+                    </div>
+                </div>
+                <Accordion type="multiple">
+                    <AccordionItem v-for="batch in plan.batch_data" :key="batch.id" :value="batch.id">
+                        <AccordionTrigger class="justify-between items-center text-xs">
+                            <span>{{ toOrdinal(batch.batch_index + 1) }} Batch</span>
+                            <span class="ml-auto flex gap-2 px-1 text-xs text-muted-foreground">
+                                <Calendar class="size-4" />{{ batch.start_date }}
+                            </span>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <DataTable v-if="batch.tasks" :items="batch.tasks" :columns="taskDataTableColumns">
+                                <template #header.actions>
+                                    <TableCell>
+                                        <WorkerBatchOperationDropdown :tasks="batch.tasks"
+                                            @select="handleBatchOperation">
+                                            <ButtonApp size="icon" variant="ghost">
+                                                <Ellipsis />
+                                            </ButtonApp>
+                                        </WorkerBatchOperationDropdown>
+                                    </TableCell>
+                                </template>
+                                <template #item.id="{ item }">
+                                    <TableCell class="uppercase" v-if="!wipLoading">
+                                        {{ item.id }}
+                                    </TableCell>
+                                    <TableCell v-else>
+                                        <div class="h-2 bg-muted rounded-full">
+                                        </div>
+                                    </TableCell>
+                                </template>
+                                <template #item.status="{ item }">
+                                    <TableCell class="capitalize" v-if="!wipLoading">
+                                        <Badge variant="secondary" class="gap-1">
+                                            <component :is="getIconByTaskStatus(item.status)" class="size-4" /> {{
+                                                item.status }}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell v-else>
+                                        <div class="h-2 bg-muted rounded-full">
+                                        </div>
+                                    </TableCell>
+                                </template>
+                                <template #item.is_startable="{ item }">
+                                    <TableCell v-if="!wipLoading">
+                                        <component :is="item.is_startable ? CircleCheck : XCircle" class="size-4" />
+                                    </TableCell>
+                                    <TableCell v-else>
+                                        <div class="h-2 bg-muted rounded-full">
+                                        </div>
+                                    </TableCell>
+                                </template>
+                                <template #item.actions="{ item }">
+                                    <TableCell v-if="isNotDone(item.status)">
+                                        <WorkerDropdown :task="item" @select="handleTaskOperation">
+                                            <ButtonApp size="icon" variant="ghost" :disabled="wipLoading">
+                                                <Ellipsis />
+                                            </ButtonApp>
+                                        </WorkerDropdown>
+                                    </TableCell>
+                                </template>
+                            </DataTable>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </Card>
+
+            <InfiniteScrollTrigger class="basis-full" />
+        </InfiniteScroll>
+        <Loader v-else-if="wipLoading" class="min-h-[60vh]" description="Loading, please wait..." />
 
         <ConfirmationDialog v-model="showConfirmationDialog" :description="confirmationDialogMessage"
             @yes="handleBatchOperationConfirm" />

@@ -2,7 +2,7 @@
 import { DataTable } from '@/components/app/data-table';
 import { useWorkerStore } from '@/stores/workerStore';
 import { storeToRefs } from 'pinia';
-import { wipWorkerDataTableColumns, workCentersKey, workerPerPage } from '../../data';
+import { selectedDepartmentKey, wipWorkerDataTableColumns, workCentersKey, workerPerPage } from '../../data';
 import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
 import { TableCell, TableHead } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,7 +11,7 @@ import { computed, inject, ref, watch, watchEffect } from 'vue';
 import { ButtonApp } from '@/components/app/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-vue-next';
-import type { Worker } from '@/types/workers';
+import type { Worker, WorkerQueryParams } from '@/types/workers';
 
 const emits = defineEmits<{
     (e: 'change', workers: Worker[]): void
@@ -19,8 +19,24 @@ const emits = defineEmits<{
 const workerStore = useWorkerStore()
 const { hasNextPage, hasPrevPage, loading } = storeToRefs(workerStore)
 const workCenters = inject(workCentersKey);
+const selectedDepartment = inject(selectedDepartmentKey);
 
 const workers = workerStore.assignableWorkers(workCenters!.value || [])
+
+const params = computed<Partial<WorkerQueryParams>>(() => {
+    const departmentID = selectedDepartment && selectedDepartment.value ? selectedDepartment.value.id : ''
+
+    return {
+        filters: [
+            {
+                column: 'department_id',
+                values: [departmentID]
+            }
+        ],
+        includes: 'department',
+        per_page: workerPerPage,
+    }
+})
 
 /* @ts-ignore */
 const { isChecked, checkedItems, handleCheckAll, indicator, toggleCheck } = useDataTableChecks<Worker>(workers)
@@ -43,7 +59,7 @@ const filteredWorkers = computed(() => {
 
 
 async function handleQueryChange(query: Partial<PaginationQuery>) {
-    await workerStore.getWorkers({ page: query.page, per_page: query.perPage ? +query.perPage : workerPerPage, includes: 'department' })
+    await workerStore.getWorkers({ ...params.value, page: query.page, per_page: query.perPage ? +query.perPage : workerPerPage, })
 }
 
 function useSearch() {
@@ -51,9 +67,8 @@ function useSearch() {
 
     async function searchWorkers() {
         await workerStore.getWorkers({
+            ...params.value,
             q: search.value,
-            per_page: workerPerPage,
-            includes: 'department'
         })
     }
 
@@ -75,7 +90,7 @@ function useSearch() {
 }
 
 /* INITIALIZE WORKERS */
-await workerStore.getWorkers({ per_page: workerPerPage, includes: 'department' })
+await workerStore.getWorkers(params.value)
 
 </script>
 

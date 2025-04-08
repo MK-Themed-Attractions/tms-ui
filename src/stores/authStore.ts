@@ -27,7 +27,7 @@ import {
 
 import { defineStore } from "pinia";
 import { useRouter } from "vue-router";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import type { SimplePaginate } from "@/types/pagination";
 import type { AxiosRequestConfig } from "axios";
 
@@ -98,12 +98,18 @@ export const useAuthStore = defineStore("auth", () => {
     return [...rolePermissions, ...userPermissions];
   });
 
+  const userUIPermissionSet = computed(() => {
+    return userPermissionSet.value
+      .filter((permission) => permission.startsWith("ui-"))
+      .map((permission) => permission.replace("ui-", "").toLowerCase());
+  });
+
   function invalidate() {
     user.value = null;
     accessToken.value = null;
     refreshToken.value = null;
     roles.value = null;
-    rolesWithPermission.value = null;
+    rolesWithPermission.value = [];
     userDirectPermissions.value = null;
   }
 
@@ -185,7 +191,7 @@ export const useAuthStore = defineStore("auth", () => {
     invalidate();
     localStorage.clear();
 
-    await router.push({ name: "login" });
+    router.push({ name: "login" });
   }
 
   async function getUsers() {
@@ -355,5 +361,6 @@ export const useAuthStore = defineStore("auth", () => {
     userPermissionSet,
     roles,
     rolesWithPermission,
+    userUIPermissionSet
   };
 });

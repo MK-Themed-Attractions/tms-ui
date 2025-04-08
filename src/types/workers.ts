@@ -12,7 +12,17 @@ export interface Worker {
   department?: WorkerDepartment;
   work_centers?: string[];
   is_active: boolean;
+  points?: WorkerPoint;
+  run_time?: WorkerRuntime;
 }
+
+export interface WorkerPoint {
+  current_day: number;
+  current_month: number;
+  current_year: number;
+}
+
+export interface WorkerRuntime extends WorkerPoint {}
 
 export interface WorkerForm {
   worker_number: string;
@@ -43,5 +53,7 @@ export interface WorkerDepartmentForm {
   ms_url: string; // ENV KEY to point to microservice URL
 }
 
-export interface WorkerQueryParams extends QueryParams {}
+export interface WorkerQueryParams extends QueryParams {
+  appends: string[];
+}
 export interface WorkerDepartmentQueryParams extends QueryParams {}

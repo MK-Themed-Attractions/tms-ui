@@ -1,5 +1,10 @@
+import type { QueryParams } from "./general";
 import type { PlanBatch, PlanStatus, PlanStatusCode } from "./planning";
-import type { Product, ProductRoutingWorkcenter } from "./products";
+import type {
+  Product,
+  ProductRoutingWorkcenter,
+  ProductRoutingWorkCenterType,
+} from "./products";
 import type { Worker } from "./workers";
 
 export interface WipTask {
@@ -94,4 +99,8 @@ export interface WipTaskQueryParams {
   pages: number;
   operation_code: string[];
   is_accessible: boolean | number;
+}
+
+export interface WorkerTasksQueryParams extends QueryParams {
+  work_centers: ProductRoutingWorkCenterType[];
 }

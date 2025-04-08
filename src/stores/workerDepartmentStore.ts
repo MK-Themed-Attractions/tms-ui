@@ -1,6 +1,6 @@
 import { useAxios } from "@/composables/useAxios";
 import { useStorage } from "@vueuse/core";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
 import type { SimplePaginateAPIResource } from "@/types/pagination";
 import type {
@@ -22,13 +22,31 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
   setHeader("Bearer-Token", bearerToken);
 
   const authStore = useAuthStore();
+  const { userUIPermissionSet, user } = storeToRefs(authStore);
   const paginatedResponse =
     ref<SimplePaginateAPIResource<WorkerDepartment> | null>(null);
 
   /* GETTERS */
-  const departments = computed(() => {
+  //list of departments without filtering permissions (clean/raw)
+  const rawDepartments = computed(() => {
     if (paginatedResponse.value) {
       return paginatedResponse.value.data;
+    } else return null;
+  });
+
+  //list of department with applied user permissions
+  const departments = computed(() => {
+    if (rawDepartments.value && userUIPermissionSet.value && user.value) {
+      const superAdminIds = <string[]>(
+        JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS)
+      );
+
+      return rawDepartments.value.filter((department) => {
+        return (
+          userUIPermissionSet.value.includes(department.code.toLowerCase()) ||
+          superAdminIds.includes(user.value.id)
+        );
+      });
     } else return null;
   });
 
@@ -76,7 +94,9 @@ export const useWorkerDepartmentStore = defineStore("workerDepartment", () => {
    * @returns string[]
    */
   function getDepartmentCodeIdByWorkCenter(workCenter: string) {
-    const dept = departments.value?.find((d) => d.work_centers.includes(workCenter));
+    const dept = departments.value?.find((d) =>
+      d.work_centers.includes(workCenter),
+    );
 
     if (dept) {
       return {

@@ -15,13 +15,17 @@ import {
 } from "@/components/ui/table";
 import type { DataTableColumns } from ".";
 import ImageApp from "../image/ImageApp.vue";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   items: T[];
   columns?: DataTableColumns[];
   loading?: boolean;
+  loadingRows?: number
   caption?: string;
-}>();
+}>(), {
+  loadingRows: 4
+});
 
 const emits = defineEmits<{
   navigateTo: [item: T, router: Router];
@@ -73,9 +77,11 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
           <span class="font-medium text-muted-foreground">No Data Available</span>
         </div>
       </TableEmpty>
-      <TableEmpty v-if="loading" :colspan="selectedColumns.length">
-        Loading...
-      </TableEmpty>
+      <TableRow v-if="loading" v-for="(_, index) in loadingRows" :key="index">
+        <TableCell v-for="col in selectedColumns.length" :key="col" class="py-3">
+          <Skeleton class="max-w-[20rem] h-2" />
+        </TableCell>
+      </TableRow>
     </TableBody>
 
     <TableFooter>

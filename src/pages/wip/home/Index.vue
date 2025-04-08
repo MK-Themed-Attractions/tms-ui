@@ -4,9 +4,8 @@ import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
 import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
 
-import { formatReadableDate, getIconByPlanStatus, getS3Link, toOrdinal } from "@/lib/utils";
+import { formatReadableDate, getIconByPlanStatus, } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 import {
   Building,
@@ -14,12 +13,11 @@ import {
   Wrench,
 } from "lucide-vue-next";
 
-import CardInfo from "./components/CardInfo.vue";
 import WipTaskDataTable from "./components/WipTaskDataTable.vue";
 import WipBatchAccordion from "./components/WipBatchAccordion.vue";
 import WipTaskDropdown from "./components/WipTaskDropdown.vue";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch, watchEffect } from "vue";
+import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch } from "vue";
 import WorkerAssignDialog from "./components/WorkerAssignDialog.vue";
 import { TableCell } from "@/components/ui/table";
 import { batchWipSuccessKey } from "@/lib/injectionKeys";
@@ -29,14 +27,23 @@ import { ButtonApp } from "@/components/app/button";
 import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
-import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from "@/components/app/input-filter";
-import { searchFilterData, workCentersKey } from "../data";
+import { InputFilter, type InputFilterDropdownData } from "@/components/app/input-filter";
+import { searchFilterData, selectedDepartmentKey, workCentersKey } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
+import { RouterLink } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
+import type { ProductRoutingWorkCenterType } from "@/types/products";
+import { TaskGroup, TaskGroupImage, TaskGroupLabel } from "@/components/app/task-group";
+import { SectionHeader } from "@/components/app/section-header";
+import { EmptyResource } from "@/components/app/empty-resource";
 
+
+const authStore = useAuthStore()
+const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
 
@@ -50,7 +57,8 @@ const { fetchWipPlans,
   fetchBatchWip,
   handleShowMultipleTaskAssignDialog,
   selectedTaskPlanId,
-  handleShowSingleTaskAssignDialog } = useWip();
+  handleShowSingleTaskAssignDialog,
+  selectedOperationCode } = useWip();
 const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
 const { handleShowWipDialog, showWipDialog } = useWipShow()
@@ -77,6 +85,9 @@ function useWip() {
   const selectedTaskIds = ref<string[]>([])
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
+
+  //task operation for single task show
+  const selectedOperationCode = ref<ProductRoutingWorkCenterType>()
 
   const wipTasksGrouped = ref<WipTaskGrouped[]>([]);
 
@@ -139,6 +150,7 @@ function useWip() {
     selectedTaskIds.value.push(task.id)
 
     selectedTaskPlanId.value = task.task_plan_id
+    selectedOperationCode.value = <ProductRoutingWorkCenterType>task.operation_code;
   }
 
   /**
@@ -181,6 +193,7 @@ function useWip() {
     assigningBatch,
     selectedTaskIds,
     selectedTaskPlanId,
+    selectedOperationCode,
     handleSingleTaskAssign,
     handleMultipleTaskAssign,
     handleShowSingleTaskAssignDialog,
@@ -524,6 +537,7 @@ async function handleDepartmentSelectionChange(department: WorkerDepartment) {
 /* Provide the batch fetching functionality on children components */
 provide(batchWipSuccessKey, fetchBatchWip)
 provide(workCentersKey, workCenters)
+provide(selectedDepartmentKey, computed(() => selectedDepartment.value))
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
@@ -537,29 +551,26 @@ onBeforeMount(() => {
 </script>
 <template>
   <div class="container space-y-6">
-    <div>
-      <h1 class="text-lg font-semibold md:text-2xl">Work in progress</h1>
-      <p class="text-muted-foreground text-sm">
-        This section lets you assign workers to tasks, start, pause, and
-        complete them, and view real-time task status.
-      </p>
-    </div>
+    <SectionHeader title="Work in progress" description="This section lets you assign workers to tasks, start, pause, and
+        complete them, and view real-time task status." />
 
     <section>
-      <Toolbar v-model="selectedDepartment" @change="handleDepartmentSelectionChange" :loading="wipLoading">
+      <Toolbar v-model="selectedDepartment" @change="handleDepartmentSelectionChange"
+        :loading="wipLoading || authLoading">
         <template #append>
           <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
-            :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading">
+            :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading || authLoading">
           </InputFilter>
 
           <div class="basis-full">
-            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading" :disabled="!selectedDepartment" />
+            <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading || authLoading"
+              :disabled="!selectedDepartment" />
           </div>
 
           <div class="ml-auto">
             <div class="flex items-center gap-2">
               <Label for="task-today">Show today&apos;s tasks</Label>
-              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading" />
+              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading || authLoading" />
             </div>
           </div>
         </template>
@@ -568,129 +579,130 @@ onBeforeMount(() => {
     </section>
 
     <section>
-      <InfiniteScroll v-if="wipTasksGrouped && wipTasksGrouped.length" :key="selectedDepartment?.id"
-        @trigger="fetchWipPlansNext">
-        <div v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id"
-          class="rounded-md border p-4 shadow-sm space-y-4">
-          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="space-y-4">
+      <InfiniteScroll v-if="wipTasksGrouped && wipTasksGrouped.length && selectedDepartment"
+        :key="selectedDepartment?.id" @trigger="fetchWipPlansNext">
 
-            <!-- show parent code only on the first index -->
-            <div class="flex gap-2 items-start justify-center" v-if="index === 0">
-              <CardInfo :image="getS3Link(parentProduct.thumbnail || '', 'thumbnail')" label="Based on product SKU">
-                {{
-                  parentProduct.sku }} </CardInfo>
+        <!-- PARENT -->
+        <TaskGroup v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id">
+          <div class="basis-full flex gap-2 items-center">
+            <TaskGroupImage :image="parentProduct.thumbnail" />
+            <TaskGroupLabel label="Parent SKU">
+              <RouterLink :to="{ name: 'productShow', params: { productId: parentProduct.sku } }" target="_blank">
+                {{ parentProduct.sku }}
+              </RouterLink>
+            </TaskGroupLabel>
+          </div>
 
-            </div>
-            <div class="flex flex-wrap gap-4">
-              <div v-for="plan in product.plan_data" :key="plan.id"
-                class="border rounded-md p-4 space-y-2 basis-[30rem] flex-1">
-                <div class="flex gap-4">
-                  <CardInfo :image="getS3Link(product.thumbnail || '', 'thumbnail')" label="Product SKU">{{ product.sku
-                  }}
-                  </CardInfo>
-                  <CardInfo label="Plan code">{{ plan.code }}</CardInfo>
-                  <div class="ml-auto flex flex-col justify-center gap-2">
-                    <Badge class="ml-auto capitalize gap-1">
-                      <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
-                      {{ plan.status_code }}
-                    </Badge>
-                    <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
-                  </div>
+          <!-- CHILD -->
+          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="basis-[33rem] grow">
+            <div v-for="plan in product.plan_data" :key="plan.id">
+              <div class="flex gap-4 bg-muted/20 border rounded-md p-2 items-center">
+                <TaskGroupImage :image="product.thumbnail || ''" />
+                <TaskGroupLabel label="plan code">
+                  <RouterLink :to="{ name: 'taskHistoryIndex', query: { q: plan.code, filter: 'plan_code' } }"
+                    target="_blank" class="hover:underline">
+                    {{ plan.code }}
+                  </RouterLink>
+                </TaskGroupLabel>
+                <TaskGroupLabel label="product SKU">
+                  <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }" target="_blank"
+                    class="hover:underline">
+                    {{ product.sku }}
+                  </RouterLink>
+                </TaskGroupLabel>
+                <div class="ml-auto flex flex-col justify-center gap-2">
+                  <Badge class="ml-auto capitalize gap-1">
+                    <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
+                    {{ plan.status_code }}
+                  </Badge>
+                  <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
                 </div>
+              </div>
 
-                <Separator />
+              <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip"
+                :loading="wipLoading">
+                <template #default="{ batch }">
+                  <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
+                    @select="(task) => handleShowWipDialog(task, batch)">
 
-                <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip"
-                  :loading="wipLoading">
-                  <template #default="{ batch }">
-                    <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                      @select="(task) => handleShowWipDialog(task, batch)">
-
-                      <template #action.header>
-                        <TableCell>
-                          <WipTaskDropdown v-if="!isBatchDone(batch)">
-                            <template #activator>
-                              <ButtonApp class="size-6" variant="outline" size="icon">
-                                <Ellipsis class="size-4" />
-                              </ButtonApp>
-                            </template>
-
-                            <template v-if="isBatchAssignable(batch)">
-                              <DropdownMenuLabel>Batch</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem @click="handleShowMultipleTaskAssignDialog(batch)">Assign multiple tasks
-                              </DropdownMenuItem>
-                              <DropdownMenuItem @click="handleShowBatchWorkerRemoveDialog(batch)">Remove all workers
-                                from tasks
-                              </DropdownMenuItem>
-                            </template>
-                            <template v-if="isBatchStartable(batch)">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem @click="handleConfirmStartAll(batch)">Start all</DropdownMenuItem>
-                              <DropdownMenuItem @click="handleConfirmPauseAll(batch)">Pause all</DropdownMenuItem>
-                              <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
-                            </template>
-                          </WipTaskDropdown>
-                        </TableCell>
-                      </template>
-
-                      <template #action="{ task }">
-                        <WipTaskDropdown v-if="isNotDone(task.status)">
+                    <template #action.header>
+                      <TableCell>
+                        <WipTaskDropdown v-if="!isBatchDone(batch)">
                           <template #activator>
-                            <Ellipsis class="invisible group-hover:visible size-4 m-auto" />
+                            <ButtonApp class="size-6" variant="outline" size="icon">
+                              <Ellipsis class="size-4" />
+                            </ButtonApp>
                           </template>
-                          <template v-if="canAssign(task.status)">
-                            <DropdownMenuLabel>Options</DropdownMenuLabel>
+
+                          <template v-if="isBatchAssignable(batch)">
+                            <DropdownMenuLabel>Batch</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem @click.stop="handleShowSingleTaskAssignDialog(task, batch)">
-                              Assign task
+                            <DropdownMenuItem @click="handleShowMultipleTaskAssignDialog(batch)">Assign multiple tasks
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @click="handleShowBatchWorkerRemoveDialog(batch)">Remove all workers
+                              from tasks
                             </DropdownMenuItem>
                           </template>
-
-                          <template v-if="hasWorkers(task.status) && task.is_startable">
+                          <template v-if="isBatchStartable(batch)">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem v-if="canStart(task.status)" @click.stop="handleStartTask(task, batch)">
-                              Start
-                            </DropdownMenuItem>
-                            <DropdownMenuItem v-if="canPause(task.status)" @click.stop="handlePauseTask(task, batch)">
-                              Pause
-                            </DropdownMenuItem>
-                            <DropdownMenuItem v-if="canFinish(task.status)" @click.stop="handleFinishTask(task, batch)">
-                              Finish
-                            </DropdownMenuItem>
-
+                            <DropdownMenuItem @click="handleConfirmStartAll(batch)">Start all</DropdownMenuItem>
+                            <DropdownMenuItem @click="handleConfirmPauseAll(batch)">Pause all</DropdownMenuItem>
+                            <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
                           </template>
                         </WipTaskDropdown>
+                      </TableCell>
+                    </template>
 
-                      </template>
+                    <template #action="{ task }">
+                      <WipTaskDropdown v-if="isNotDone(task.status)">
+                        <template #activator>
+                          <Ellipsis class="invisible group-hover:visible size-4 m-auto" />
+                        </template>
+                        <template v-if="canAssign(task.status)">
+                          <DropdownMenuLabel>Options</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem @click.stop="handleShowSingleTaskAssignDialog(task, batch)">
+                            Assign task
+                          </DropdownMenuItem>
+                        </template>
 
-                    </WipTaskDataTable>
-                  </template>
-                </WipBatchAccordion>
-              </div>
+                        <template v-if="hasWorkers(task.status) && task.is_startable">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem v-if="canStart(task.status)" @click.stop="handleStartTask(task, batch)">
+                            Start
+                          </DropdownMenuItem>
+                          <DropdownMenuItem v-if="canPause(task.status)" @click.stop="handlePauseTask(task, batch)">
+                            Pause
+                          </DropdownMenuItem>
+                          <DropdownMenuItem v-if="canFinish(task.status)" @click.stop="handleFinishTask(task, batch)">
+                            Finish
+                          </DropdownMenuItem>
+
+                        </template>
+                      </WipTaskDropdown>
+
+                    </template>
+
+                  </WipTaskDataTable>
+                </template>
+              </WipBatchAccordion>
             </div>
           </div>
-        </div>
+        </TaskGroup>
         <InfiniteScrollTrigger />
 
       </InfiniteScroll>
+
       <!-- fallback for no department -->
-      <div v-else-if="!wipTasksGrouped"
-        class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
-        <Building class="mx-auto" />
-        <h2 class="text-2xl font-bold tracking-tight">No department selected</h2>
-        <p class="text-sm text-muted-foreground">click on the toolbar and select a department to
-          start.</p>
-      </div>
+      <EmptyResource v-else-if="!selectedDepartment" title="No Selected Department" description="click on the toolbar and select a department to
+          start" :icon="Building">
+      </EmptyResource>
+
       <!-- fallback for empty wip -->
-      <div v-else class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
-        <Wrench class="mx-auto" />
-        <h2 class="text-2xl font-bold tracking-tight">No tasks available</h2>
-        <p class="text-sm text-muted-foreground">There are no tasks available at the moment. Please check again later.
-        </p>
-      </div>
+      <EmptyResource v-else title="No tasks available"
+        description="There are no tasks available at the moment. Please check again later." :icon="Wrench" />
     </section>
 
     <!-- DIALOGS -->
@@ -698,8 +710,8 @@ onBeforeMount(() => {
       v-if="assigningBatch" :batch="assigningBatch">
     </WorkerAssignDialog>
 
-    <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch" v-model="showWipDialog" :batch="assigningBatch.batch"
-      :task-id="selectedTaskPlanId">
+    <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
+      :batch="assigningBatch.batch" :task-id="selectedTaskPlanId" :operation-code="selectedOperationCode">
     </WipTaskShowDialog>
 
     <!-- confirmation dialog for batch's tasks change status -->

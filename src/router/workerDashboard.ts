@@ -6,8 +6,5 @@ export const workerDashboard: RouteRecordRaw[] = [
     path: "/worker-dashboard",
     name: "workerDashboard",
     component: Index,
-    meta: {
-      requiresAuth: true,
-    },
   },
 ];

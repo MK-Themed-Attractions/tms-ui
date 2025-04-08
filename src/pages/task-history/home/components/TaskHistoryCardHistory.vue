@@ -19,7 +19,7 @@ const props = defineProps<{
             <StepperItem v-for="(history, index) in task.histories" :key="history.id" :step="index" #="{ state }"
                 class="items-start relative">
                 <StepperSeparator v-if="index !== task.histories.length - 1"
-                    class="absolute left-[18px] top-[38px] block h-[105%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary" />
+                    class="absolute left-[18px] top-[38px] block h-[100%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary" />
 
                 <StepperTrigger as-child>
                     <Button as="div" :variant="state === 'completed' ? 'default' : 'outline'" size="icon"
