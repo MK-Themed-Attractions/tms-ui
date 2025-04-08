@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { Dot } from 'lucide-vue-next';
-import type { DateValue, } from '@internationalized/date';
-import { computed, useTemplateRef } from 'vue';
-import { useElementBounding } from '@vueuse/core';
+import { computed, } from 'vue';
+import type { CalendarEventConcreteData } from '.';
 
-const eventRef = useTemplateRef('eventRef')
-const { top } = useElementBounding(eventRef, {
-    windowResize: false
-})
 
 const props = defineProps<{
     anchor: { width: number, height: number },
-    event: { data: any, startDate: DateValue, endDate: DateValue, color: string },
+    event: CalendarEventConcreteData
 }>()
 
 const differenceInDate = computed(() => {

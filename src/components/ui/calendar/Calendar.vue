@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils'
-import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading } from '@/components/ui/calendar'
+import { cn, getRandomColor } from '@/lib/utils'
+import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, type CalendarEventConcreteData } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -17,8 +17,9 @@ import { ButtonApp } from '@/components/app/button'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Separator from '../separator/Separator.vue'
 import CalendarEvent from './CalendarEvent.vue'
+import type { CalendarEventData } from './index.ts'
 
-const props = withDefaults(defineProps<CalendarRootProps & { events?: { data: any, startDate: DateValue, endDate: DateValue }[] } & { class?: HTMLAttributes['class'] }>(), {
+const props = withDefaults(defineProps<CalendarRootProps & { events?: CalendarEventData[] } & { class?: HTMLAttributes['class'] }>(), {
   modelValue: undefined,
   placeholder() {
     return today(getLocalTimeZone())
@@ -72,17 +73,18 @@ const concreteEvents = computed(() => {
     return durationB - durationA; // Sort by duration descending if start dates are equal
   });
 
-  const result = [];
+  const result: CalendarEventConcreteData[] = [];
 
   // Step 2: Split events when encountering a Saturday
-  function splitEvent(event) {
+  function splitEvent(event: CalendarEventData) {
     let currentStart = event.startDate;
+    const barColor = getRandomColor()
 
     while (currentStart.compare(event.endDate) <= 0) {
       let nextEnd = currentStart;
 
       // Move to the next Saturday or stop at event.endDate
-      while (nextEnd.compare(event.endDate) <= 0 && nextEnd.toDate().getDay() !== 6) {
+      while (nextEnd.compare(event.endDate) <= 0 && nextEnd.toDate(getLocalTimeZone()).getDay() !== 6) {
         nextEnd = nextEnd.add({ days: 1 });
       }
 
@@ -92,6 +94,7 @@ const concreteEvents = computed(() => {
 
       result.push({
         ...event,
+        color: barColor,
         startDate: currentStart,
         endDate: nextEnd,
         intersect: 0, // Will be calculated later
@@ -108,9 +111,10 @@ const concreteEvents = computed(() => {
   // Step 3: Calculate the intersect property
   result.forEach((currentEvent, index) => {
     let intersectCount = 0;
+
+
     for (let i = 0; i < index; i++) {
       const higherSpanEvent = result[i];
-      // Check if the current event intersects with the higher span event
       if (
         currentEvent.startDate.compare(higherSpanEvent.endDate) <= 0 &&
         currentEvent.endDate.compare(higherSpanEvent.startDate) >= 0
