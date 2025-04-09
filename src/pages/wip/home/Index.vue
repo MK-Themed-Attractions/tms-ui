@@ -468,7 +468,11 @@ function useTaskStatusFilter() {
   async function fetchWipPlansNext(cb: (canAddMore: boolean) => void) {
     const params: Partial<WipPlanQueryParams> = {
       work_centers: workCenters.value,
-      page: ++page.value
+      page: ++page.value,
+      is_accessible: tasksForTodayOnly.value,
+      filter: selectedTaskStatusFilter.value,
+      filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
+      q: search.value
     }
     if (search.value.trim()) {
       params.keyword = search.value
