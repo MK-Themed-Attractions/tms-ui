@@ -459,6 +459,7 @@ function useTaskStatusFilter() {
       work_centers: workCenters.value,
       filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
       keyword: search.value,
+      is_accessible: tasksForTodayOnly.value,
       page: page.value
     })
 
@@ -471,8 +472,6 @@ function useTaskStatusFilter() {
       page: ++page.value,
       is_accessible: tasksForTodayOnly.value,
       filter: selectedTaskStatusFilter.value,
-      filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
-      q: search.value
     }
     if (search.value.trim()) {
       params.keyword = search.value
