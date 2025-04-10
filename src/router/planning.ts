@@ -34,6 +34,15 @@ export const planning: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: "planning-calendar",
+    name: "planningCalendar",
+    component: () => import("@/pages/planning/calendar/Index.vue"),
+    meta: {
+      requiresAuth: true,
+      permissionKey: import.meta.env.VITE_PLANNING_CALENDAR_KEY,
+    },
+  },
 ];
 
 async function checkPlan(

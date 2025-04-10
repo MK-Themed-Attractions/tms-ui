@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "vue-sonner";
 import { useToastUIStore } from "@/stores/ui/toastUIStore";
 import { useAuthStore } from "@/stores/authStore";
+import { SectionHeader } from "@/components/app/section-header";
 
 const planStore = usePlanStore();
 const authStore = useAuthStore()
@@ -79,12 +80,9 @@ await getPlans();
 
 <template>
   <div class="container space-y-6">
-    <div>
-      <h1 class="text-lg font-semibold md:text-2xl">Planning</h1>
-      <p class="text-muted-foreground text-sm">
-        Create production plan, cancel or override specific tasks.
-      </p>
-    </div>
+
+    <SectionHeader title="Planning" description="Create production plan, cancel or override specific tasks." />
+
 
     <div>
       <PlanToolbar>

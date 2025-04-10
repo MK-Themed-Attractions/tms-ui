@@ -16,6 +16,7 @@ import type { Updater } from "@tanstack/vue-table";
 import type { Ref } from "vue";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { rand } from "@vueuse/core";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -142,4 +143,35 @@ export function getIconByTaskStatus(status: TaskStatus) {
 
 export function msTeamLink() {
   return `https://teams.microsoft.com/l/chat/0/0?users=${import.meta.env.VITE_DEV_TEAM_EMAIL}`;
+}
+
+/**
+ * Get Random HEX color based on tailwind colors
+ * @returns string HEX color code
+ */
+export function getRandomColor() {
+  const randomColors = [
+    "#f87171",
+    "#fb923c",
+    "#fbbf24",
+    "#facc15",
+    "#a78bfa",
+    "#a5b4fc",
+    "#60a5fa",
+    "#60a5fa",
+    "#38bdf8",
+    "#22d3ee",
+    "#22d3ee",
+    "#2dd4bf",
+    "#34d399",
+    "#4ade80",
+    "#a3e635",
+    "#a8a29e",
+    "#a3a3a3",
+    "#a1a1aa",
+    "#9ca3af",
+    "#94a3b8",
+  ];
+
+  return randomColors[rand(0, randomColors.length - 1)];
 }
