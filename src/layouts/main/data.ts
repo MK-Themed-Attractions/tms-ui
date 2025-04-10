@@ -1,6 +1,8 @@
 import {
   Building,
   Calendar,
+  CalendarDays,
+  CalendarFold,
   Clipboard,
   ContactRound,
   HardHat,
@@ -77,6 +79,12 @@ export const navItemData: NavItem[] = [
     to: { name: "planningIndex" },
     icon: Calendar,
     permissionKey: import.meta.env.VITE_PLANNING_KEY,
+  },
+  {
+    name: "Plan Calendar",
+    to: { name: "planningCalendar" },
+    icon: CalendarDays,
+    permissionKey: import.meta.env.VITE_PLANNING_CALENDAR_KEY,
   },
   {
     name: "User management",

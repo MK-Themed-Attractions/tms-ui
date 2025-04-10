@@ -32,10 +32,8 @@ const props = defineProps<{
   productId: string;
 }>();
 const productStore = useProductStore();
-const { loading } = storeToRefs(productStore);
-
-const { fetchProduct, product } = useProduct();
-const { selectedRouting, productRoutingBoms, routing } = useRouting();
+const { fetchProduct, product, loading } = useProduct();
+const { selectedRouting, productRoutingBoms, routing, routingLoading, defaultSelectedRouting } = useRouting();
 const {
   attachmentDialog,
   attachmentLoading,
@@ -48,35 +46,49 @@ const {
 
 function useProduct() {
   const { product } = storeToRefs(productStore);
-
+  const loading = ref(false)
   async function fetchProduct(
     productId: string,
     params?: Partial<ProductQueryParameter>,
   ) {
+    loading.value = false
+    loading.value = true
     await productStore.getProduct(productId, {
       includes: "routings,images",
       ...params,
     });
+    loading.value = false
+
   }
 
   return {
     fetchProduct,
     product,
+    loading
   };
 }
 
 function useRouting() {
-  const selectedRouting = ref("");
+  const defaultSelectedRouting = computed(() => product.value?.routings && product.value.routings.length ? product.value.routings.filter(r => !r.is_autocomplete)[0].operation_code : '')
+  const selectedRouting = ref(defaultSelectedRouting.value);
+  watchEffect(() => {
+    if (selectedRouting.value) return;
+    selectedRouting.value = defaultSelectedRouting.value
+  })
   const productRoutingBoms = ref<ProductRoutingBOM[]>();
+  const routingLoading = ref(false)
 
   watchEffect(async () => {
     if (selectedRouting.value) {
+      routingLoading.value = false
+      routingLoading.value = true;
       productRoutingBoms.value = await productStore.getProductRoutingBom(
         props.productId,
         {
           routing_link_code: selectedRouting.value,
         },
       );
+      routingLoading.value = false
     }
   });
 
@@ -92,6 +104,8 @@ function useRouting() {
     selectedRouting,
     productRoutingBoms,
     routing,
+    routingLoading,
+    defaultSelectedRouting
   };
 }
 
@@ -208,7 +222,7 @@ onActivated(() => {
 });
 </script>
 <template>
-  <div class="grid gap-4 px-4 lg:grid-cols-2" v-if="product">
+  <div class="grid gap-4 px-4 lg:grid-cols-2" v-if="product && !loading">
     <Card>
       <ImageCarousel v-if="product?.images" :images="product?.images"></ImageCarousel>
     </Card>
@@ -240,18 +254,17 @@ onActivated(() => {
       class="col-span-full">
       <ProductRoutingInfo :routing="routing" v-if="routing" class="mt-4" />
 
-      <ProductRoutingBoms v-if="productRoutingBoms && !loading" :product-routing-boms="productRoutingBoms" class="mt-4">
+      <ProductRoutingBoms v-if="productRoutingBoms" :product-routing-boms="productRoutingBoms" :loading="routingLoading"
+        class="mt-4">
       </ProductRoutingBoms>
 
-      <div v-else class="mt-4 grid min-h-[10rem] place-content-center rounded-md border border-dashed">
-        <LoaderCircle class="animate-spin" v-if="loading" />
 
-        <div class="text-muted-foreground" v-if="!productRoutingBoms && !loading">
-          <MousePointerClick class="mx-auto" />
-          <p class="text-sm font-medium">
-            Click on any routing to view its data
-          </p>
-        </div>
+      <div class="text-muted-foreground border rounded-md border-dashed text-center p-4 mt-4"
+        v-if="!productRoutingBoms && !routingLoading">
+        <MousePointerClick class="mx-auto" />
+        <p class="text-sm font-medium">
+          Click on any routing to view its data
+        </p>
       </div>
     </ProductRouting>
 
