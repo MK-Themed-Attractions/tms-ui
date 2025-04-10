@@ -4,6 +4,8 @@ import type {
   PlanBatch,
   PlanBatchesForm,
   PlanBatchForm,
+  PlanCalendar,
+  PlanCalendarQueryParams,
   PlanDataForm,
   PlanDeletePayload,
   PlanForm,
@@ -208,6 +210,21 @@ export const usePlanStore = defineStore("plans", () => {
     }
   }
 
+  async function getPlanCalendar(params: PlanCalendarQueryParams) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: PlanCalendar[] }>("/api/plan-calendar", {
+      params,
+    });
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     paginatedResponse,
     plans,
@@ -227,6 +244,7 @@ export const usePlanStore = defineStore("plans", () => {
     appendBatch,
     appendTask,
     getTaskHistory,
+    getPlanCalendar,
     errors,
     loading,
   };

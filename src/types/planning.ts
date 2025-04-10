@@ -5,6 +5,7 @@ import type {
   ProductRouting,
   ProductRoutingOperationLetter,
   ProductRoutingWorkcenter,
+  ProductRoutingWorkCenterType,
 } from "./products";
 
 export interface Plan {
@@ -25,7 +26,7 @@ export interface PlanData {
 }
 
 export type PlanProductData = Pick<Product, "routings" | "sku" | "title"> & {
-  image: {
+  image?: {
     filename: string;
   };
 };
@@ -61,6 +62,21 @@ export interface PlanStatus {
   status: PlanStatusCode;
   description: string;
 }
+
+export type PlanCalendar = {
+  plan_data: PlanData;
+  product_data: PlanProductData;
+  parent_product: PlanProductData;
+  operation_data: {
+    no: ProductRoutingWorkCenterType;
+    name: string;
+    runtime: number;
+  };
+  start_date: string;
+  end_date: string;
+  total_runtime: number;
+  total_tasks: number;
+};
 export type PlanStatusCode =
   | "pending"
   | "ongoing"
@@ -94,4 +110,9 @@ export interface PlanBatchForm {
 export interface PlanQueryParams extends QueryParams {}
 export interface PlanDeletePayload {
   user_id: string;
+}
+export interface PlanCalendarQueryParams {
+  month: number;
+  year: number;
+  "work-center": ProductRoutingWorkCenterType[];
 }
