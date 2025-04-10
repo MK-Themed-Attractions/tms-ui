@@ -29,6 +29,7 @@ interface ImportMetaEnv {
   readonly VITE_PLANNING_CALENDAR_KEY: string;
   readonly VITE_USERS_KEY: string;
   readonly VITE_USERS_PERMISSION_KEY: string;
+  readonly VITE_OUTPUT_POSTING_KEY: string;
 
   readonly VITE_SUPERADMIN_IDS: string;
 }

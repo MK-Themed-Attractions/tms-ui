@@ -14,13 +14,21 @@ import type {
 import { useStorage } from "@vueuse/core";
 import { defineStore, storeToRefs } from "pinia";
 import { useAuthStore } from "./authStore";
-import type { SimplePaginateAPIResource } from "@/types/pagination";
+import type {
+  SimplePaginate,
+  SimplePaginateAPIResource,
+} from "@/types/pagination";
 import { computed, ref } from "vue";
 import {
   useSimplePaginate,
   useSimplePaginateAPIResource,
 } from "@/composables/usePaginate";
 import type { TaskHistory, TaskHistoryParams } from "@/types/taskHistory";
+import type {
+  OutputPosting,
+  OutputPostingForm,
+  OutputPostingQueryParams,
+} from "@/types/outputPosting";
 
 export const usePlanStore = defineStore("plans", () => {
   const baseUrl = import.meta.env.VITE_PLANNING;
@@ -225,6 +233,31 @@ export const usePlanStore = defineStore("plans", () => {
     }
   }
 
+  async function getOutputPosting(params?: Partial<OutputPostingQueryParams>) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: SimplePaginate<OutputPosting> }>(
+      "/api/output-posting/get-for-posting",
+      { params },
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  async function postOutputPosting(form: OutputPostingForm) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await put("/api/output-posting/approve", form);
+  }
+
   return {
     paginatedResponse,
     plans,
@@ -245,6 +278,8 @@ export const usePlanStore = defineStore("plans", () => {
     appendTask,
     getTaskHistory,
     getPlanCalendar,
+    getOutputPosting,
+    postOutputPosting,
     errors,
     loading,
   };

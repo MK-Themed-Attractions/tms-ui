@@ -1,4 +1,7 @@
-import type { RouteRecordRaw } from "vue-router";
+import type {
+  RouteLocationNormalizedGeneric,
+  RouteRecordRaw,
+} from "vue-router";
 
 export const errorPages: RouteRecordRaw[] = [
   {

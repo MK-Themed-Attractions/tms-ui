@@ -156,6 +156,9 @@ function useActions() {
     </template>
 
     <template #footer>
+      <slot name="footer">
+      </slot>
+
       <PlanEditDialog v-model="showPlanEditDialog" v-if="selectedPlan" :plan="selectedPlan" />
       <BatchAddDialog v-model="showAddBatchDialog" v-if="selectedPlan" :plan="selectedPlan" />
 
@@ -168,8 +171,7 @@ function useActions() {
         </div>
 
       </ConfirmationDialog>
-      <slot name=" footer">
-      </slot>
+
 
     </template>
 

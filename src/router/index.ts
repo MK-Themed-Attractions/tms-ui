@@ -14,6 +14,7 @@ import { taskHistory } from "./taskHistory";
 import { users } from "./users";
 import { workerDashboard } from "./workerDashboard";
 import { errorPages } from "./errorPages";
+import { outputPosting } from "./outputPosting";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -75,6 +76,7 @@ const router = createRouter({
         ...qc,
         ...taskHistory,
         ...users,
+        ...outputPosting,
         ...errorPages,
       ],
     },
@@ -116,7 +118,11 @@ function checkUser(
     const isSuperAdmin = superAdmins.includes(user.value.id);
 
     if (!hasPermission && !isSuperAdmin) {
-      return { name: "notFound" };
+      return {
+        name: "notFound",
+        params: { pathMatch: to.path.substring(1).split("/") },
+        query: to.query,
+      };
     }
   }
 }

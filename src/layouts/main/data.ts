@@ -10,6 +10,7 @@ import {
   Home,
   Package,
   SearchCheck,
+  Send,
   Shield,
   TrendingUp,
   User,
@@ -85,6 +86,12 @@ export const navItemData: NavItem[] = [
     to: { name: "planningCalendar" },
     icon: CalendarDays,
     permissionKey: import.meta.env.VITE_PLANNING_CALENDAR_KEY,
+  },
+  {
+    name: "Output Posting",
+    to: { name: "outputPosting" },
+    icon: Send,
+    permissionKey: import.meta.env.VITE_OUTPUT_POSTING_KEY,
   },
   {
     name: "User management",
