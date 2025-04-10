@@ -26,7 +26,7 @@ interface ImportMetaEnv {
   readonly VITE_WORKERS_KEY: string;
   readonly VITE_WORKER_DEPARTMENTS_KEY: string;
   readonly VITE_PLANNING_KEY: string;
-  readonly VITE_PLANNING_CALENDAR_KEY; string;
+  readonly VITE_PLANNING_CALENDAR_KEY: string;
   readonly VITE_USERS_KEY: string;
   readonly VITE_USERS_PERMISSION_KEY: string;
 
