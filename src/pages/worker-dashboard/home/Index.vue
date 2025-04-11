@@ -19,7 +19,7 @@ import { InfiniteScroll } from '@/components/app/infinite-scroll';
 import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { DataTable } from '@/components/app/data-table';
-import { getIconByTaskStatus, toOrdinal } from '@/lib/utils';
+import { getIconByTaskStatus, getS3Link, toOrdinal } from '@/lib/utils';
 import { Calendar, CircleCheck, Ellipsis, XCircle } from 'lucide-vue-next';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -27,17 +27,23 @@ import WorkerDropdown from './components/WorkerDropdown.vue';
 import { ButtonApp } from '@/components/app/button';
 import InfiniteScrollTrigger from '@/components/app/infinite-scroll/InfiniteScrollTrigger.vue';
 import WorkerBatchOperationDropdown from './components/WorkerBatchOperationDropdown.vue';
+import { ImageApp } from '@/components/app/image';
+import { TaskGroupLabel } from '@/components/app/task-group';
+import type { WorkerTaskPriority } from '../../../types/wip';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
+const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
-const { fetchWorkerTasks, wipLoading, changeTaskStatus } = useWip()
+const { fetchWorkerTasks, wipLoading, changeTaskStatus, checkWorkerAvailability } = useWip()
 const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
+const { handleShowPriorityDialog, priorityTask, showPriorityDialog, handlePriorityConfirm } = usePriorityDialog()
 
 const rfidState = ref<RFIDState>('not-detected')
+
 function useScanner(callBack?: RFIDScannerEvent) {
     const rfid = ref('')
     const scanBuffer = ref(""); // Stores temporary scanned RFID
@@ -47,7 +53,7 @@ function useScanner(callBack?: RFIDScannerEvent) {
         return /^\d+$/.test(data); // Only allow numbers (adjust if RFID has letters)
     };
 
-    const handleKeydown = (event: KeyboardEvent) => {
+    const handleKeydown = async (event: KeyboardEvent) => {
         const currentTime = Date.now();
 
         // Reset buffer if first keypress or if delay is more than 500ms
@@ -61,7 +67,6 @@ function useScanner(callBack?: RFIDScannerEvent) {
         if (event.key === "Enter") {
             if (isValidRFID(scanBuffer.value)) {
                 rfid.value = scanBuffer.value;
-
                 /* fire the callback event  */
                 if (callBack)
                     callBack(rfid.value)
@@ -86,6 +91,7 @@ function useScanner(callBack?: RFIDScannerEvent) {
 function useWorker() {
 
     const worker = ref<Worker>()
+
     async function fetchWorker(rfid: string) {
         rfidState.value = 'scanning'
         const data = await workerStore.getWorkerByRfid(rfid)
@@ -94,6 +100,7 @@ function useWorker() {
             rfidState.value = 'detected'
             worker.value = data;
             resetInfiniteScroll()
+            await checkWorkerAvailability(worker.value);
             await fetchNextWorkerTasks()
             return;
         }
@@ -117,6 +124,22 @@ function useWip() {
     const { loading: wipLoading, errors } = storeToRefs(wipStore)
     const selectedFilterSku = ref<string>()
     const { items: workerTasks, paginate } = useSimplePaginate<WipPlan>()
+
+    async function checkWorkerAvailability(worker: Worker, params?: Partial<WorkerTasksQueryParams>) {
+        const microservice = worker.department?.ms_url
+        wipStore.pointToMicroservice(microservice)
+
+        const workCenters = <ProductRoutingWorkCenterType[]>worker.department?.work_centers
+
+        const data = await wipStore.getWorkerAvailability(worker.id, { work_centers: workCenters, ...params })
+
+        if (data && data.is_available) {
+            const task = await wipStore.getWorkerTaskPriority(worker.id, { work_centers: workCenters, ...params })
+            if (task) {
+                handleShowPriorityDialog(task)
+            }
+        }
+    }
 
     async function fetchWorkerTasks(worker: Worker, params?: Partial<WorkerTasksQueryParams>) {
         const microservice = worker.department?.ms_url
@@ -152,11 +175,11 @@ function useWip() {
         wipLoading,
         changeTaskStatus,
         selectedFilterSku,
+        checkWorkerAvailability
     }
 }
 
 function useBatchOperation() {
-
     const selectedTaskIds = ref<string[]>()
     const selectedTaskOperationType = ref<TaskOperationType>()
     const showConfirmationDialog = ref(false)
@@ -265,6 +288,45 @@ function useInfiniteScroll() {
         fetchNextWorkerTasks,
         resetInfiniteScroll,
         workerTasksInfiniteScroll
+    }
+}
+
+function usePriorityDialog() {
+    const showPriorityDialog = ref(false)
+    const priorityTask = ref<WorkerTaskPriority>()
+
+    function handleShowPriorityDialog(task: WorkerTaskPriority) {
+        priorityTask.value = task;
+        showPriorityDialog.value = true;
+    }
+
+    async function handlePriorityConfirm() {
+        if (!worker.value || !priorityTask.value) return;
+
+        const payload = {
+            workers: [worker.value.id],
+            tasks: [priorityTask.value.id]
+        }
+        await wipStore.assignWorkersToTasks(payload)
+
+        if (!wipErrors.value) {
+            resetInfiniteScroll()
+            await fetchNextWorkerTasks()
+            toast.info('Assigning Info', {
+                description: 'You\'ve successfully assigned yourself the task'
+            })
+        } else {
+            toast.error('Assigning Error', {
+                description: 'Something went wrong while assigning yourself to the task'
+            })
+        }
+    }
+
+    return {
+        showPriorityDialog,
+        handleShowPriorityDialog,
+        priorityTask,
+        handlePriorityConfirm
     }
 }
 
@@ -380,6 +442,24 @@ onUnmounted(() => {
 
         <ConfirmationDialog v-model="showConfirmationDialog" :description="confirmationDialogMessage"
             @yes="handleBatchOperationConfirm" />
+
+        <ConfirmationDialog v-if="priorityTask" v-model="showPriorityDialog" title="You don't have any tasks"
+            description="You may manually assign yourself to the task listed below if you'd like. However, please note that even after assigning yourself, 
+            you will not be able to start the task unless it is marked as 'available'" yes-message="Yes, assign me"
+            :close-on-click-outside="false" @yes="handlePriorityConfirm">
+            <div>
+                <p>Assign yourself to:</p>
+                <div class="bg-muted/20 p-4 rounded-md flex gap-4 items-center flex-wrap">
+                    <div class="max-w-[3rem]">
+                        <ImageApp :image="getS3Link(priorityTask.product_data?.image?.filename || '', 'small')" />
+                    </div>
+                    <TaskGroupLabel label="SKU">{{ priorityTask.sku }} </TaskGroupLabel>
+                    <TaskGroupLabel label="Plan code">{{ priorityTask.plan_data.code }} </TaskGroupLabel>
+                    <TaskGroupLabel label="Routing">{{ priorityTask.operation_code }} </TaskGroupLabel>
+                    <TaskGroupLabel label="Manpower">{{ priorityTask.manpower }} </TaskGroupLabel>
+                </div>
+            </div>
+        </ConfirmationDialog>
     </div>
 </template>
 
