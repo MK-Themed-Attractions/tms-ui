@@ -83,6 +83,14 @@ export interface WipPlan {
   batch_data: WipBatch[];
 }
 
+export interface WorkerAvailability {
+  is_available: boolean;
+}
+export interface WorkerTaskPriority extends WipTask {
+  batch_data: WipBatch;
+  plan_data: WipPlan;
+}
+
 export interface WipPlanQueryParams {
   filter: string;
   work_centers: string[];
