@@ -1,9 +1,9 @@
 import { useAxios } from "@/composables/useAxios";
-import type { SimplePaginate, SimplePaginateObject } from "@/types/pagination";
+import type { SimplePaginate } from "@/types/pagination";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import type {
   WipTask,
   WipTaskGrouped,
@@ -12,10 +12,11 @@ import type {
   TaskStatus,
   WipPlan,
   WorkerTasksQueryParams,
+  WorkerAvailability,
 } from "@/types/wip";
 import type { DepartmentKPIPayload } from "@/types/qc";
 import type { ProductRoutingWorkCenterType } from "@/types/products";
-import type { PlanQueryParams } from "@/types/planning";
+import type { WorkerTaskPriority } from "../types/wip";
 
 export const useWipStore = defineStore("wips", () => {
   const baseUrl = ref(import.meta.env.VITE_COMMON);
@@ -119,10 +120,7 @@ export const useWipStore = defineStore("wips", () => {
     tasks: string[];
     workers: string[];
   }) {
-    await authStore.checkTokenValidity(
-      `${baseUrl.value}/api/auth/bearer-token`,
-      bearerToken,
-    );
+    //no need for token verification as this endpoint is open
 
     const res = await post("/api/tasks/mass-assign-workers", payload);
   }
@@ -233,6 +231,40 @@ export const useWipStore = defineStore("wips", () => {
       return res;
     }
   }
+  async function getWorkerAvailability(
+    workerId: string,
+    params?: Partial<WorkerTasksQueryParams>,
+  ) {
+    //no need for token verification as this endpoint is open
+
+    const res = await get<WorkerAvailability>(
+      `/api/task-workers/${workerId}/availability`,
+      {
+        params,
+      },
+    );
+
+    if (res) {
+      return res;
+    }
+  }
+  async function getWorkerTaskPriority(
+    workerId: string,
+    params: Partial<WorkerTasksQueryParams>,
+  ) {
+    //no need for token verification as this endpoint is open
+
+    const res = await get<WorkerTaskPriority>(
+      `/api/task-workers/${workerId}/priority`,
+      {
+        params,
+      },
+    );
+
+    if (res) {
+      return res;
+    }
+  }
 
   return {
     invalidate,
@@ -251,5 +283,7 @@ export const useWipStore = defineStore("wips", () => {
     reset,
     pointToMicroservice,
     getWorkerTasks,
+    getWorkerAvailability,
+    getWorkerTaskPriority,
   };
 });

@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<Partial<DialogProps>>(), {
   description: "",
   yesMessage: "Yes, im sure",
   noMessage: "No",
+  closeOnClickOutside: true
 });
 const emits = defineEmits<{
   (e: "yes"): void;
@@ -30,7 +31,7 @@ const dialog = defineModel({ default: false })
       <slot name="activator" />
     </DialogTrigger>
 
-    <DialogScrollContent>
+    <DialogScrollContent @interact-outside="e => closeOnClickOutside ? null : e.preventDefault()">
       <DialogHeader>
         <slot name="title">
           <DialogTitle>{{ title }}</DialogTitle>

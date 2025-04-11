@@ -5,4 +5,5 @@ export interface DialogProps {
   description: string;
   yesMessage: string;
   noMessage: string;
+  closeOnClickOutside: boolean;
 }
