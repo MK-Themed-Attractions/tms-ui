@@ -18,6 +18,7 @@ import { EmptyResource } from '@/components/app/empty-resource';
 import { CalendarDays } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-vue-next';
+import { toast } from 'vue-sonner'
 import CalendarEventDialog from './components/CalendarEventDialog.vue';
 
 const planStore = usePlanStore()
@@ -73,6 +74,14 @@ async function handleSearchPlan() {
     planCalendarData.value = planCalendarData.value.filter((plan) => {
         return plan.plan_data.code.toLowerCase().includes(searchPlan.value.toLowerCase())
     })
+
+    if (!planCalendarData.value.length) {
+        toast.info('No results found', {
+            description: 'Please try a different search term.',
+        })
+        planCalendarData.value = originalPlanCalendarData.value // Reset to original data if no results found
+    }
+
 }
 
 function usePlanCalendarDialog() {
