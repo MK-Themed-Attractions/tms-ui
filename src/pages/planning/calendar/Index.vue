@@ -16,14 +16,18 @@ import type { ProductRoutingWorkCenterType } from '@/types/products';
 import { storeToRefs } from 'pinia';
 import { EmptyResource } from '@/components/app/empty-resource';
 import { CalendarDays } from 'lucide-vue-next';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-vue-next';
 import CalendarEventDialog from './components/CalendarEventDialog.vue';
 
 const planStore = usePlanStore()
 const { loading: planLoading } = storeToRefs(planStore)
 const planCalendarData = ref<PlanCalendar[]>()
+const originalPlanCalendarData = ref<PlanCalendar[]>() // This will be used to store the original data for filtering
 const { selectedPlanCalendar, showPlanCalendarDialog, handleEventClick } = usePlanCalendarDialog()
 const { fetchPlanCalendar, handleDepartmentChange } = usePlanCalendar()
 const dateWasFetched = ref(false)
+const searchPlan = ref('')
 
 function getPlanEvents(): EventSourceInput | undefined {
     if (!planCalendarData.value) return undefined;
@@ -60,6 +64,16 @@ const calendarOptions = computed<CalendarOptions | undefined>(() => {
     }
 })
 
+async function handleSearchPlan() {
+    if (searchPlan.value.trim() === '' || !planCalendarData.value) {
+        planCalendarData.value = originalPlanCalendarData.value // Reset to original data if search is empty
+        return;
+    };
+
+    planCalendarData.value = planCalendarData.value.filter((plan) => {
+        return plan.plan_data.code.toLowerCase().includes(searchPlan.value.toLowerCase())
+    })
+}
 
 function usePlanCalendarDialog() {
     const showPlanCalendarDialog = ref(false)
@@ -98,6 +112,7 @@ function usePlanCalendar() {
             month,
             year,
         })
+        originalPlanCalendarData.value = planCalendarData.value // Store the original data for filtering
     }
 
     async function handleDepartmentChange(department: WorkerDepartment) {
@@ -127,6 +142,11 @@ function usePlanCalendar() {
                 <Skeleton class="h-10" />
             </template>
         </Suspense>
+        <div class="relative isolate">
+            <Search class="absolute size-4 text-muted-foreground top-1/2 -translate-y-1/2 left-2" />
+            <Input class="pl-8" placeholder="Search for plans..." @keydown.enter="handleSearchPlan"
+                v-model="searchPlan" />
+        </div>
         <FullCalendar v-if="calendarOptions" :options="calendarOptions" ref="calendarRef" />
         <div v-else-if="!calendarOptions">
             <EmptyResource title="Select a department"
