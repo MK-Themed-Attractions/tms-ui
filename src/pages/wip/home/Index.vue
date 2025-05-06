@@ -342,9 +342,12 @@ function useTaskOperations() {
 
       return acc;
     }, [])
+    
+    console.log('taskIds', taskIds)
 
     //collect all worker ids on each task
     const workerIds = selectedBatch.value.tasks.reduce<string[]>((acc, task) => {
+      console.log('task', task)
       if (!task.task_workers || !task.task_workers.worker_ids) return acc;
 
       //worker ids
@@ -357,6 +360,7 @@ function useTaskOperations() {
       return acc;
     }, [])
 
+    console.log('workerIds', workerIds)
     //do not proceed when theres at least one workers on each task
     if (!workerIds.length) {
       toast.warning('Batch Info', {
@@ -520,6 +524,8 @@ function isBatchAssignable(batch: WipBatch) {
 }
 
 async function handleDepartmentSelectionChange(department: WorkerDepartment) {
+  //reset the search on department change
+  search.value = ''
   selectedDepartment.value = department;
   //point the base url of wipStore to the selected department's microservice url
   wipStore.pointToMicroservice(department.ms_url);
@@ -586,7 +592,7 @@ onBeforeMount(() => {
         :key="selectedDepartment?.id" @trigger="fetchWipPlansNext">
 
         <!-- PARENT -->
-        <TaskGroup v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id">
+        <TaskGroup v-for="parentProduct in wipTasksGrouped" :key="parentProduct.id" class="items-start">
           <div class="basis-full flex gap-2 items-center">
             <TaskGroupImage :image="parentProduct.thumbnail" />
             <TaskGroupLabel label="Parent SKU">
@@ -597,7 +603,7 @@ onBeforeMount(() => {
           </div>
 
           <!-- CHILD -->
-          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="basis-[33rem] grow">
+          <div v-for="(product, index) in parentProduct.product_data" :key="product.id" class="basis-[33rem] grow ">
             <div v-for="plan in product.plan_data" :key="plan.id">
               <div class="flex gap-4 bg-muted/20 border rounded-md p-2 items-center">
                 <TaskGroupImage :image="product.thumbnail || ''" />
