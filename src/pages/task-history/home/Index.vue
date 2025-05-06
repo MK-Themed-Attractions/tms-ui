@@ -106,7 +106,7 @@ if (inputFilter.value?.key && typeof search.value !== 'undefined' && search.valu
                     </template>
                     <TaskHistoryCardBatches :batches="taskHistory.batches" #="{ items }">
                         <TaskHistoryCardTasks :tasks="items" #="{ item }">
-                            <TaskHistoryCardHistory :task="item"></TaskHistoryCardHistory>
+                            <TaskHistoryCardHistory :task="item" ></TaskHistoryCardHistory>
                         </TaskHistoryCardTasks>
 
                     </TaskHistoryCardBatches>

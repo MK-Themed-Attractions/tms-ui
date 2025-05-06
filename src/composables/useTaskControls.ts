@@ -39,11 +39,11 @@ export const useTaskControls = function useTaskControl() {
   function showWipToast(success: boolean) {
     if (success) {
       toast.info("Task info", {
-        description: "Task successfully started",
+        description: "Operation completed successfully",
       });
     } else {
-      toast.error("Task info", {
-        description: "Something went wrong while starting the task",
+      toast.error("Task error", {
+        description: "Operation failed, please try again",
       });
     }
   }
