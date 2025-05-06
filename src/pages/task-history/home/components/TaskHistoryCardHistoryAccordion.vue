@@ -53,7 +53,7 @@ const getIconByContentType = (type: HistoryContentType) => {
 <template>
     <Accordion type="single" collapsible :default-value="<string>route.query.workCenter">
         <AccordionItem :value="workCenter">
-            <AccordionTrigger class="py-1 gap-2 justify-start">Open history</AccordionTrigger>
+            <AccordionTrigger class="py-1 gap-2 justify-start !pointer-events-auto">Open history</AccordionTrigger>
             <AccordionContent class="space-y-4 mt-2">
                 <div v-for="(content, index) in contents" :key="content.created_at" class="flex relative gap-4">
                     <Dot :stroke-width="5" :class="{ 'text-primary': index === 0 }" class="z-20" v-if="index !== 0" />
