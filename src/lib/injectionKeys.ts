@@ -1,6 +1,6 @@
 import type { WipBatch } from "@/types/wip";
 import type { WorkerQueryParams } from "@/types/workers";
-import type { InjectionKey } from "vue";
+import type { ComputedRef, InjectionKey } from "vue";
 
 export const workerDepartmentOnSuccessKey = Symbol() as InjectionKey<
   (params?: Partial<WorkerQueryParams>) => Promise<void>

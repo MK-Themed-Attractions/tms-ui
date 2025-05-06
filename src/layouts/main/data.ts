@@ -1,4 +1,5 @@
 import {
+  Boxes,
   Building,
   Calendar,
   CalendarDays,
@@ -110,5 +111,10 @@ export const navItemData: NavItem[] = [
         permissionKey: import.meta.env.VITE_USERS_PERMISSION_KEY,
       },
     ],
+  },
+  {
+    name: "BOM Inventory",
+    icon: Boxes,
+    to: { name: "inventoryIndex" },
   },
 ];
