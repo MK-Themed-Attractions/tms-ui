@@ -69,12 +69,12 @@ function useWip() {
 
         //if theres no search keyword refetch the selected department 
         if (!data.search.trim() && workCenters) {
-            await getTasksByWorkCenters({ filterBy: <"product-sku" | "plan-code">filter.value.key, keyword: search.value })
+            await getTasksByWorkCenters({ page: 1 })
             return;
         }
 
         //reset the page to 1 everytime filter is applied
-        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: <"product-sku" | "plan-code">filter.value.key })
+        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: <"product-sku" | "plan-code">filter.value.key, work_centers: workCenters.value })
         if (res) wipTaskGrouped.value = res;
     }
 
@@ -208,7 +208,8 @@ onBeforeUnmount(() => {
         <Toolbar v-model="selectedDepartment" @change="handleDepartmentChange" :loading="wipLoading || authLoading">
             <template #append>
                 <InputFilter v-model:filter="filter" v-model:search="search" :dropdown-data="searchFilterData"
-                    :loading="wipLoading || authLoading" @submit="getTasksByWorkCentersWithFilter" :disabled="!selectedDepartment">
+                    :loading="wipLoading || authLoading" @submit="getTasksByWorkCentersWithFilter"
+                    :disabled="!selectedDepartment">
                 </InputFilter>
             </template>
         </Toolbar>
