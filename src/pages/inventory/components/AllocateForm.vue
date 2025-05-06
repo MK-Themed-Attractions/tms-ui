@@ -41,8 +41,12 @@ const formSchema = toTypedSchema(z.object({
 const tasksOnRoute = computed(() => {
     if (!selectedRouting || !selectedBatch || !selectedBatch.value || !selectedRouting.value) return
 
-    const filteredBatch = selectedBatch.value.tasks?.filter(t => t.operation_code.toLowerCase() === selectedRouting.value?.toLowerCase())
-    return filteredBatch?.filter(fb => {
+    const filteredBatchByRouting = selectedBatch.value.tasks?.filter(t => t.operation_code.toLowerCase() === selectedRouting.value?.toLowerCase())
+    const filteredBatchByUnassignedBomAllocation = filteredBatchByRouting?.filter(fb => {
+        return selectedBatch.value?.allocated_boms?.some(ab => ab.plan_task_id === fb.task_plan_id) === false
+    })
+
+    return filteredBatchByUnassignedBomAllocation?.filter(fb => {
         return props.taskIds.includes(fb.task_plan_id)
     })
 })
@@ -134,7 +138,7 @@ watchEffect(async () => {
                         <div class="relative isolate">
                             <Input v-bind="componentField" />
                             <span class="absolute right-2 text-xs top-1/2 -translate-y-1/2">{{ bom.unit_of_measure_code
-                            }}</span>
+                                }}</span>
                         </div>
                     </FormControl>
                     <FormMessage />

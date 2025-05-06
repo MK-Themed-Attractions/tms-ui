@@ -180,7 +180,10 @@ function useBom() {
     const showAllocateDialog = ref(false)
     const selectedTaskIds = ref<string[]>([])
 
-    function handleShowAllocateDialog() {
+    function handleShowAllocateDialog(batch: WipBatch, plan: WipPlan) {
+        selectedBatch.value = batch
+        selectedPlan.value = plan
+        
         if (!taskIds.value) return;
 
         showAllocateDialog.value = true;
@@ -275,7 +278,7 @@ provide(wipPlanKey, computed(() => selectedPlan.value))
 
                                                 <DropdownMenuLabel>Batch Operations</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem @click="handleShowAllocateDialog">
+                                                <DropdownMenuItem @click="handleShowAllocateDialog(batch,plan)">
                                                     <Layers /> Allocate to batch
                                                 </DropdownMenuItem>
 
