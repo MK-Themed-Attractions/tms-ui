@@ -18,19 +18,21 @@ import WipTaskDropdown from '@/pages/wip/home/components/WipTaskDropdown.vue';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from '@/types/wip';
 import type { WorkerDepartment } from '@/types/workers';
-import { ArrowRight, Ellipsis, Layers, Merge } from 'lucide-vue-next';
+import { ArrowRight, Ellipsis, Eye, Layers, Merge, Pencil } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, provide, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-import AllocateDialog from '../components/AllocateDialog.vue';
-import { wipBatchKey, wipPlanKey } from '../data';
 import { useInventoryStore } from '@/stores/inventoryStore';
 import InventoryTaskDataTable from '../components/InventoryTaskDataTable.vue';
+import AllocateDialog from '../components/AllocateDialog.vue';
+import { fetchBomKey, inventorySelectedKey, type AllocationMode } from '../data';
+import RouteSelection from '../components/RouteSelection.vue';
+import AllocationForm from '../components/AllocationForm.vue';
 
 
-const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip, taskIds, selectedBatch, selectedPlan } = useWip()
+const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip } = useWip()
 const { page, handleFetchNextPage, filter, search, handleFetchWipGroup, statusFilter } = useInifiteScroll()
-const { handleShowAllocateDialog, showAllocateDialog, selectedTaskIds, handleShowAllocateDialogForTask } = useBom()
+const { handleShowAllocateDialogForBatch, showAllocateDialog, handleShowAllocateDialogForTask, fetchBom, selectedRoute, selectedMode, isTaskHasBomAllocated } = useBom()
 const wipStore = useWipStore()
 const { loading: wipLoading } = storeToRefs(wipStore)
 const inventoryStore = useInventoryStore()
@@ -108,15 +110,7 @@ function useInifiteScroll() {
 
 function useWip() {
     const selectedDepartment = ref<WorkerDepartment>()
-    const selectedBatch = ref<WipBatch>()
-    const selectedPlan = ref<WipPlan>()
     const wipTaskGroup = ref<WipTaskGrouped[]>([])
-
-    const taskIds = computed(() => {
-        if (!selectedBatch.value) return
-
-        return selectedBatch.value.tasks?.map(t => t.task_plan_id)
-    })
 
     async function handleDepartmentSelectionChange(department: WorkerDepartment) {
         selectedDepartment.value = department
@@ -135,9 +129,7 @@ function useWip() {
             wipTaskGroup.value = data
     }
 
-    async function fetchBatchWip(batch: WipBatch, plan: WipPlan) {
-        selectedBatch.value = batch
-        selectedPlan.value = plan;
+    async function fetchBatchWip(batch: WipBatch) {
 
         if (!selectedDepartment.value || (batch.tasks && batch.allocated_boms)) return
 
@@ -152,17 +144,11 @@ function useWip() {
             batch.tasks = res;
         }
 
-        const inventoryParams = {
-            plan_task_ids: selectedBatch.value.tasks?.map(t => t.task_plan_id) || [],
-        }
+        await fetchBom(batch)
 
-        await inventoryStore.validateToken()
-        const inventoryRes = await inventoryStore.getInventoryConsumptionByPlanTaskId(inventoryParams)
 
-        if (inventoryRes) {
-            batch.allocated_boms = inventoryRes
-        }
     }
+
 
 
     return {
@@ -170,43 +156,76 @@ function useWip() {
         selectedDepartment,
         wipTaskGroup,
         fetchBatchWip,
-        selectedBatch,
-        selectedPlan,
-        taskIds
     }
 }
 
 function useBom() {
     const showAllocateDialog = ref(false)
-    const selectedTaskIds = ref<string[]>([])
+    const selectedBatch = ref<WipBatch>()
+    const selectedPlan = ref<WipPlan>()
+    const selectedTasks = ref<WipTask[]>()
+    const selectedRoute = ref<string>()
+    const selectedMode = ref<AllocationMode>('add')
 
-    function handleShowAllocateDialog(batch: WipBatch, plan: WipPlan) {
-        selectedBatch.value = batch
-        selectedPlan.value = plan
-        
-        if (!taskIds.value) return;
 
-        showAllocateDialog.value = true;
-        selectedTaskIds.value = taskIds.value
-    }
+    function handleShowAllocateDialogForBatch(batch: WipBatch, plan: WipPlan) {
+        selectedBatch.value = batch;
+        selectedPlan.value = plan;
+        selectedTasks.value = batch.tasks?.filter(t => !isTaskHasBomAllocated(t))
+        selectedMode.value = 'add'
 
-    function handleShowAllocateDialogForTask(task: WipTask) {
-        if (!taskIds.value) return;
-
-        selectedTaskIds.value = [task.task_plan_id]
         showAllocateDialog.value = true
     }
 
+    function handleShowAllocateDialogForTask(task: WipTask, batch: WipBatch, plan: WipPlan, mode: AllocationMode = 'add') {
+        selectedBatch.value = batch;
+        selectedPlan.value = plan;
+        selectedTasks.value = [task]
+        selectedRoute.value = task.operation_code
+        selectedMode.value = mode
+
+        showAllocateDialog.value = true
+    }
+
+    async function fetchBom(batch: WipBatch) {
+        const inventoryParams = {
+            plan_task_ids: batch.tasks?.map(t => t.task_plan_id) || [],
+        }
+
+        await inventoryStore.validateToken()
+        const inventoryRes = await inventoryStore.getInventoryConsumptionByPlanTaskId(inventoryParams)
+
+        batch.allocated_boms = inventoryRes;
+    }
+
+    function isTaskHasBomAllocated(task: WipTask) {
+        return selectedBatch.value?.allocated_boms?.some(ab => ab.task_id === task.id)
+    }
+
+    provide(inventorySelectedKey, computed(() => {
+        return {
+            batch: selectedBatch.value,
+            plan: selectedPlan.value,
+            tasks: selectedTasks.value,
+            route: selectedRoute.value
+        }
+    }))
+
     return {
         showAllocateDialog,
-        selectedTaskIds,
-        handleShowAllocateDialog,
-        handleShowAllocateDialogForTask
+        handleShowAllocateDialogForBatch,
+        handleShowAllocateDialogForTask,
+        isTaskHasBomAllocated,
+        fetchBom,
+        selectedBatch,
+        selectedPlan,
+        selectedTasks,
+        selectedRoute,
+        selectedMode
     }
 }
 
-provide(wipBatchKey, computed(() => selectedBatch.value))
-provide(wipPlanKey, computed(() => selectedPlan.value))
+provide(fetchBomKey, fetchBom)
 </script>
 
 <template>
@@ -260,15 +279,16 @@ provide(wipPlanKey, computed(() => selectedPlan.value))
                             </div>
                         </div>
 
-                        <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data"
-                            @select="(batch) => fetchBatchWip(batch, plan)" :loading="wipLoading || inventoryLoading">
+                        <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="fetchBatchWip"
+                            :loading="wipLoading || inventoryLoading">
                             <template #default="{ batch }">
                                 <InventoryTaskDataTable v-if="batch.tasks" :tasks="batch.tasks"
                                     :allocated-boms="batch.allocated_boms" :loading="wipLoading || inventoryLoading">
 
                                     <template #header.actions>
                                         <TableCell>
-                                            <WipTaskDropdown>
+                                            <WipTaskDropdown
+                                                v-if="!batch.tasks?.every(t => batch.allocated_boms?.some(ab => ab.task_id === t.id))">
                                                 <template #activator>
                                                     <ButtonApp class="size-6" variant="outline" size="icon">
                                                         <Ellipsis class="size-4" />
@@ -278,7 +298,8 @@ provide(wipPlanKey, computed(() => selectedPlan.value))
 
                                                 <DropdownMenuLabel>Batch Operations</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem @click="handleShowAllocateDialog(batch,plan)">
+                                                <DropdownMenuItem
+                                                    @click="handleShowAllocateDialogForBatch(batch, plan)">
                                                     <Layers /> Allocate to batch
                                                 </DropdownMenuItem>
 
@@ -296,8 +317,15 @@ provide(wipPlanKey, computed(() => selectedPlan.value))
                                                 <DropdownMenuLabel>Task Operations</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
-                                                    @click="handleShowAllocateDialogForTask(<WipTask>item)">
+                                                    v-if="batch.allocated_boms?.findIndex(ab => ab.task_id === item.id) === -1"
+                                                    @click="handleShowAllocateDialogForTask(<WipTask>item, batch, plan)">
                                                     <ArrowRight /> Allocate Materials
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    v-if="batch.allocated_boms?.findIndex(ab => ab.task_id === item.id) !== -1"
+                                                    @click="handleShowAllocateDialogForTask(<WipTask>item, batch, plan, 'edit')">
+                                                    <Eye />
+                                                    <Pencil /> View/Update
                                                 </DropdownMenuItem>
 
                                             </WipTaskDropdown>
@@ -315,7 +343,10 @@ provide(wipPlanKey, computed(() => selectedPlan.value))
         </InfiniteScroll>
 
 
-        <AllocateDialog v-if="taskIds" v-model="showAllocateDialog" :task-ids="selectedTaskIds" />
+        <AllocateDialog v-model="showAllocateDialog">
+            <RouteSelection v-model="selectedRoute" />
+            <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode" />
+        </AllocateDialog>
     </div>
 </template>
 

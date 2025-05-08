@@ -14,8 +14,8 @@ const props = defineProps<{
     allocatedBoms?: InventoryAllocatedBom[]
 }>()
 
-function isTaskHasBomAllocated(planTaskId: string) {
-    return computed(() => props.allocatedBoms?.some(ab => ab.plan_task_id === planTaskId))
+function isTaskHasBomAllocated(taskId: string) {
+    return computed(() => props.allocatedBoms?.some(ab => ab.task_id === taskId))
 }
 </script>
 <template>
@@ -42,7 +42,7 @@ function isTaskHasBomAllocated(planTaskId: string) {
         </template>
         <template #item.allocate_bom="{ item }">
             <TableCell>
-                <component :is="isTaskHasBomAllocated(item.task_plan_id).value ? CheckCircle : XCircle"
+                <component :is="isTaskHasBomAllocated(item.id).value ? CheckCircle : XCircle"
                     class="size-4 text-muted-foreground"></component>
             </TableCell>
         </template>

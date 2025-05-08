@@ -1,9 +1,12 @@
 import { useAxios } from "@/composables/useAxios";
-import type { InventoryAllocatedBom, InventoryPayload, InventoryQueryParams } from "@/types/inventory";
+import type {
+  InventoryAllocatedBom,
+  InventoryPayload,
+  InventoryQueryParams,
+} from "@/types/inventory";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
-import type { ProductRoutingBOM } from "@/types/products";
 
 export const useInventoryStore = defineStore("inventories", () => {
   const baseUrl = import.meta.env.VITE_INVENTORY;
@@ -35,7 +38,14 @@ export const useInventoryStore = defineStore("inventories", () => {
   }
   async function addInventoryConsumption(payload: InventoryPayload) {
     try {
-      await post("/api/consumption", payload);
+      await post("/api/consumption/mass-store", payload);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async function updateInventoryConsumption(payload: InventoryPayload) {
+    try {
+      await put("/api/consumption/mass-update", payload);
     } catch (error) {
       console.log(error);
     }
@@ -67,5 +77,6 @@ export const useInventoryStore = defineStore("inventories", () => {
     validateToken,
     addInventoryConsumption,
     getInventoryConsumptionByPlanTaskId,
+    updateInventoryConsumption
   };
 });
