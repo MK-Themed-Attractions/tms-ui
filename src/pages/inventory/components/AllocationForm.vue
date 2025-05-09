@@ -12,6 +12,7 @@ import { ButtonApp } from '@/components/app/button';
 import { useInventoryStore } from '@/stores/inventoryStore';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
+import type { WipTask } from '@/types/wip';
 
 const props = withDefaults(defineProps<{
     selectedRoute: string;
@@ -120,8 +121,11 @@ watchEffect(async () => {
         })
 
         if (props.mode === 'edit') {
+            const [task] = inventorySelected.value.tasks as WipTask[]
+            if (!task) return;
+
             consumptions?.forEach(cons => {
-                const existingBomAllocation = inventorySelected.value.batch?.allocated_boms?.find(ab => ab.no === cons.no)
+                const existingBomAllocation = inventorySelected.value.batch?.allocated_boms?.find(ab => ab.no === cons.no && ab.task_id === task.id)
                 if (existingBomAllocation) {
                     cons.quantity = existingBomAllocation.quantity
                     cons.id = existingBomAllocation.id
