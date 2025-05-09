@@ -7,6 +7,7 @@ export const inventory: RouteRecordRaw[] = [
     component: () => import("@/pages/inventory/Index.vue"),
     meta: {
       requiresAuth: true,
+      permissionKey: import.meta.env.VITE_INVENTORY_KEY,
     },
     children: [
       {

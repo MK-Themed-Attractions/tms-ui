@@ -116,5 +116,6 @@ export const navItemData: NavItem[] = [
     name: "BOM Inventory",
     icon: Boxes,
     to: { name: "inventoryIndex" },
+    permissionKey: import.meta.env.VITE_INVENTORY_KEY
   },
 ];
