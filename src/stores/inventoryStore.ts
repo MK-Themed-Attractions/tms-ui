@@ -69,6 +69,24 @@ export const useInventoryStore = defineStore("inventories", () => {
       console.log(error);
     }
   }
+  async function getInventoryConsumptionByTaskId(params: string[]) {
+    try {
+      const res = await get<{ data: InventoryAllocatedBom[] }>(
+        "/api/consumption/get-consumption-by-task-id",
+        {
+          params: {
+            task_ids: params,
+          },
+        },
+      );
+
+      if (res) {
+        return res.data;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return {
     invalidate,
@@ -77,6 +95,7 @@ export const useInventoryStore = defineStore("inventories", () => {
     validateToken,
     addInventoryConsumption,
     getInventoryConsumptionByPlanTaskId,
-    updateInventoryConsumption
+    getInventoryConsumptionByTaskId,
+    updateInventoryConsumption,
   };
 });

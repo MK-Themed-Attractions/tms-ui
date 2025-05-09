@@ -188,12 +188,9 @@ function useBom() {
     }
 
     async function fetchBom(batch: WipBatch) {
-        const inventoryParams = {
-            plan_task_ids: batch.tasks?.map(t => t.task_plan_id) || [],
-        }
-
+        const inventoryParams = batch.tasks?.map(t => t.id) || []
         await inventoryStore.validateToken()
-        const inventoryRes = await inventoryStore.getInventoryConsumptionByPlanTaskId(inventoryParams)
+        const inventoryRes = await inventoryStore.getInventoryConsumptionByTaskId(inventoryParams)
 
         batch.allocated_boms = inventoryRes;
     }
