@@ -18,7 +18,7 @@ import WipTaskDropdown from '@/pages/wip/home/components/WipTaskDropdown.vue';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from '@/types/wip';
 import type { WorkerDepartment } from '@/types/workers';
-import { ArrowRight, Ellipsis, Eye, Layers, Merge, Pencil } from 'lucide-vue-next';
+import { ArrowRight, Building, Ellipsis, Eye, Layers, Merge, Pencil } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, provide, ref } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -28,6 +28,7 @@ import AllocateDialog from '../components/AllocateDialog.vue';
 import { fetchBomKey, inventorySelectedKey, type AllocationMode } from '../data';
 import RouteSelection from '../components/RouteSelection.vue';
 import AllocationForm from '../components/AllocationForm.vue';
+import { EmptyResource } from '@/components/app/empty-resource';
 
 
 const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip } = useWip()
@@ -228,7 +229,7 @@ provide(fetchBomKey, fetchBom)
 <template>
     <div class="container space-y-6">
         <SectionHeader title="BOM Inventory" description="Bill of Materials management page" />
-        <Toolbar @change="handleDepartmentSelectionChange">
+        <Toolbar @change="handleDepartmentSelectionChange" :loading="wipLoading">
             <template #append>
                 <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
                     @submit="handleFetchWipGroup" :disabled="!selectedDepartment" :loading="wipLoading">
@@ -236,7 +237,7 @@ provide(fetchBomKey, fetchBom)
             </template>
         </Toolbar>
 
-        <InfiniteScroll @trigger="handleFetchNextPage">
+        <InfiniteScroll @trigger="handleFetchNextPage" v-if="wipTaskGroup && wipTaskGroup.length && selectedDepartment">
             <TaskGroup v-for="parentProduct in wipTaskGroup" :key="parentProduct.id">
                 <div class="basis-full flex gap-2 items-center">
                     <TaskGroupImage :image="parentProduct.thumbnail" />
@@ -338,8 +339,9 @@ provide(fetchBomKey, fetchBom)
             </TaskGroup>
             <InfiniteScrollTrigger />
         </InfiniteScroll>
-
-
+        <EmptyResource v-else-if="!selectedDepartment" title="No Selected Department" description="click on the toolbar and select a department to
+          start" :icon="Building">
+        </EmptyResource>
         <AllocateDialog v-model="showAllocateDialog">
             <RouteSelection v-model="selectedRoute" />
             <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode" />
