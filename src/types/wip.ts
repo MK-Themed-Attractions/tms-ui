@@ -1,7 +1,9 @@
 import type { QueryParams } from "./general";
+import type { InventoryAllocatedBom } from "./inventory";
 import type { PlanBatch, PlanStatus, PlanStatusCode } from "./planning";
 import type {
   Product,
+  ProductRoutingBOM,
   ProductRoutingWorkcenter,
   ProductRoutingWorkCenterType,
 } from "./products";
@@ -69,6 +71,7 @@ export type WipBatch = Omit<
 > & {
   batch_id: string;
   tasks?: WipTask[];
+  allocated_boms?: InventoryAllocatedBom[];
 };
 
 export interface WipPlan {
@@ -102,7 +105,7 @@ export interface WipPlanQueryParams {
 }
 
 export interface WipTaskQueryParams {
-  filter: TaskStatus;
+  filter: TaskStatus | "assigned";
   keyword: string;
   pages: number;
   operation_code: string[];
