@@ -39,6 +39,7 @@ function handleWorkerSelect(workers: Worker[]) {
 
     selectedWorkerIds.value = workerIds;
 }
+
 function handleTaskSelect(taskId: string) {
     const taskIndex = selectedTaskIds.value.indexOf(taskId)
 
