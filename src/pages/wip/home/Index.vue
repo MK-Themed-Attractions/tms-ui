@@ -40,6 +40,7 @@ import type { ProductRoutingWorkCenterType } from "@/types/products";
 import { TaskGroup, TaskGroupImage, TaskGroupLabel } from "@/components/app/task-group";
 import { SectionHeader } from "@/components/app/section-header";
 import { EmptyResource } from "@/components/app/empty-resource";
+import WipSkeleton from "./components/WipSkeleton.vue";
 
 
 const authStore = useAuthStore()
@@ -342,7 +343,7 @@ function useTaskOperations() {
 
       return acc;
     }, [])
-    
+
     console.log('taskIds', taskIds)
 
     //collect all worker ids on each task
@@ -700,7 +701,9 @@ onBeforeMount(() => {
             </div>
           </div>
         </TaskGroup>
-        <InfiniteScrollTrigger />
+        <InfiniteScrollTrigger>
+          <WipSkeleton faded />
+        </InfiniteScrollTrigger>
 
       </InfiniteScroll>
 
@@ -710,8 +713,12 @@ onBeforeMount(() => {
       </EmptyResource>
 
       <!-- fallback for empty wip -->
-      <EmptyResource v-else title="No tasks available"
+      <EmptyResource v-else-if="!wipTasksGrouped || wipTasksGrouped.length && !wipLoading" title="No tasks available"
         description="There are no tasks available at the moment. Please check again later." :icon="Wrench" />
+      <div class="space-y-6" v-else>
+        <WipSkeleton />
+        <WipSkeleton faded />
+      </div>
     </section>
 
     <!-- DIALOGS -->
