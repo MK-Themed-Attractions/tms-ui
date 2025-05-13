@@ -344,7 +344,7 @@ provide(fetchBomKey, fetchBom)
         </EmptyResource>
         <AllocateDialog v-model="showAllocateDialog">
             <RouteSelection v-model="selectedRoute" />
-            <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode" />
+            <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode" @submitted="showAllocateDialog = false"/>
         </AllocateDialog>
     </div>
 </template>
