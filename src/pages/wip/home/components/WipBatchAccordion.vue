@@ -33,7 +33,9 @@ const emits = defineEmits<{
                 </div>
 
                 <p v-if="loading" class="text-muted-foreground flex items-center gap-2 justify-center">
-                    <LoaderCircle class="animate-spin" /> Retrieving data, please wait.
+                    <slot name="fallback" :batch="batch">
+                        <LoaderCircle class="animate-spin" /> Retrieving data, please wait.
+                    </slot>
                 </p>
             </AccordionContent>
         </AccordionItem>

@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import { computed, onBeforeMount, onBeforeUnmount, ref, watchEffect } from 'vue';
 import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
-import { getS3Link } from '@/lib/utils';
+import { formatReadableDate, getIconByPlanStatus, getS3Link } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import WipBatchAccordion from '@/pages/wip/home/components/WipBatchAccordion.vue';
 import QCTasksDataTable from './components/QCTasksDataTable.vue';
@@ -22,6 +22,12 @@ import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData }
 import { InfiniteScroll, InfiniteScrollTrigger } from '@/components/app/infinite-scroll';
 import type { WorkerDepartment } from '@/types/workers';
 import { useAuthStore } from '@/stores/authStore';
+import { TaskGroup, TaskGroupImage, TaskGroupLabel } from '@/components/app/task-group';
+import { RouterLink } from 'vue-router';
+import Badge from '@/components/ui/badge/Badge.vue';
+import { DataTableLoader } from '@/components/app/data-table';
+import { batchWipSuccessKey } from '@/lib/injectionKeys';
+import WipSkeleton from '@/pages/wip/home/components/WipSkeleton.vue';
 
 const authStore = useAuthStore()
 const { loading: authLoading } = storeToRefs(authStore)
@@ -214,29 +220,54 @@ onBeforeUnmount(() => {
             </template>
         </Toolbar>
 
-        <InfiniteScroll class="flex flex-wrap gap-4" v-if="wipTaskGrouped && wipTaskGrouped.length"
-            @trigger="getNextTaskByWorkCenters" :key="selectedDepartment?.id">
-            <template v-for="wipTask in wipTaskGrouped" :key="wipTask.id">
-                <template v-for="product in wipTask.product_data" :key="product.id">
-                    <div v-for="plan in product.plan_data" :key="plan.id"
-                        class="border rounded-md p-4 shadow-sm grow space-y-2">
-                        <div class="flex justify-between">
-                            <CardInfo :image="getS3Link(product.thumbnail || '', 'small')" label="Product SKU">
+        <InfiniteScroll class="flex flex-wrap gap-4"
+            v-if="wipTaskGrouped && wipTaskGrouped.length && selectedDepartment" @trigger="getNextTaskByWorkCenters"
+            :key="selectedDepartment?.id">
+            <TaskGroup v-for="parentProduct in wipTaskGrouped" :key="parentProduct.id" class="items-start">
+                <div class="basis-full flex gap-2 items-center">
+                    <TaskGroupImage :image="parentProduct.thumbnail" />
+                    <TaskGroupLabel label="Parent SKU">
+                        <RouterLink :to="{ name: 'productShow', params: { productId: parentProduct.sku } }"
+                            target="_blank">
+                            {{ parentProduct.sku }}
+                        </RouterLink>
+                    </TaskGroupLabel>
+                </div>
+
+                <!-- CHILD -->
+                <div v-for="(product, index) in parentProduct.product_data" :key="product.id"
+                    class="basis-[33rem] grow ">
+                    <div v-for="plan in product.plan_data" :key="plan.id">
+                        <div class="flex gap-4 bg-muted/20 border rounded-md p-2 items-center">
+                            <TaskGroupImage :image="product.thumbnail || ''" />
+                            <TaskGroupLabel label="plan code">
+                                <RouterLink
+                                    :to="{ name: 'taskHistoryIndex', query: { q: plan.code, filter: 'plan_code' } }"
+                                    target="_blank" class="hover:underline">
+                                    {{ plan.code }}
+                                </RouterLink>
+                            </TaskGroupLabel>
+                            <TaskGroupLabel label="product SKU">
                                 <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }"
-                                    target="_blank">
+                                    target="_blank" class="hover:underline">
                                     {{ product.sku }}
                                 </RouterLink>
-                            </CardInfo>
-                            <CardInfo label="Plan code">
-                                {{ plan.code }}
-                            </CardInfo>
-
+                            </TaskGroupLabel>
+                            <div class="ml-auto flex flex-col justify-center gap-2">
+                                <Badge class="ml-auto capitalize gap-1">
+                                    <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
+                                    {{ plan.status_code }}
+                                </Badge>
+                                <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
+                            </div>
                         </div>
-                        <Separator orientation="horizontal" />
-                        <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip">
+
+
+                        <WipBatchAccordion type="multiple" :wip-batch="plan.batch_data" @select="handleGetBatchWip"
+                            :loading="wipLoading">
                             <template #default="{ batch }">
                                 <QCTasksDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                                    @navigate-to="(task) => handlePass(task, batch)">
+                                    :loading="wipLoading" @navigate-to="(task) => handlePass(task, batch)">
                                     <template #item.actions="{ item }">
                                         <TableCell>
                                             <QCTaskDropdownMenu @pass="handlePass(item, batch)"
@@ -254,31 +285,42 @@ onBeforeUnmount(() => {
                                     </div>
                                 </div>
                             </template>
-
+                            <template #fallback="{ batch }">
+                                <DataTableLoader v-if="!batch.tasks" />
+                            </template>
                         </WipBatchAccordion>
+
                     </div>
-                </template>
+                </div>
+            </TaskGroup>
 
-            </template>
-
-            <InfiniteScrollTrigger />
+            <InfiniteScrollTrigger>
+                <WipSkeleton faded/>
+            </InfiniteScrollTrigger>
         </InfiniteScroll>
 
         <!-- fallback for undefined wipTaskGrouped -->
-        <div v-else-if="!wipTaskGrouped"
+        <div v-else-if="!selectedDepartment"
             class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
             <Building class="mx-auto" />
             <h2 class="text-2xl font-bold tracking-tight">No department selected</h2>
             <p class="text-sm text-muted-foreground">click on the toolbar and select a department to
                 start.</p>
         </div>
+
         <!-- fallback for empty array of wipTaskGrouped -->
-        <div v-else class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
+        <div v-else-if="!wipTaskGrouped || !wipTaskGrouped.length && !wipLoading"
+            class=" border border-dashed rounded-md grid min-h-[40vh] p-4 place-content-center text-center">
             <ClipboardCheck class="mx-auto" />
             <h2 class="text-2xl font-bold tracking-tight">No Tasks for Inspection</h2>
             <p class="text-sm text-muted-foreground">There are currently no tasks requiring quality inspection. Check
                 back later
                 for updates.</p>
+        </div>
+
+        <div v-else class="space-y-4">
+            <WipSkeleton />
+            <WipSkeleton faded />
         </div>
 
         <QcTaskDialog v-if="selectedQCTask && departmentKPIs" v-model="showQCTaskDialog" :task="selectedQCTask.task"
