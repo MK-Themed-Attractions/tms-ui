@@ -13,6 +13,10 @@ import { useInventoryStore } from '@/stores/inventoryStore';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import type { WipTask } from '@/types/wip';
+import { EmptyResource } from '@/components/app/empty-resource';
+import { PackageOpen } from 'lucide-vue-next';
+import { Skeleton } from '@/components/ui/skeleton';
+import AllocateSkeleton from './AllocateSkeleton.vue';
 
 const props = withDefaults(defineProps<{
     selectedRoute: string;
@@ -20,10 +24,13 @@ const props = withDefaults(defineProps<{
 }>(), {
     mode: 'add'
 })
-
+const emits = defineEmits<{
+    (e: 'submitted'): void
+}>()
 const inventorySelected = inject(inventorySelectedKey)
 const fetchBom = inject(fetchBomKey)
 const productStore = useProductStore()
+const { loading: productLoading } = storeToRefs(productStore)
 const productBoms = ref<ProductRoutingBOM[]>()
 const inventoryStore = useInventoryStore()
 const { errors: inventoryErrors, loading: inventoryLoading } = storeToRefs(inventoryStore)
@@ -74,6 +81,7 @@ const submit = handleSubmit(async (values) => {
                 if (fetchBom && inventorySelected && inventorySelected.value.batch && inventorySelected.value.plan)
                     await fetchBom(inventorySelected.value.batch)
 
+                emits('submitted')
                 toast.info('BOM Allocation Info', {
                     description: 'BOM successfully allocated'
                 })
@@ -91,6 +99,9 @@ const submit = handleSubmit(async (values) => {
             if (!inventoryErrors.value) {
                 if (fetchBom && inventorySelected && inventorySelected.value.batch && inventorySelected.value.plan)
                     await fetchBom(inventorySelected.value.batch)
+
+                emits('submitted')
+
 
                 toast.info('BOM Allocation Info', {
                     description: 'BOM allocation successfully updated'
@@ -141,7 +152,7 @@ watchEffect(async () => {
 </script>
 <template>
     <form @submit.prevent="submit" class="space-y-4 mt-6">
-        <ul class="grid lg:grid-cols-2 gap-4 items-end">
+        <ul class="grid lg:grid-cols-2 gap-4 items-end" v-if="productBoms && productBoms.length && !productLoading">
             <li v-for="(bom, index) in productBoms" :key="bom.no">
                 <FormField #="{ componentField }" :name="`consumptions[${index}].quantity`">
                     <FormItem>
@@ -166,7 +177,12 @@ watchEffect(async () => {
                 </FormField>
             </li>
         </ul>
-        <ButtonApp type="submit" :loading="inventoryLoading">Allocate</ButtonApp>
+        <EmptyResource v-else-if="!productBoms?.length && !productLoading" title="No BOM Found"
+            description="Seems like there's no BOM for this route, please contact R&D if you think this is a mistake."
+            :icon="PackageOpen" />
+        <AllocateSkeleton v-else />
+        <ButtonApp type="submit" :loading="inventoryLoading">{{ mode === 'add' ? 'Allocate' : 'Update Allocation' }}
+        </ButtonApp>
     </form>
 </template>
 

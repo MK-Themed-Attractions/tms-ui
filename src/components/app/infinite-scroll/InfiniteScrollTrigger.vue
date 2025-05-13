@@ -27,9 +27,12 @@ const { isActive, stop } = useIntersectionObserver(triggerRef, ([{ isIntersectin
 </script>
 
 <template>
-    <div class="min-h-[20dvh] grid place-content-center relative" ref="trigger">
-        <LoaderCircle class="animate-spin" v-if="isActive" />
-
+    <div ref="trigger">
+        <slot v-if="isActive">
+            <div class="min-h-[20dvh] grid place-content-center relative">
+                <LoaderCircle class="animate-spin" />
+            </div>
+        </slot>
         <slot name="noContent" v-else>
             <InfiniteScrollNoContent />
         </slot>
