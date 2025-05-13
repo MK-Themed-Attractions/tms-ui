@@ -41,6 +41,7 @@ import { TaskGroup, TaskGroupImage, TaskGroupLabel } from "@/components/app/task
 import { SectionHeader } from "@/components/app/section-header";
 import { EmptyResource } from "@/components/app/empty-resource";
 import WipSkeleton from "./components/WipSkeleton.vue";
+import { DataTableLoader } from "@/components/app/data-table";
 
 
 const authStore = useAuthStore()
@@ -696,6 +697,9 @@ onBeforeMount(() => {
                     </template>
 
                   </WipTaskDataTable>
+                </template>
+                <template #fallback="{batch}">
+                  <DataTableLoader v-if="!batch.tasks" :col-count="4"/>
                 </template>
               </WipBatchAccordion>
             </div>

@@ -286,7 +286,7 @@ onBeforeUnmount(() => {
                                 </div>
                             </template>
                             <template #fallback="{ batch }">
-                                <DataTableLoader v-if="!batch.tasks" />
+                                <DataTableLoader v-if="!batch.tasks" :col-count="4"/>
                             </template>
                         </WipBatchAccordion>
 
