@@ -18,7 +18,7 @@ import WipTaskDropdown from '@/pages/wip/home/components/WipTaskDropdown.vue';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from '@/types/wip';
 import type { WorkerDepartment } from '@/types/workers';
-import { ArrowRight, Building, Ellipsis, Eye, Layers, Merge, Pencil } from 'lucide-vue-next';
+import { ArrowRight, Building, Ellipsis, Eye, Layers, Merge, Pencil, Wrench } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, provide, ref } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -29,6 +29,8 @@ import { fetchBomKey, inventorySelectedKey, type AllocationMode } from '../data'
 import RouteSelection from '../components/RouteSelection.vue';
 import AllocationForm from '../components/AllocationForm.vue';
 import { EmptyResource } from '@/components/app/empty-resource';
+import { DataTableLoader } from '@/components/app/data-table';
+import WipSkeleton from '@/pages/wip/home/components/WipSkeleton.vue';
 
 
 const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip } = useWip()
@@ -119,6 +121,7 @@ function useWip() {
         wipStore.pointToMicroservice(department.ms_url)
 
         search.value = ''
+        wipTaskGroup.value = []
         const data = await wipStore.getWipPlansByWorkCenters({
             is_accessible: true,
             work_centers: department.work_centers,
@@ -333,18 +336,30 @@ provide(fetchBomKey, fetchBom)
                                     </template>
                                 </InventoryTaskDataTable>
                             </template>
+                            <template #fallback="{ batch }">
+                                <DataTableLoader :col-count="4" v-if="!batch.tasks" />
+                            </template>
                         </WipBatchAccordion>
                     </div>
                 </div>
             </TaskGroup>
-            <InfiniteScrollTrigger />
+            <InfiniteScrollTrigger>
+                <WipSkeleton faded />
+            </InfiniteScrollTrigger>
         </InfiniteScroll>
         <EmptyResource v-else-if="!selectedDepartment" title="No Selected Department" description="click on the toolbar and select a department to
           start" :icon="Building">
         </EmptyResource>
+        <EmptyResource v-else-if="(!wipTaskGroup || wipTaskGroup.length) && !wipLoading" title="No tasks available"
+            description="There are no tasks available at the moment. Please check again later." :icon="Wrench" />
+        <div class="space-y-6" v-else>
+            <WipSkeleton />
+            <WipSkeleton faded />
+        </div>
         <AllocateDialog v-model="showAllocateDialog">
             <RouteSelection v-model="selectedRoute" />
-            <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode" @submitted="showAllocateDialog = false"/>
+            <AllocationForm v-if="selectedRoute" :selected-route="selectedRoute" class="mt-2" :mode="selectedMode"
+                @submitted="showAllocateDialog = false" />
         </AllocateDialog>
     </div>
 </template>
