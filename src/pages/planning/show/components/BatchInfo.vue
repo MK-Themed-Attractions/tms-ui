@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ButtonApp } from "@/components/app/button";
 import { formatReadableDate } from "@/lib/utils";
-import type { PlanBatch } from "@/types/planning";
+import type { Plan, PlanBatch } from "@/types/planning";
 import { Pencil } from "lucide-vue-next";
 import BatchEditDialog from "./BatchEditDialog.vue";
 import { ref } from "vue";
 
 const props = defineProps<{
   batch: PlanBatch;
+  plan: Plan
 }>();
 
 const openEditBatchDialog = ref(false);
@@ -42,21 +43,13 @@ const openEditBatchDialog = ref(false);
       </li>
     </ul>
 
-    <div class="absolute right-0 top-0">
-      <ButtonApp
-        size="icon"
-        variant="secondary"
-        class="h-6 w-6"
-        @click="openEditBatchDialog = true"
-      >
+    <div class="absolute right-0 top-0" v-if="plan.status_code === 'pending'">
+      <ButtonApp size="icon" variant="secondary" class="h-6 w-6" @click="openEditBatchDialog = true">
         <Pencil />
       </ButtonApp>
     </div>
 
-    <BatchEditDialog
-      v-model="openEditBatchDialog"
-      :batch="batch"
-    ></BatchEditDialog>
+    <BatchEditDialog v-model="openEditBatchDialog" :batch="batch"></BatchEditDialog>
   </div>
 </template>
 
