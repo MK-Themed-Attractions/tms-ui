@@ -74,7 +74,7 @@ function useBatch() {
         <div v-if="plan?.batches?.length" class="mt-2">
           <PlanBatchTabs v-model="selectedBatchId" :batches="plan.batches" :loading="batchLoading">
             <template #append>
-              <DropdownMenu>
+              <DropdownMenu v-if="plan.status_code === 'pending'">
                 <DropdownMenuTrigger>
                   <ButtonApp size="icon" variant="ghost">
                     <EllipsisVertical />
@@ -96,9 +96,9 @@ function useBatch() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </template>
-            
+
             <div class="space-y-4">
-              <BatchInfo :batch="batch" v-if="batch" />
+              <BatchInfo :plan="plan" :batch="batch" v-if="batch" />
               <Separator />
               <div v-if="batch?.tasks?.length">
                 <h3 class="mb-2 font-medium">Task information</h3>

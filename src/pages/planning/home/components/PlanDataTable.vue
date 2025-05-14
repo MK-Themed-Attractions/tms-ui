@@ -137,14 +137,18 @@ function useActions() {
               View history
             </RouterLink>
           </DropdownMenuItem>
-          <DropdownMenuItem @click="handleShowAddBatchDialog(item)">
-            <Plus />
-            Add batch
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="handleShowUpdatePlanDialog(item)">
-            <Pencil />
-            Update plan
-          </DropdownMenuItem>
+
+          <template v-if="item.status_code === 'pending'">
+            <DropdownMenuItem @click="handleShowAddBatchDialog(item)">
+              <Plus />
+              Add batch
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleShowUpdatePlanDialog(item)">
+              <Pencil />
+              Update plan
+            </DropdownMenuItem>
+          </template>
+
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Danger zone</DropdownMenuLabel>
           <DropdownMenuItem @click="handleShowDeletePlanConfirmDialog(item)" class="text-destructive">
