@@ -12,3 +12,8 @@ export const planDataColumns: DataTableColumns[] = [
     title: "",
   },
 ];
+
+export type StatusFilter = {
+  id: string;
+  name: string;
+};

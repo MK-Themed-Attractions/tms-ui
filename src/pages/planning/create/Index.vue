@@ -29,6 +29,7 @@ import { toast } from "vue-sonner";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 import PlanFormReviewDialog from "./components/PlanFormReviewDialog.vue";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const props = defineProps<{
   plan?: Plan;
@@ -170,19 +171,22 @@ function useReviewAndAdd() {
 </script>
 <template>
   <div class="container max-w-[50rem]">
-    <form
-      class="grid gap-4 lg:grid-cols-[minmax(10rem,25rem),1fr]"
-      @submit.prevent="submit"
-    >
+    <form class="grid gap-4 lg:grid-cols-[minmax(10rem,25rem),1fr]" @submit.prevent="submit">
       <FormField v-slot="{ componentField }" name="sku">
         <FormItem>
           <FormLabel>Product</FormLabel>
-          <FormDescription
-            >Select the product for which you want to create a
-            plan.</FormDescription
-          >
+          <FormDescription>Select the product for which you want to create a
+            plan.</FormDescription>
           <FormControl>
-            <FormProductInput v-bind="componentField" />
+            <Suspense>
+              <FormProductInput v-bind="componentField" />
+              <template #fallback>
+                <div class="space-y-2">
+                  <Skeleton class="h-10"></Skeleton>
+                  <Skeleton class="h-[20rem]"></Skeleton>
+                </div>
+              </template>
+            </Suspense>
             <FormMessage />
           </FormControl>
         </FormItem>
@@ -210,8 +214,7 @@ function useReviewAndAdd() {
         <FormField v-slot="{ componentField }" name="plan_data.is_prototype">
           <FormItem>
             <FormLabel>Plan type</FormLabel>
-            <FormDescription
-              >Choose the appropriate plan to run in production.
+            <FormDescription>Choose the appropriate plan to run in production.
             </FormDescription>
             <FormControl>
               <FormProductPlanType v-bind="componentField" />
@@ -229,24 +232,15 @@ function useReviewAndAdd() {
           individual task.
         </p>
 
-        <div
-          class="space-y-4 rounded-md border p-4 text-sm shadow"
-          v-if="controlledValues.sku"
-        >
-          <ButtonApp variant="secondary" @click="handleAddBatch" class="w-fit"
-            ><Plus /> Add batch</ButtonApp
-          >
+        <div class="space-y-4 rounded-md border p-4 text-sm shadow" v-if="controlledValues.sku">
+          <ButtonApp variant="secondary" @click="handleAddBatch" class="w-fit">
+            <Plus /> Add batch
+          </ButtonApp>
 
           <ul class="space-y-1">
-            <li
-              v-for="(batch, index) in batchFields"
-              :key="batch.key"
-              class="flex flex-wrap items-start gap-3 rounded-md border p-2"
-            >
-              <FormField
-                :name="`batches[${index}].qty`"
-                v-slot="{ componentField }"
-              >
+            <li v-for="(batch, index) in batchFields" :key="batch.key"
+              class="flex flex-wrap items-start gap-3 rounded-md border p-2">
+              <FormField :name="`batches[${index}].qty`" v-slot="{ componentField }">
                 <FormItem class="shrink">
                   <FormLabel>Quantity</FormLabel>
                   <FormControl>
@@ -255,10 +249,7 @@ function useReviewAndAdd() {
                   <FormMessage />
                 </FormItem>
               </FormField>
-              <FormField
-                :name="`batches[${index}].start_date`"
-                v-slot="{ componentField }"
-              >
+              <FormField :name="`batches[${index}].start_date`" v-slot="{ componentField }">
                 <FormItem class="shrink">
                   <FormLabel>Access Date</FormLabel>
 
@@ -268,25 +259,16 @@ function useReviewAndAdd() {
                   <FormMessage />
                 </FormItem>
               </FormField>
-              <FormField
-                :name="`batches[${index}].start_operation`"
-                v-slot="{ componentField }"
-              >
+              <FormField :name="`batches[${index}].start_operation`" v-slot="{ componentField }">
                 <FormItem class="grow">
                   <FormLabel>Start route</FormLabel>
                   <template v-if="filteredRoutings && filteredRoutings.length">
                     <FormControl>
-                      <FormRoutingSelectInput
-                        v-bind="componentField"
-                        :routings="filteredRoutings"
-                      />
+                      <FormRoutingSelectInput v-bind="componentField" :routings="filteredRoutings" />
                     </FormControl>
                     <FormMessage />
                   </template>
-                  <div
-                    v-else
-                    class="flex w-fit items-center gap-2 rounded-md border p-2"
-                  >
+                  <div v-else class="flex w-fit items-center gap-2 rounded-md border p-2">
                     <TriangleAlert :size="17" />
                     <p>
                       No Routing available for
@@ -298,50 +280,31 @@ function useReviewAndAdd() {
                 </FormItem>
               </FormField>
               <div class="flex max-w-[50rem] flex-col gap-1">
-                <ButtonApp
-                  size="icon"
-                  variant="ghost"
-                  class="h-6 w-6"
-                  @click.stop="handleRemoveBatch(index)"
-                >
+                <ButtonApp size="icon" variant="ghost" class="h-6 w-6" @click.stop="handleRemoveBatch(index)">
                   <Trash class="stroke-destructive" />
                 </ButtonApp>
               </div>
             </li>
           </ul>
         </div>
-        <div
-          v-else
-          class="rounded-md border border-dashed p-4 text-center text-xs"
-        >
+        <div v-else class="rounded-md border border-dashed p-4 text-center text-xs">
           <Info :size="15" class="mx-auto" />
           <p>Select a product to start adding tasks.</p>
         </div>
       </div>
       <div class="col-span-full text-end">
-        <FormSubmitButton
-          :disabled="Object.keys(errors).length"
-          @add="handlePlanReviewConfirmed"
-          :loading="planLoading"
-        >
-          <ButtonApp
-            class="px-3 shadow-none"
-            :disabled="Object.keys(errors).length || planLoading"
-            @click="handleReviewAndAdd"
-            :loading="planLoading"
-            >Review & Add
+        <FormSubmitButton :disabled="Object.keys(errors).length" @add="handlePlanReviewConfirmed"
+          :loading="planLoading">
+          <ButtonApp class="px-3 shadow-none" :disabled="Object.keys(errors).length || planLoading"
+            @click="handleReviewAndAdd" :loading="planLoading">Review & Add
           </ButtonApp>
         </FormSubmitButton>
       </div>
     </form>
 
-    <PlanFormReviewDialog
-      @yes="handlePlanReviewConfirmed"
-      v-if="product?.routings"
-      v-model:open="showConfirmationDialog"
-      :routings="product.routings"
-      :plan-form-values="planFormValues as PlanForm"
-    />
+    <PlanFormReviewDialog @yes="handlePlanReviewConfirmed" v-if="product?.routings"
+      v-model:open="showConfirmationDialog" :routings="product.routings"
+      :plan-form-values="planFormValues as PlanForm" />
   </div>
 </template>
 
