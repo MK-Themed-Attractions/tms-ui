@@ -705,6 +705,7 @@ onBeforeMount(() => {
             </div>
           </div>
         </TaskGroup>
+
         <InfiniteScrollTrigger>
           <WipSkeleton faded />
         </InfiniteScrollTrigger>
@@ -717,8 +718,9 @@ onBeforeMount(() => {
       </EmptyResource>
 
       <!-- fallback for empty wip -->
-      <EmptyResource v-else-if="!wipTasksGrouped || wipTasksGrouped.length && !wipLoading" title="No tasks available"
+      <EmptyResource v-else-if="!wipTasksGrouped || !wipTasksGrouped.length && !wipLoading" title="No tasks available"
         description="There are no tasks available at the moment. Please check again later." :icon="Wrench" />
+
       <div class="space-y-6" v-else>
         <WipSkeleton />
         <WipSkeleton faded />
