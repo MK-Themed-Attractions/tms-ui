@@ -2,7 +2,7 @@
 import { FilterApp } from "@/components/app/filter";
 import PlanToolbar from "./components/PlanToolbar.vue";
 import { planDataColumns, type StatusFilter } from "./components/data";
-import { ref, watchEffect } from "vue";
+import { ref, watch, watchEffect } from "vue";
 import { Plus } from "lucide-vue-next";
 import { usePlanStore } from "@/stores/planStore";
 import PlanDataTable from "./components/PlanDataTable.vue";
@@ -17,20 +17,21 @@ import { useToastUIStore } from "@/stores/ui/toastUIStore";
 import { useAuthStore } from "@/stores/authStore";
 import { SectionHeader } from "@/components/app/section-header";
 import PlanStatusFilter from "./components/PlanStatusFilter.vue";
+import { ButtonApp } from "@/components/app/button";
 
+const search = ref<string>()
 const planStore = usePlanStore();
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const route = useRoute()
 const { filter, getPlans, plans, handleGetPlansWithPagination, hasNextPage, hasPrevPage, handleDeletePlan } = usePlan();
-const search = ref<string>()
 
 function usePlan() {
   const filter = ref<StatusFilter[]>([]);
-  watchEffect(async () => {
-
+  watch(filter, async () => {
     await getPlans({ page: 1 })
   },)
+
   const toastUIStore = useToastUIStore()
 
   const { plans, hasNextPage, hasPrevPage, errors: planErrors } = storeToRefs(planStore);
@@ -40,10 +41,6 @@ function usePlan() {
       filters: [{
         column: 'status_code',
         values: filter.value.map(f => f.name)
-      },
-      {
-        column: 'plan_data.is_prototype',
-        values: ['true']
       }],
       page: route.query.page ? +route.query.page : undefined,
       per_page: route.query['per-page'] ? route.query['per-page'].toString() : undefined,
