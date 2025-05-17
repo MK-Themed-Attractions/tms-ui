@@ -28,10 +28,8 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData } from "@/components/app/input-filter";
-import { searchFilterData, selectedDepartmentKey, workCentersKey } from "../data";
+import { searchFilterData, selectedDepartmentKey, workCentersKey, type SelectedDateRange } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
 import { RouterLink } from "vue-router";
@@ -42,6 +40,8 @@ import { SectionHeader } from "@/components/app/section-header";
 import { EmptyResource } from "@/components/app/empty-resource";
 import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
+import WipDateFilter from "./components/WipDateFilter.vue";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const authStore = useAuthStore()
@@ -78,7 +78,7 @@ const { handleFinishTask,
   selectedOperation,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
-const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, tasksForTodayOnly, fetchWipPlansNext, page } = useTaskStatusFilter()
+const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, selectedDateRange, fetchWipPlansNext, page } = useTaskStatusFilter()
 
 function useWip() {
   const { loading: wipLoading } = storeToRefs(wipStore);
@@ -104,7 +104,7 @@ function useWip() {
 
   async function fetchBatchWip(batch: WipBatch) {
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, is_accessible: tasksForTodayOnly.value, }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, startDate: selectedDateRange.value?.start, endDate: selectedDateRange.value?.end }
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
@@ -442,7 +442,7 @@ function useTaskStatusFilter() {
   const selectedTaskStatusFilter = ref<TaskStatus>()
   const search = ref('')
   const filter = ref<InputFilterDropdownData>(searchFilterData[0])
-  const tasksForTodayOnly = ref(true)
+  const selectedDateRange = ref<SelectedDateRange>()
   const page = ref(1)
 
   async function handleGetWIpsWithFilter() {
@@ -454,7 +454,8 @@ function useTaskStatusFilter() {
       await fetchWipPlans({
         work_centers: workCenters.value,
         filter: selectedTaskStatusFilter.value,
-        is_accessible: tasksForTodayOnly.value,
+        startDate: selectedDateRange.value?.start,
+        endDate: selectedDateRange.value?.end,
         page: page.value
       })
       return;
@@ -465,7 +466,8 @@ function useTaskStatusFilter() {
       work_centers: workCenters.value,
       filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
       keyword: search.value,
-      is_accessible: tasksForTodayOnly.value,
+      startDate: selectedDateRange.value?.start,
+      endDate: selectedDateRange.value?.end,
       page: page.value
     })
 
@@ -476,7 +478,8 @@ function useTaskStatusFilter() {
     const params: Partial<WipPlanQueryParams> = {
       work_centers: workCenters.value,
       page: ++page.value,
-      is_accessible: tasksForTodayOnly.value,
+      startDate: selectedDateRange.value?.start,
+      endDate: selectedDateRange.value?.end,
       filter: selectedTaskStatusFilter.value,
     }
     if (search.value.trim()) {
@@ -494,8 +497,9 @@ function useTaskStatusFilter() {
     if (!selectedDepartment.value) return;
     await handleGetWIpsWithFilter()
   })
-  watch(tasksForTodayOnly, async (newValue) => {
+  watch(selectedDateRange, async (newValue) => {
     if (!selectedDepartment.value) return;
+
     await handleGetWIpsWithFilter()
   })
 
@@ -504,7 +508,7 @@ function useTaskStatusFilter() {
     handleGetWIpsWithFilter,
     search,
     filter,
-    tasksForTodayOnly,
+    selectedDateRange,
     page,
     fetchWipPlansNext
   }
@@ -540,7 +544,8 @@ async function handleDepartmentSelectionChange(department: WorkerDepartment) {
   await fetchWipPlans({
     work_centers: workCenters.value,
     filter: selectedTaskStatusFilter.value,
-    is_accessible: tasksForTodayOnly.value,
+    startDate: selectedDateRange.value?.start,
+    endDate: selectedDateRange.value?.end,
     page: page.value
   });
 }
@@ -573,16 +578,10 @@ onBeforeMount(() => {
             :disabled="!selectedDepartment" @submit="handleGetWIpsWithFilter" :loading="wipLoading || authLoading">
           </InputFilter>
 
-          <div class="basis-full">
+          <div class="basis-full inline-flex justify-between flex-wrap gap-4">
             <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading || authLoading"
               :disabled="!selectedDepartment" />
-          </div>
-
-          <div class="ml-auto">
-            <div class="flex items-center gap-2">
-              <Label for="task-today">Show today&apos;s tasks</Label>
-              <Switch id="task-today" v-model="tasksForTodayOnly" :disabled="wipLoading || authLoading" />
-            </div>
+            <WipDateFilter v-model="selectedDateRange" :loading="wipLoading" />
           </div>
         </template>
 
@@ -698,8 +697,8 @@ onBeforeMount(() => {
 
                   </WipTaskDataTable>
                 </template>
-                <template #fallback="{batch}">
-                  <DataTableLoader v-if="!batch.tasks" :col-count="4"/>
+                <template #fallback="{ batch }">
+                  <DataTableLoader v-if="!batch.tasks" :col-count="4" />
                 </template>
               </WipBatchAccordion>
             </div>

@@ -1,6 +1,7 @@
 import type { DataTableColumns } from "@/components/app/data-table";
 import type { InputFilterDropdownData } from "@/components/app/input-filter";
 import type { WorkerDepartment } from "@/types/workers";
+import type { DateValue } from "reka-ui";
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter } from "vue";
 
 export const wipWorkerDataTableColumns: DataTableColumns[] = [
@@ -36,3 +37,16 @@ export const workCentersKey = Symbol() as InjectionKey<
 export const selectedDepartmentKey = Symbol() as InjectionKey<
   ComputedRef<WorkerDepartment | undefined>
 >;
+
+export type WipDateFilterType =
+  | "today"
+  | "yesterday"
+  | "this-week"
+  | "last-week"
+  | "this-month"
+  | "last-month"
+  | "custom";
+export type SelectedDateRange = {
+  start: DateValue;
+  end: DateValue;
+};
