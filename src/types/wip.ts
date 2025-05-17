@@ -1,3 +1,4 @@
+import type { DateValue } from "reka-ui";
 import type { QueryParams } from "./general";
 import type { InventoryAllocatedBom } from "./inventory";
 import type { PlanBatch, PlanStatus, PlanStatusCode } from "./planning";
@@ -101,7 +102,8 @@ export interface WipPlanQueryParams {
   filterBy: "product-sku" | "plan-code";
   pages: number | string; //per page
   page: string | number;
-  is_accessible: boolean | number;
+  startDate?: DateValue;
+  endDate?: DateValue;
 }
 
 export interface WipTaskQueryParams {
@@ -109,7 +111,8 @@ export interface WipTaskQueryParams {
   keyword: string;
   pages: number;
   operation_code: string[];
-  is_accessible: boolean | number;
+  startDate?: DateValue;
+  endDate?: DateValue;
 }
 
 export interface WorkerTasksQueryParams extends QueryParams {
