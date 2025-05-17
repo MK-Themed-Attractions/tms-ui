@@ -2,7 +2,7 @@
 import { useWipStore } from '@/stores/wipStore';
 import Toolbar from './components/Toolbar.vue';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onBeforeUnmount, ref, watchEffect } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch, watchEffect } from 'vue';
 import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
 import { formatReadableDate, getIconByPlanStatus, getS3Link } from '@/lib/utils';
@@ -28,6 +28,8 @@ import Badge from '@/components/ui/badge/Badge.vue';
 import { DataTableLoader } from '@/components/app/data-table';
 import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import WipSkeleton from '@/pages/wip/home/components/WipSkeleton.vue';
+import WipDateFilter from '@/pages/wip/home/components/WipDateFilter.vue';
+import type { SelectedDateRange } from '@/pages/wip/data';
 
 const authStore = useAuthStore()
 const { loading: authLoading } = storeToRefs(authStore)
@@ -45,7 +47,8 @@ const {
     page,
     getNextTaskByWorkCenters,
     selectedBatch,
-    workCenters } = useWip()
+    workCenters,
+    selectedDateRange } = useWip()
 const { handleFail, handlePass, selectedQCTask, showQCTaskDialog, departmentKPIs, getDepartmentKPIs } = useQC()
 const { hadInspected } = useTaskControls()
 const workerDepartmentStore = useWorkerDepartmentStore()
@@ -58,29 +61,47 @@ function useWip() {
     const search = ref<string>()
     const filter = ref<InputFilterDropdownData>(searchFilterData[0])
     const page = ref(1)
+    const selectedDateRange = ref<SelectedDateRange>()
+
+    watch(selectedDateRange, async (newValue) => {
+        if (!selectedDepartment.value) return;
+
+        await getTasksByWorkCentersWithFilter()
+    })
 
     const { loading: wipLoading } = storeToRefs(wipStore)
     const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
 
     //Get all DONE plans > batches > tasks  
     async function getTasksByWorkCenters(params?: Partial<WipPlanQueryParams>) {
-        const res = await wipStore.getWipPlansByWorkCenters({ work_centers: workCenters.value, filter: 'done', page: page.value, ...params })
+        const res = await wipStore.getWipPlansByWorkCenters({
+            work_centers: workCenters.value,
+            filter: 'done',
+            page: page.value,
+            ...params
+        })
         if (res) wipTaskGrouped.value?.push(...res)
 
         return res
     }
 
     //get all DONE plans > batches > tabs with filtering
-    async function getTasksByWorkCentersWithFilter(data: InputFilterSearchData) {
+    async function getTasksByWorkCentersWithFilter() {
 
-        //if theres no search keyword refetch the selected department 
-        if (!data.search.trim() && workCenters) {
-            await getTasksByWorkCenters({ page: 1 })
-            return;
+        wipTaskGrouped.value = []
+        page.value = 1
+        const params: Partial<WipPlanQueryParams> = {}
+
+        if (search.value) {
+            params.keyword = search.value;
+            params.filterBy = <"product-sku" | "plan-code">filter.value.key
+        } else {
+            params.startDate = selectedDateRange.value?.start
+            params.endDate = selectedDateRange.value?.end
         }
 
         //reset the page to 1 everytime filter is applied
-        const res = await wipStore.getWipPlansByWorkCenters({ keyword: search.value, filterBy: <"product-sku" | "plan-code">filter.value.key, work_centers: workCenters.value })
+        const res = await getTasksByWorkCenters(params)
         if (res) wipTaskGrouped.value = res;
     }
 
@@ -136,7 +157,8 @@ function useWip() {
         search,
         filter,
         page,
-        workCenters
+        workCenters,
+        selectedDateRange
     }
 }
 
@@ -217,6 +239,10 @@ onBeforeUnmount(() => {
                     :loading="wipLoading || authLoading" @submit="getTasksByWorkCentersWithFilter"
                     :disabled="!selectedDepartment">
                 </InputFilter>
+
+                <div class="basis-full flex justify-end">
+                    <WipDateFilter v-model="selectedDateRange" :disabled="Boolean(search)" :loading="wipLoading" />
+                </div>
             </template>
         </Toolbar>
 
@@ -286,7 +312,7 @@ onBeforeUnmount(() => {
                                 </div>
                             </template>
                             <template #fallback="{ batch }">
-                                <DataTableLoader v-if="!batch.tasks" :col-count="4"/>
+                                <DataTableLoader v-if="!batch.tasks" :col-count="4" />
                             </template>
                         </WipBatchAccordion>
 
@@ -295,7 +321,7 @@ onBeforeUnmount(() => {
             </TaskGroup>
 
             <InfiniteScrollTrigger>
-                <WipSkeleton faded/>
+                <WipSkeleton faded />
             </InfiniteScrollTrigger>
         </InfiniteScroll>
 
