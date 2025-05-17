@@ -12,7 +12,8 @@ import { endOfMonth, endOfWeek, getLocalTimeZone, startOfMonth, startOfWeek, tod
 import { Skeleton } from '@/components/ui/skeleton';
 
 const props = defineProps<{
-    loading?: boolean
+    loading?: boolean,
+    disabled?: boolean
 }>()
 
 const emits = defineEmits<{
@@ -97,7 +98,7 @@ watch(selectedDateRange, (newValue) => {
     <div>
         <div class="flex w-fit border rounded-md overflow-hidden" v-if="!loading">
             <Select v-model="selectedDate">
-                <SelectTrigger class="w-[10rem] border-none p-0 h-6 self-center rounded-none mx-3 ">
+                <SelectTrigger class="w-[10rem] border-none p-0 h-6 self-center rounded-none mx-3" :disabled="disabled">
                     <SelectValue class="text-xs font-medium" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,7 +116,8 @@ watch(selectedDateRange, (newValue) => {
             </div>
             <Popover v-model:open="openRangeDate">
                 <PopoverTrigger>
-                    <Button variant="ghost" size="icon" class="rounded-none" :class="{ 'bg-primary': openRangeDate }">
+                    <Button variant="ghost" size="icon" class="rounded-none" :class="{ 'bg-primary': openRangeDate }"
+                        :disabled="disabled">
                         <CalendarRange
                             :class="{ 'stroke-white': openRangeDate, 'stroke-muted-foreground': !openRangeDate }" />
                     </Button>

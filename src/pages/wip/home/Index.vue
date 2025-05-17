@@ -104,9 +104,15 @@ function useWip() {
 
   async function fetchBatchWip(batch: WipBatch) {
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, startDate: selectedDateRange.value?.start, endDate: selectedDateRange.value?.end }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value }
+
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
+
+    if (!search.value) {
+      params.startDate = selectedDateRange.value?.start
+      params.endDate = selectedDateRange.value?.end
+    }
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
     if (res) {
@@ -445,31 +451,32 @@ function useTaskStatusFilter() {
   const selectedDateRange = ref<SelectedDateRange>()
   const page = ref(1)
 
+
+
   async function handleGetWIpsWithFilter() {
     page.value = 1;
     wipTasksGrouped.value = []
 
-    /* if search keyword is empty refetch plans */
-    if (!search.value.trim()) {
-      await fetchWipPlans({
-        work_centers: workCenters.value,
-        filter: selectedTaskStatusFilter.value,
-        startDate: selectedDateRange.value?.start,
-        endDate: selectedDateRange.value?.end,
-        page: page.value
-      })
-      return;
+    const params: Partial<WipPlanQueryParams> = {
+      work_centers: workCenters.value,
+      filter: selectedTaskStatusFilter.value,
+      page: page.value
     }
 
-    /* refetch plans with applied filters */
-    await fetchWipPlans({
-      work_centers: workCenters.value,
-      filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
-      keyword: search.value,
-      startDate: selectedDateRange.value?.start,
-      endDate: selectedDateRange.value?.end,
-      page: page.value
-    })
+    /* if search keyword is empty refetch plans with date filter */
+    if (!search.value.trim()) {
+      params.startDate = selectedDateRange.value?.start
+      params.endDate = selectedDateRange.value?.end
+
+    }
+    else {
+      /* refetch plans with applied filters ignoring date filter */
+      params.filterBy = filter.value?.key as WipPlanQueryParams['filterBy']
+      params.keyword = search.value;
+    }
+
+
+    await fetchWipPlans(params)
 
 
   }
@@ -581,7 +588,7 @@ onBeforeMount(() => {
           <div class="basis-full inline-flex justify-between flex-wrap gap-4">
             <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading || authLoading"
               :disabled="!selectedDepartment" />
-            <WipDateFilter v-model="selectedDateRange" :loading="wipLoading" />
+            <WipDateFilter v-model="selectedDateRange" :loading="wipLoading" :disabled="Boolean(search)" />
           </div>
         </template>
 
@@ -620,12 +627,12 @@ onBeforeMount(() => {
                     {{ product.sku }}
                   </RouterLink>
                 </TaskGroupLabel>
-                <div class="ml-auto flex flex-col justify-center gap-2">
-                  <Badge class="ml-auto capitalize gap-1">
+                <div class="ml-auto flex flex-col justify-center ">
+                  <Badge class="ml-auto capitalize gap-1 bg-white" variant="outline">
                     <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
                     {{ plan.status_code }}
                   </Badge>
-                  <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
+                  <p class="text-xs text-muted-foreground text-end mr-2">Plan Status</p>
                 </div>
               </div>
 
