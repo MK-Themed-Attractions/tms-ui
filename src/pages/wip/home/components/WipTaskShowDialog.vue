@@ -7,7 +7,7 @@ import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import { formatReadableDate, getIconByTaskStatus } from '@/lib/utils';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipTask } from '@/types/wip';
-import { AlertCircle, CheckCircle, Delete, Flag, History, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
+import { AlertCircle, CheckCircle, Delete, Flag, History, LoaderCircle, Pause, Play, Plus, Printer, Trash, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { inject, ref, watch } from 'vue';
 import { useTaskControls } from '../../../../composables/useTaskControls';
@@ -198,10 +198,15 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 class="shadow-sm flex flex-wrap flex-col md:max-h-[12rem] border rounded-md p-4 [&>*:nth-child(even)]:mb-2 [&>*:nth-child(even)]:font-medium [&>*:nth-child(odd)]:text-muted-foreground">
                 <span>Track History</span>
                 <RouterLink :to="trackHistory" target="_blank">
-                    <Badge class="px-2 gap-1">
+                    <ButtonApp class="px-2 gap-2 h-6" size="sm">
                         <History class="size-4" /> Go to history
-                    </Badge>
+                    </ButtonApp>
                 </RouterLink>
+
+                <span>Bill of Materials</span>
+                <ButtonApp size="sm" class="px-2 gap-2 h-6 w-fit" @click="showBomDialog = true">
+                    <Printer /> View/Print
+                </ButtonApp>
 
                 <span>Product SKU:</span> <span>{{ task.sku }}</span>
 
@@ -214,14 +219,13 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 <span>Planned start date:</span> <span>{{ formatReadableDate(task.can_accessed_at) }}</span>
 
                 <span>Status:</span>
-                <Badge class="w-fit gap-1 capitalize">
+                <Badge class="w-fit gap-1 capitalize" variant="secondary">
                     <component :is="getIconByTaskStatus(task.status)" class="size-4" /> {{ task.status }}
                 </Badge>
 
                 <span>Required manpower:</span> <span>{{ task.manpower }}</span>
 
-                <span>Bill of Materials</span>
-                <ButtonApp size="sm" class="h-6" @click="showBomDialog = true">View/Print</ButtonApp>
+
             </div>
             <div class="border rounded-md shadow-sm p-4">
                 <div class="flex items-center justify-between gap-2  mb-2">

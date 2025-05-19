@@ -42,7 +42,9 @@ watchEffect(() => {
                     start: currentDate.subtract({
                         days: 1
                     }),
-                    end: currentDate
+                    end: currentDate.subtract({
+                        days: 1
+                    })
                 }
                 break;
             case 'last-week':
