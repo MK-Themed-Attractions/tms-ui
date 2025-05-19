@@ -2,7 +2,7 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
+import type { TaskStatus, WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData } from "@/components/app/input-filter";
-import { searchFilterData, selectedDepartmentKey, workCentersKey, type SelectedDateRange } from "../data";
+import { searchFilterData, selectedDepartmentKey, selectedPlanKey, workCentersKey, type SelectedDateRange } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
@@ -41,7 +41,6 @@ import { EmptyResource } from "@/components/app/empty-resource";
 import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
 import WipDateFilter from "./components/WipDateFilter.vue";
-import { Skeleton } from "@/components/ui/skeleton";
 
 
 const authStore = useAuthStore()
@@ -60,7 +59,8 @@ const { fetchWipPlans,
   handleShowMultipleTaskAssignDialog,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog,
-  selectedOperationCode } = useWip();
+  selectedOperationCode,
+  selectedPlan } = useWip();
 const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
 const { handleShowWipDialog, showWipDialog } = useWipShow()
@@ -87,6 +87,8 @@ function useWip() {
   const selectedTaskIds = ref<string[]>([])
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
+
+  const selectedPlan = ref<WipPlan>()
 
   //task operation for single task show
   const selectedOperationCode = ref<ProductRoutingWorkCenterType>()
@@ -202,6 +204,7 @@ function useWip() {
     selectedTaskIds,
     selectedTaskPlanId,
     selectedOperationCode,
+    selectedPlan,
     handleSingleTaskAssign,
     handleMultipleTaskAssign,
     handleShowSingleTaskAssignDialog,
@@ -224,7 +227,8 @@ function useWorker() {
 function useWipShow() {
   const showWipDialog = ref(false)
 
-  function handleShowWipDialog(task: WipTask, batch: WipBatch) {
+  function handleShowWipDialog(task: WipTask, batch: WipBatch, plan: WipPlan) {
+    selectedPlan.value = plan;
     handleSingleTaskAssign(task, batch)
 
     showWipDialog.value = true;
@@ -561,6 +565,7 @@ async function handleDepartmentSelectionChange(department: WorkerDepartment) {
 provide(batchWipSuccessKey, fetchBatchWip)
 provide(workCentersKey, workCenters)
 provide(selectedDepartmentKey, computed(() => selectedDepartment.value))
+provide(selectedPlanKey, computed(() => selectedPlan.value))
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
@@ -640,7 +645,7 @@ onBeforeMount(() => {
                 :loading="wipLoading">
                 <template #default="{ batch }">
                   <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                    @select="(task) => handleShowWipDialog(task, batch)">
+                    @select="(task) => handleShowWipDialog(task, batch, plan)">
 
                     <template #action.header>
                       <TableCell>
@@ -740,6 +745,7 @@ onBeforeMount(() => {
 
     <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
       :batch="assigningBatch.batch" :task-id="selectedTaskPlanId" :operation-code="selectedOperationCode">
+
     </WipTaskShowDialog>
 
     <!-- confirmation dialog for batch's tasks change status -->

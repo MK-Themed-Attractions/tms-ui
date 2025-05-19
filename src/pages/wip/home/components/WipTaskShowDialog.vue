@@ -18,6 +18,7 @@ import WorkerAssignDialog from './WorkerAssignDialog.vue';
 import type { RouteLocationAsRelativeGeneric } from 'vue-router';
 import { computed } from '@vue/reactivity';
 import type { ProductRoutingWorkCenterType } from '@/types/products';
+import BomInfoDialog from './BomInfoDialog.vue';
 
 const dialog = defineModel({ default: false })
 
@@ -41,6 +42,7 @@ const task = ref<WipTask>()
 const selectedTaskIds = ref<string[]>()
 const madeChanges = ref(false) //this will determine if batchTask should re-fetch or not 
 const fetchBatchTasks = inject(batchWipSuccessKey);
+const showBomDialog = ref(false)
 
 
 /* fetch the task when dialog is opened
@@ -217,6 +219,9 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 </Badge>
 
                 <span>Required manpower:</span> <span>{{ task.manpower }}</span>
+
+                <span>Bill of Materials</span>
+                <ButtonApp size="sm" class="h-6" @click="showBomDialog = true">View/Print</ButtonApp>
             </div>
             <div class="border rounded-md shadow-sm p-4">
                 <div class="flex items-center justify-between gap-2  mb-2">
@@ -283,6 +288,8 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 </div>
             </div>
         </DialogScrollContent>
+
+        <BomInfoDialog v-if="task" v-model="showBomDialog" :task="task" />
 
         <ConfirmationDialog v-model="showWorkerRemoveConfirmDialog" @yes="handleRemoveWorker" title="Remove worker"
             description="Removing this worker will result in their points not being recorded.">
