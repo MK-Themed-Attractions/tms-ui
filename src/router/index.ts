@@ -16,6 +16,7 @@ import { workerDashboard } from "./workerDashboard";
 import { errorPages } from "./errorPages";
 import { outputPosting } from "./outputPosting";
 import { inventory } from "./inventory";
+import { printRoutes } from "./prints";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -84,6 +85,7 @@ const router = createRouter({
     },
     ...auth,
     ...workerDashboard,
+    ...printRoutes
   ],
 });
 
