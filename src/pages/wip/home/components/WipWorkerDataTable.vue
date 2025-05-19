@@ -17,11 +17,11 @@ const emits = defineEmits<{
     (e: 'change', workers: Worker[]): void
 }>()
 const workerStore = useWorkerStore()
+const { workers } = storeToRefs(workerStore)
 const { hasNextPage, hasPrevPage, loading } = storeToRefs(workerStore)
-const workCenters = inject(workCentersKey);
 const selectedDepartment = inject(selectedDepartmentKey);
 
-const workers = workerStore.assignableWorkers(workCenters!.value || [])
+// const workers = workerStore.assignableWorkers(workCenters!.value || [])
 
 const params = computed<Partial<WorkerQueryParams>>(() => {
     const departmentID = selectedDepartment && selectedDepartment.value ? selectedDepartment.value.id : ''
@@ -29,6 +29,9 @@ const params = computed<Partial<WorkerQueryParams>>(() => {
     return {
         filters: [
             {
+                column: 'is_active',
+                values: ['true']
+            }, {
                 column: 'department_id',
                 values: [departmentID]
             }

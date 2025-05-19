@@ -30,10 +30,15 @@ import WorkerBatchOperationDropdown from './components/WorkerBatchOperationDropd
 import { ImageApp } from '@/components/app/image';
 import { TaskGroupLabel } from '@/components/app/task-group';
 import type { WorkerTaskPriority } from '../../../types/wip';
+import { useRouter } from 'vue-router';
+import { useProductStore } from '@/stores/productStore';
+import { useToastUIStore } from '@/stores/ui/toastUIStore';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
+const productStore = useProductStore()
+const router = useRouter()
 const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
@@ -235,7 +240,14 @@ function useBatchOperation() {
      * @param task 
      */
     async function handleTaskOperation(taskOperationType: TaskOperationType, task: WipTask) {
-        await changeTaskStatus(taskOperationType, [task.id])
+        if (taskOperationType === 'print') {
+            const t = toast.loading('Please wait', {
+                description: 'Generating BOM, please wait...'
+            })
+            useToastUIStore().setToast(t)
+            await printBom(task)
+        } else
+            await changeTaskStatus(taskOperationType, [task.id])
     }
 
     /**
@@ -328,6 +340,30 @@ function usePriorityDialog() {
         priorityTask,
         handlePriorityConfirm
     }
+}
+
+async function printBom(task: WipTask) {
+    const planCode = workerTasksInfiniteScroll.value.find(wt => wt.plan_id === task.plan_id)?.code
+    const product = await productStore.getProduct(task.sku, {
+        includes: 'routings'
+    })
+    const boms = await productStore.getProductRoutingBom(task.sku, {
+        routing_link_code: task.operation_code
+    })
+    useToastUIStore().dismissLastAddedToast()
+    const routing = computed(() => product?.routings?.find(r => r.operation_code === task.operation_code))
+
+    const routeData = router.resolve({
+        name: 'printBom', query: {
+            planCode: planCode,
+            product: JSON.stringify(product),
+            routing: JSON.stringify(routing.value),
+            task: JSON.stringify(task),
+            boms: JSON.stringify(boms)
+        }
+    })
+
+    window.open(routeData.href, '_blank')
 }
 
 onMounted(() => {
