@@ -121,7 +121,9 @@ function useWip() {
     async function fetchBatchWip(batch: WipBatch) {
         const res = await wipStore.getTasksByBatchId(batch.batch_id, {
             filter: 'done',
-            operation_code: workCenters.value
+            operation_code: workCenters.value,
+            startDate: selectedDateRange.value?.start,
+            endDate: selectedDateRange.value?.end,
         })
 
         if (res) {

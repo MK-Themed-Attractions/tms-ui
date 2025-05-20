@@ -11,7 +11,7 @@ import DropdownMenuLabel from '@/components/ui/dropdown-menu/DropdownMenuLabel.v
 import DropdownMenuSeparator from '@/components/ui/dropdown-menu/DropdownMenuSeparator.vue';
 import TableCell from '@/components/ui/table/TableCell.vue';
 import { formatReadableDate, getIconByPlanStatus, getS3Link } from '@/lib/utils';
-import { searchFilterData } from '@/pages/wip/data';
+import { searchFilterData, type SelectedDateRange } from '@/pages/wip/data';
 import Toolbar from '@/pages/wip/home/components/Toolbar.vue';
 import WipBatchAccordion from '@/pages/wip/home/components/WipBatchAccordion.vue';
 import WipTaskDropdown from '@/pages/wip/home/components/WipTaskDropdown.vue';
@@ -20,7 +20,7 @@ import type { WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, Wi
 import type { WorkerDepartment } from '@/types/workers';
 import { ArrowRight, Building, Ellipsis, Eye, Layers, Merge, Pencil, Wrench } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { computed, provide, ref } from 'vue';
+import { computed, provide, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useInventoryStore } from '@/stores/inventoryStore';
 import InventoryTaskDataTable from '../components/InventoryTaskDataTable.vue';
@@ -31,9 +31,10 @@ import AllocationForm from '../components/AllocationForm.vue';
 import { EmptyResource } from '@/components/app/empty-resource';
 import { DataTableLoader } from '@/components/app/data-table';
 import WipSkeleton from '@/pages/wip/home/components/WipSkeleton.vue';
+import WipDateFilter from '@/pages/wip/home/components/WipDateFilter.vue';
 
 
-const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip } = useWip()
+const { handleDepartmentSelectionChange, selectedDepartment, wipTaskGroup, fetchBatchWip, selectedDateRange } = useWip()
 const { page, handleFetchNextPage, filter, search, handleFetchWipGroup, statusFilter } = useInifiteScroll()
 const { handleShowAllocateDialogForBatch, showAllocateDialog, handleShowAllocateDialogForTask, fetchBom, selectedRoute, selectedMode, isTaskHasBomAllocated } = useBom()
 const wipStore = useWipStore()
@@ -55,9 +56,7 @@ function useInifiteScroll() {
         const params: Partial<WipPlanQueryParams> = {
             page: ++page.value,
             work_centers: selectedDepartment.value.work_centers,
-            is_accessible: true,
             filter: statusFilter.value,
-
         }
 
 
@@ -79,18 +78,20 @@ function useInifiteScroll() {
         if (!selectedDepartment.value) return
 
         page.value = 1
+        wipTaskGroup.value = []
         const params: Partial<WipPlanQueryParams> = {
             page: page.value,
             work_centers: selectedDepartment.value.work_centers,
-            is_accessible: true,
             filter: statusFilter.value,
-
         }
 
 
         if (search.value) {
             params.filterBy = filter.value.key as WipPlanQueryParams['filterBy']
             params.keyword = search.value
+        } else {
+            params.startDate = selectedDateRange.value?.start
+            params.endDate = selectedDateRange.value?.end
         }
 
 
@@ -114,6 +115,13 @@ function useInifiteScroll() {
 function useWip() {
     const selectedDepartment = ref<WorkerDepartment>()
     const wipTaskGroup = ref<WipTaskGrouped[]>([])
+    const selectedDateRange = ref<SelectedDateRange>()
+
+    watch(selectedDateRange, async (newValue) => {
+        if (newValue?.start && newValue.end && selectedDepartment.value) {
+            await handleDepartmentSelectionChange(selectedDepartment.value)
+        }
+    })
 
     async function handleDepartmentSelectionChange(department: WorkerDepartment) {
         selectedDepartment.value = department
@@ -121,12 +129,14 @@ function useWip() {
         wipStore.pointToMicroservice(department.ms_url)
 
         search.value = ''
+        page.value = 1;
         wipTaskGroup.value = []
         const data = await wipStore.getWipPlansByWorkCenters({
-            is_accessible: true,
+            page: page.value,
             work_centers: department.work_centers,
             filter: statusFilter.value,
-
+            startDate: selectedDateRange.value?.start,
+            endDate: selectedDateRange.value?.end,
         })
 
         if (data)
@@ -139,7 +149,6 @@ function useWip() {
 
         const params: Partial<WipTaskQueryParams> = {
             operation_code: selectedDepartment.value.work_centers,
-            is_accessible: 1,
             filter: statusFilter.value as 'assigned',
         }
 
@@ -160,6 +169,7 @@ function useWip() {
         selectedDepartment,
         wipTaskGroup,
         fetchBatchWip,
+        selectedDateRange
     }
 }
 
@@ -237,6 +247,8 @@ provide(fetchBomKey, fetchBom)
                 <InputFilter v-model:search="search" v-model:filter="filter" :dropdown-data="searchFilterData"
                     @submit="handleFetchWipGroup" :disabled="!selectedDepartment" :loading="wipLoading">
                 </InputFilter>
+                <WipDateFilter class="ml-auto" :disabled="search.trim() !== ''" :loading="wipLoading"
+                    v-model="selectedDateRange" />
             </template>
         </Toolbar>
 
@@ -350,7 +362,7 @@ provide(fetchBomKey, fetchBom)
         <EmptyResource v-else-if="!selectedDepartment" title="No Selected Department" description="click on the toolbar and select a department to
           start" :icon="Building">
         </EmptyResource>
-        <EmptyResource v-else-if="(!wipTaskGroup || wipTaskGroup.length) && !wipLoading" title="No tasks available"
+        <EmptyResource v-else-if="(!wipTaskGroup || !wipTaskGroup.length) && !wipLoading" title="No tasks available"
             description="There are no tasks available at the moment. Please check again later." :icon="Wrench" />
         <div class="space-y-6" v-else>
             <WipSkeleton />

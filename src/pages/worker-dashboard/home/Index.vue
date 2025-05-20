@@ -492,22 +492,25 @@ onUnmounted(() => {
                                                 </TableCell>
                                             </template>
                                             <template #item.actions="{ item }">
-                                                <TableCell class="flex items-center gap-2" v-if="item.is_startable">
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canStart(item.status)"
-                                                        @click="handleTaskOperation('start', item)">
-                                                        <Play />
-                                                    </ButtonApp>
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canPause(item.status)"
-                                                        @click="handleTaskOperation('pause', item)">
-                                                        <Pause />
-                                                    </ButtonApp>
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canFinish(item.status)"
-                                                        @click="handleTaskOperation('done', item)">
-                                                        <Flag />
-                                                    </ButtonApp>
+                                                <TableCell class="flex items-center gap-2">
+                                                    <template v-if="item.is_startable">
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canStart(item.status)"
+                                                            @click="handleTaskOperation('start', item)">
+                                                            <Play />
+                                                        </ButtonApp>
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canPause(item.status)"
+                                                            @click="handleTaskOperation('pause', item)">
+                                                            <Pause />
+                                                        </ButtonApp>
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canFinish(item.status)"
+                                                            @click="handleTaskOperation('done', item)">
+                                                            <Flag />
+                                                        </ButtonApp>
+                                                    </template>
+
                                                     <ButtonApp size="icon" class="size-6 ml-2"
                                                         @click="handleTaskOperation('print', item)">
                                                         <Printer />
