@@ -31,10 +31,7 @@ const emits = defineEmits<{
                 <span class="text-xs text-muted-foreground">Department</span>
                 <p class="font-medium capitalize">{{ worker.department?.name }}</p>
             </div>
-            <div>
-                <span class="text-xs text-muted-foreground">Points</span>
-                <p class="font-medium">1,598</p>
-            </div>
+
             <div class="self-center ml-auto">
                 <ButtonApp size="icon" variant="secondary" @click="$emit('logout')">
                     <LogOut />

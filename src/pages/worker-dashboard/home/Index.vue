@@ -20,7 +20,7 @@ import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { DataTable } from '@/components/app/data-table';
 import { getIconByTaskStatus, getS3Link, toOrdinal } from '@/lib/utils';
-import { Calendar, CircleCheck, Ellipsis, XCircle } from 'lucide-vue-next';
+import { Boxes, Calendar, CircleCheck, Ellipsis, Eye, Flag, Pause, Play, Printer, XCircle } from 'lucide-vue-next';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import WorkerDropdown from './components/WorkerDropdown.vue';
@@ -33,6 +33,7 @@ import type { WorkerTaskPriority } from '../../../types/wip';
 import { useRouter } from 'vue-router';
 import { useProductStore } from '@/stores/productStore';
 import { useToastUIStore } from '@/stores/ui/toastUIStore';
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 
 
 const workerStore = useWorkerStore()
@@ -43,7 +44,7 @@ const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
 const { fetchWorkerTasks, wipLoading, changeTaskStatus, checkWorkerAvailability } = useWip()
-const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone } = useBatchOperation()
+const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone, canFinish, canPause, canStart } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
 const { handleShowPriorityDialog, priorityTask, showPriorityDialog, handlePriorityConfirm } = usePriorityDialog()
 
@@ -202,7 +203,7 @@ function useBatchOperation() {
         }
     }
 
-    function handleBatchOperation(taskOperationType: TaskOperationType, tasks?: WipTask[]) {
+    function handleBatchOperation(taskOperationType: TaskOperationType, tasks?: WipTask[], skipDialog: boolean = false) {
         if (!tasks) return;
 
         /* set the operation type */
@@ -213,14 +214,19 @@ function useBatchOperation() {
         confirmationDialogMessage.value = getConfirmationDialogMessage(taskOperationType)
         /* collect tasks ids */
         selectedTaskIds.value = tasks.filter(t => {
-            return can!(t.status)
+            return can!(t.status) && t.is_startable
         }).reduce<string[]>((acc, t) => {
             acc.push(t.id)
             return acc;
         }, [])
 
-        /* show the confirmation dialog */
-        showConfirmationDialog.value = true;
+        if (!skipDialog) {
+            /* show the confirmation dialog */
+            showConfirmationDialog.value = true;
+        } else {
+            /* perform the actual operation */
+            handleBatchOperationConfirm()
+        }
     }
 
     function getConfirmationDialogMessage(taskOperationType: TaskOperationType) {
@@ -246,8 +252,9 @@ function useBatchOperation() {
             })
             useToastUIStore().setToast(t)
             await printBom(task)
-        } else
+        } else {
             await changeTaskStatus(taskOperationType, [task.id])
+        }
     }
 
     /**
@@ -272,7 +279,10 @@ function useBatchOperation() {
         handleBatchOperation,
         handleBatchOperationConfirm,
         handleTaskOperation,
-        isNotDone
+        isNotDone,
+        canStart,
+        canPause,
+        canFinish
     }
 }
 
@@ -391,85 +401,148 @@ onUnmounted(() => {
         </header>
 
         <InfiniteScroll v-if="workerTasksInfiniteScroll && workerTasksInfiniteScroll.length && worker"
-            class="flex flex-wrap !flex-row gap-4" @trigger="fetchNextWorkerTasks">
-            <Card v-for="plan in workerTasksInfiniteScroll" :key="plan.id" class="basis-[30rem] grow p-4">
-                <div class="border rounded-md p-2 bg-muted/20 flex gap-4 text-sm">
-                    <div>
-                        <span class="text-xs text-muted-foreground">Plan code</span>
-                        <p class="font-medium">{{ plan.code }}</p>
-                    </div>
-                    <div>
-                        <span class="text-xs text-muted-foreground">SKU</span>
-                        <p class="font-medium">{{ plan.sku }}</p>
-                    </div>
-                    <div>
-                        <span class="text-xs text-muted-foreground">Status</span>
-                        <p class="font-medium">{{ plan.status_code }}</p>
+            class="flex flex-wrap gap-4" @trigger="fetchNextWorkerTasks">
+            <Card v-for="plan in workerTasksInfiniteScroll" :key="plan.id" class="grow p-4">
+                <div class="border rounded-md p-2 bg-muted/20 flex justify-between gap-4 text-sm">
+                    <div class="flex gap-4">
+                        <div>
+                            <span class="text-xs text-muted-foreground">Plan code</span>
+                            <p class="font-medium">{{ plan.code }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-muted-foreground">SKU</span>
+                            <p class="font-medium">{{ plan.sku }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-muted-foreground">Status</span>
+                            <p class="font-medium">{{ plan.status_code }}</p>
+                        </div>
                     </div>
                 </div>
-                <Accordion type="multiple">
-                    <AccordionItem v-for="batch in plan.batch_data" :key="batch.id" :value="batch.id">
-                        <AccordionTrigger class="justify-between items-center text-xs">
-                            <span>{{ toOrdinal(batch.batch_index + 1) }} Batch</span>
-                            <span class="ml-auto flex gap-2 px-1 text-xs text-muted-foreground">
+
+
+                <div class="mt-4 space-y-2">
+                    <div v-for="batch in plan.batch_data" :key="batch.id" :value="batch.id"
+                        class="flex justify-between">
+                        <div class="inline-flex items-center gap-4 basis-[15rem]">
+                            <span class="font-medium">{{ toOrdinal(batch.batch_index + 1) }} Batch</span>
+                            <span class=" flex gap-2 px-1 text-xs text-muted-foreground">
                                 <Calendar class="size-4" />{{ batch.start_date }}
                             </span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <DataTable v-if="batch.tasks" :items="batch.tasks" :columns="taskDataTableColumns">
-                                <template #header.actions>
-                                    <TableCell>
-                                        <WorkerBatchOperationDropdown :tasks="batch.tasks"
-                                            @select="handleBatchOperation">
-                                            <ButtonApp size="icon" variant="ghost">
-                                                <Ellipsis />
-                                            </ButtonApp>
-                                        </WorkerBatchOperationDropdown>
-                                    </TableCell>
-                                </template>
-                                <template #item.id="{ item }">
-                                    <TableCell class="uppercase" v-if="!wipLoading">
-                                        {{ item.id }}
-                                    </TableCell>
-                                    <TableCell v-else>
-                                        <div class="h-2 bg-muted rounded-full">
-                                        </div>
-                                    </TableCell>
-                                </template>
-                                <template #item.status="{ item }">
-                                    <TableCell class="capitalize" v-if="!wipLoading">
-                                        <Badge variant="secondary" class="gap-1">
-                                            <component :is="getIconByTaskStatus(item.status)" class="size-4" /> {{
-                                                item.status }}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell v-else>
-                                        <div class="h-2 bg-muted rounded-full">
-                                        </div>
-                                    </TableCell>
-                                </template>
-                                <template #item.is_startable="{ item }">
-                                    <TableCell v-if="!wipLoading">
-                                        <component :is="item.is_startable ? CircleCheck : XCircle" class="size-4" />
-                                    </TableCell>
-                                    <TableCell v-else>
-                                        <div class="h-2 bg-muted rounded-full">
-                                        </div>
-                                    </TableCell>
-                                </template>
-                                <template #item.actions="{ item }">
-                                    <TableCell v-if="isNotDone(item.status)">
-                                        <WorkerDropdown :task="item" @select="handleTaskOperation">
-                                            <ButtonApp size="icon" variant="ghost" :disabled="wipLoading">
-                                                <Ellipsis />
-                                            </ButtonApp>
-                                        </WorkerDropdown>
-                                    </TableCell>
-                                </template>
-                            </DataTable>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                        </div>
+
+                        <div>
+                            <Drawer>
+                                <DrawerTrigger as-child>
+                                    <ButtonApp size="icon" class="size-8">
+                                        <Eye />
+                                    </ButtonApp>
+                                </DrawerTrigger>
+
+                                <DrawerContent>
+                                    <DrawerHeader>
+                                        <DrawerTitle>{{ toOrdinal(batch.batch_index + 1) }} Batch Tasks</DrawerTitle>
+                                        <DrawerDescription>View or start individual tasks.</DrawerDescription>
+                                    </DrawerHeader>
+                                    <div class="px-4">
+                                        <DataTable v-if="batch.tasks" :items="batch.tasks"
+                                            :columns="taskDataTableColumns">
+                                            <template #header.actions>
+                                                <TableCell>
+                                                    <WorkerBatchOperationDropdown :tasks="batch.tasks"
+                                                        @select="(m, t) => handleBatchOperation(m, t, true)">
+                                                        <ButtonApp size="icon" variant="ghost">
+                                                            <Ellipsis />
+                                                        </ButtonApp>
+                                                    </WorkerBatchOperationDropdown>
+                                                </TableCell>
+                                            </template>
+                                            <template #item.id="{ item }">
+                                                <TableCell v-if="!wipLoading">
+                                                    <div class="hidden md:block">
+                                                        {{ item.id }}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell v-else>
+                                                    <div class="h-2 bg-muted rounded-full">
+                                                    </div>
+                                                </TableCell>
+                                            </template>
+                                            <template #item.status="{ item }">
+                                                <TableCell class="capitalize" v-if="!wipLoading">
+                                                    <Badge variant="secondary" class="gap-1">
+                                                        <component :is="getIconByTaskStatus(item.status)"
+                                                            class="size-4" /> {{
+                                                                item.status }}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell v-else>
+                                                    <div class="h-2 bg-muted rounded-full">
+                                                    </div>
+                                                </TableCell>
+                                            </template>
+                                            <template #item.is_startable="{ item }">
+                                                <TableCell v-if="!wipLoading">
+                                                    <component :is="item.is_startable ? CircleCheck : XCircle"
+                                                        class="size-4" />
+                                                </TableCell>
+                                                <TableCell v-else>
+                                                    <div class="h-2 bg-muted rounded-full">
+                                                    </div>
+                                                </TableCell>
+                                            </template>
+                                            <template #item.actions="{ item }">
+                                                <TableCell class="flex items-center gap-2" v-if="item.is_startable">
+                                                    <ButtonApp size="icon" class="size-6"
+                                                        :disabled="!canStart(item.status)"
+                                                        @click="handleTaskOperation('start', item)">
+                                                        <Play />
+                                                    </ButtonApp>
+                                                    <ButtonApp size="icon" class="size-6"
+                                                        :disabled="!canPause(item.status)"
+                                                        @click="handleTaskOperation('pause', item)">
+                                                        <Pause />
+                                                    </ButtonApp>
+                                                    <ButtonApp size="icon" class="size-6"
+                                                        :disabled="!canFinish(item.status)"
+                                                        @click="handleTaskOperation('done', item)">
+                                                        <Flag />
+                                                    </ButtonApp>
+                                                    <ButtonApp size="icon" class="size-6 ml-2"
+                                                        @click="handleTaskOperation('print', item)">
+                                                        <Printer />
+                                                    </ButtonApp>
+                                                </TableCell>
+                                            </template>
+                                        </DataTable>
+                                    </div>
+                                </DrawerContent>
+
+
+                            </Drawer>
+                        </div>
+                        <div class="inline-flex justify-between">
+                            <div>
+                                <div class="inline-flex gap-2 items-center">
+                                    <ButtonApp size="icon" @click="handleBatchOperation('start', batch.tasks)"
+                                        class="size-8 border" variant="secondary">
+                                        <Play />
+                                    </ButtonApp>
+                                    <ButtonApp size="icon" @click="handleBatchOperation('pause', batch.tasks)"
+                                        class="size-8 border" variant="secondary">
+                                        <Pause />
+                                    </ButtonApp>
+
+                                    <ButtonApp size="icon" @click="handleBatchOperation('done', batch.tasks)"
+                                        class="size-8 border" variant="secondary">
+                                        <Flag />
+                                    </ButtonApp>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </Card>
 
             <InfiniteScrollTrigger class="basis-full" />

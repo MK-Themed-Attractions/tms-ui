@@ -13,8 +13,8 @@ export interface WorkerStats {
 
 export const taskDataTableColumns: DataTableColumns[] = [
   {
-    key: "id",
-    title: "UUID",
+    key: "operation_code",
+    title: "Current Route",
   },
   {
     key: "status",
