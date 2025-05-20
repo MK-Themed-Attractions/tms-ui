@@ -49,10 +49,8 @@ export const useWorkerStore = defineStore("workers", () => {
   function assignableWorkers(workCenters: string[]) {
     return computed(() =>
       workers.value?.filter((worker) => {
-        return (
-          worker.department?.work_centers.some((center) =>
-            workCenters.includes(center),
-          ) && worker.is_active
+        return worker.department?.work_centers.some((center) =>
+          workCenters.includes(center),
         );
       }),
     );
@@ -168,7 +166,6 @@ export const useWorkerStore = defineStore("workers", () => {
       params: { worker_ids: workerIds },
     });
   }
-
 
   return {
     getWorkers,

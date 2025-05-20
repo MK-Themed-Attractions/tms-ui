@@ -1,5 +1,6 @@
 import type { DataTableColumns } from "@/components/app/data-table";
 import type { InputFilterDropdownData } from "@/components/app/input-filter";
+import type { WipPlan } from "@/types/wip";
 import type { WorkerDepartment } from "@/types/workers";
 import type { DateValue } from "reka-ui";
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter } from "vue";
@@ -23,6 +24,20 @@ export const wipWorkerDataTableColumns: DataTableColumns[] = [
   },
 ];
 
+export const bomInfoDataTableColumns: DataTableColumns[] = [
+  {
+    key: "no",
+    title: "No",
+  },
+  {
+    key: "description",
+    title: "Description",
+  },
+  {
+    key: "quantity_per",
+    title: "Quantity",
+  },
+];
 export const searchFilterData: InputFilterDropdownData[] = [
   { key: "product-sku", value: "Product SKU" },
   { key: "plan-code", value: "Plan code" },
@@ -36,6 +51,10 @@ export const workCentersKey = Symbol() as InjectionKey<
 
 export const selectedDepartmentKey = Symbol() as InjectionKey<
   ComputedRef<WorkerDepartment | undefined>
+>;
+
+export const selectedPlanKey = Symbol() as InjectionKey<
+  ComputedRef<WipPlan | undefined>
 >;
 
 export type WipDateFilterType =

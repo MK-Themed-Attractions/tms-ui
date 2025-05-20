@@ -2,7 +2,7 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { TaskStatus, WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
+import type { TaskStatus, WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ import { ConfirmationDialog } from "@/components/app/confirmation-dialog";
 import { toast } from "vue-sonner";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import { InputFilter, type InputFilterDropdownData } from "@/components/app/input-filter";
-import { searchFilterData, selectedDepartmentKey, workCentersKey, type SelectedDateRange } from "../data";
+import { searchFilterData, selectedDepartmentKey, selectedPlanKey, workCentersKey, type SelectedDateRange } from "../data";
 import WIPFilter from "./components/WIPFilter.vue";
 import { InfiniteScroll, InfiniteScrollTrigger } from "@/components/app/infinite-scroll";
 import type { WorkerDepartment } from "@/types/workers";
@@ -41,7 +41,6 @@ import { EmptyResource } from "@/components/app/empty-resource";
 import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
 import WipDateFilter from "./components/WipDateFilter.vue";
-import { Skeleton } from "@/components/ui/skeleton";
 
 
 const authStore = useAuthStore()
@@ -60,7 +59,8 @@ const { fetchWipPlans,
   handleShowMultipleTaskAssignDialog,
   selectedTaskPlanId,
   handleShowSingleTaskAssignDialog,
-  selectedOperationCode } = useWip();
+  selectedOperationCode,
+  selectedPlan } = useWip();
 const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
 const { handleShowWipDialog, showWipDialog } = useWipShow()
@@ -88,6 +88,8 @@ function useWip() {
   //id on planning ms
   const selectedTaskPlanId = ref<string>()
 
+  const selectedPlan = ref<WipPlan>()
+
   //task operation for single task show
   const selectedOperationCode = ref<ProductRoutingWorkCenterType>()
 
@@ -104,9 +106,15 @@ function useWip() {
 
   async function fetchBatchWip(batch: WipBatch) {
 
-    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value, startDate: selectedDateRange.value?.start, endDate: selectedDateRange.value?.end }
+    const params: Partial<WipTaskQueryParams> = { operation_code: workCenters.value }
+
     if (selectedTaskStatusFilter.value)
       params.filter = selectedTaskStatusFilter.value;
+
+    if (!search.value) {
+      params.startDate = selectedDateRange.value?.start
+      params.endDate = selectedDateRange.value?.end
+    }
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
     if (res) {
@@ -196,6 +204,7 @@ function useWip() {
     selectedTaskIds,
     selectedTaskPlanId,
     selectedOperationCode,
+    selectedPlan,
     handleSingleTaskAssign,
     handleMultipleTaskAssign,
     handleShowSingleTaskAssignDialog,
@@ -218,7 +227,8 @@ function useWorker() {
 function useWipShow() {
   const showWipDialog = ref(false)
 
-  function handleShowWipDialog(task: WipTask, batch: WipBatch) {
+  function handleShowWipDialog(task: WipTask, batch: WipBatch, plan: WipPlan) {
+    selectedPlan.value = plan;
     handleSingleTaskAssign(task, batch)
 
     showWipDialog.value = true;
@@ -445,31 +455,32 @@ function useTaskStatusFilter() {
   const selectedDateRange = ref<SelectedDateRange>()
   const page = ref(1)
 
+
+
   async function handleGetWIpsWithFilter() {
     page.value = 1;
     wipTasksGrouped.value = []
 
-    /* if search keyword is empty refetch plans */
-    if (!search.value.trim()) {
-      await fetchWipPlans({
-        work_centers: workCenters.value,
-        filter: selectedTaskStatusFilter.value,
-        startDate: selectedDateRange.value?.start,
-        endDate: selectedDateRange.value?.end,
-        page: page.value
-      })
-      return;
+    const params: Partial<WipPlanQueryParams> = {
+      work_centers: workCenters.value,
+      filter: selectedTaskStatusFilter.value,
+      page: page.value
     }
 
-    /* refetch plans with applied filters */
-    await fetchWipPlans({
-      work_centers: workCenters.value,
-      filterBy: filter.value?.key as WipPlanQueryParams['filterBy'],
-      keyword: search.value,
-      startDate: selectedDateRange.value?.start,
-      endDate: selectedDateRange.value?.end,
-      page: page.value
-    })
+    /* if search keyword is empty refetch plans with date filter */
+    if (!search.value.trim()) {
+      params.startDate = selectedDateRange.value?.start
+      params.endDate = selectedDateRange.value?.end
+
+    }
+    else {
+      /* refetch plans with applied filters ignoring date filter */
+      params.filterBy = filter.value?.key as WipPlanQueryParams['filterBy']
+      params.keyword = search.value;
+    }
+
+
+    await fetchWipPlans(params)
 
 
   }
@@ -554,6 +565,7 @@ async function handleDepartmentSelectionChange(department: WorkerDepartment) {
 provide(batchWipSuccessKey, fetchBatchWip)
 provide(workCentersKey, workCenters)
 provide(selectedDepartmentKey, computed(() => selectedDepartment.value))
+provide(selectedPlanKey, computed(() => selectedPlan.value))
 
 /* CLEANUP */
 // clear the wip task grouped when this component unmounted
@@ -581,7 +593,7 @@ onBeforeMount(() => {
           <div class="basis-full inline-flex justify-between flex-wrap gap-4">
             <WIPFilter v-model="selectedTaskStatusFilter" :loading="wipLoading || authLoading"
               :disabled="!selectedDepartment" />
-            <WipDateFilter v-model="selectedDateRange" :loading="wipLoading" />
+            <WipDateFilter v-model="selectedDateRange" :loading="wipLoading" :disabled="Boolean(search)" />
           </div>
         </template>
 
@@ -620,12 +632,12 @@ onBeforeMount(() => {
                     {{ product.sku }}
                   </RouterLink>
                 </TaskGroupLabel>
-                <div class="ml-auto flex flex-col justify-center gap-2">
-                  <Badge class="ml-auto capitalize gap-1">
+                <div class="ml-auto flex flex-col justify-center ">
+                  <Badge class="ml-auto capitalize gap-1 bg-white" variant="outline">
                     <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
                     {{ plan.status_code }}
                   </Badge>
-                  <p class="text-xs text-muted-foreground">{{ formatReadableDate(plan.created_at) }}</p>
+                  <p class="text-xs text-muted-foreground text-end mr-2">Plan Status</p>
                 </div>
               </div>
 
@@ -633,7 +645,7 @@ onBeforeMount(() => {
                 :loading="wipLoading">
                 <template #default="{ batch }">
                   <WipTaskDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
-                    @select="(task) => handleShowWipDialog(task, batch)">
+                    @select="(task) => handleShowWipDialog(task, batch, plan)">
 
                     <template #action.header>
                       <TableCell>
@@ -733,6 +745,7 @@ onBeforeMount(() => {
 
     <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
       :batch="assigningBatch.batch" :task-id="selectedTaskPlanId" :operation-code="selectedOperationCode">
+
     </WipTaskShowDialog>
 
     <!-- confirmation dialog for batch's tasks change status -->

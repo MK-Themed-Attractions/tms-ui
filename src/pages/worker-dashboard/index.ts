@@ -4,7 +4,7 @@ export type RFIDScannerEvent = (rfid: string) => void;
 
 export type RFIDState = "detected" | "scanning" | "not-detected";
 
-export type TaskOperationType = "start" | "pause" | "done";
+export type TaskOperationType = "start" | "pause" | "done" | 'print';
 
 export interface WorkerStats {
   tasksCount: number;
@@ -13,8 +13,8 @@ export interface WorkerStats {
 
 export const taskDataTableColumns: DataTableColumns[] = [
   {
-    key: "id",
-    title: "UUID",
+    key: "operation_code",
+    title: "Current Route",
   },
   {
     key: "status",

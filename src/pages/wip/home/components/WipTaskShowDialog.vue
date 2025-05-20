@@ -7,7 +7,7 @@ import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import { formatReadableDate, getIconByTaskStatus } from '@/lib/utils';
 import { useWipStore } from '@/stores/wipStore';
 import type { WipBatch, WipTask } from '@/types/wip';
-import { AlertCircle, CheckCircle, Delete, Flag, History, LoaderCircle, Pause, Play, Plus, Trash, X, XCircle } from 'lucide-vue-next';
+import { AlertCircle, CheckCircle, Delete, Flag, History, LoaderCircle, Pause, Play, Plus, Printer, Trash, X, XCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { inject, ref, watch } from 'vue';
 import { useTaskControls } from '../../../../composables/useTaskControls';
@@ -18,6 +18,7 @@ import WorkerAssignDialog from './WorkerAssignDialog.vue';
 import type { RouteLocationAsRelativeGeneric } from 'vue-router';
 import { computed } from '@vue/reactivity';
 import type { ProductRoutingWorkCenterType } from '@/types/products';
+import BomInfoDialog from './BomInfoDialog.vue';
 
 const dialog = defineModel({ default: false })
 
@@ -41,6 +42,7 @@ const task = ref<WipTask>()
 const selectedTaskIds = ref<string[]>()
 const madeChanges = ref(false) //this will determine if batchTask should re-fetch or not 
 const fetchBatchTasks = inject(batchWipSuccessKey);
+const showBomDialog = ref(false)
 
 
 /* fetch the task when dialog is opened
@@ -196,10 +198,15 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 class="shadow-sm flex flex-wrap flex-col md:max-h-[12rem] border rounded-md p-4 [&>*:nth-child(even)]:mb-2 [&>*:nth-child(even)]:font-medium [&>*:nth-child(odd)]:text-muted-foreground">
                 <span>Track History</span>
                 <RouterLink :to="trackHistory" target="_blank">
-                    <Badge class="px-2 gap-1">
+                    <ButtonApp class="px-2 gap-2 h-6" size="sm">
                         <History class="size-4" /> Go to history
-                    </Badge>
+                    </ButtonApp>
                 </RouterLink>
+
+                <span>Bill of Materials</span>
+                <ButtonApp size="sm" class="px-2 gap-2 h-6 w-fit" @click="showBomDialog = true">
+                    <Printer /> View/Print
+                </ButtonApp>
 
                 <span>Product SKU:</span> <span>{{ task.sku }}</span>
 
@@ -212,11 +219,13 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 <span>Planned start date:</span> <span>{{ formatReadableDate(task.can_accessed_at) }}</span>
 
                 <span>Status:</span>
-                <Badge class="w-fit gap-1 capitalize">
+                <Badge class="w-fit gap-1 capitalize" variant="secondary">
                     <component :is="getIconByTaskStatus(task.status)" class="size-4" /> {{ task.status }}
                 </Badge>
 
                 <span>Required manpower:</span> <span>{{ task.manpower }}</span>
+
+
             </div>
             <div class="border rounded-md shadow-sm p-4">
                 <div class="flex items-center justify-between gap-2  mb-2">
@@ -283,6 +292,8 @@ task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
                 </div>
             </div>
         </DialogScrollContent>
+
+        <BomInfoDialog v-if="task" v-model="showBomDialog" :task="task" />
 
         <ConfirmationDialog v-model="showWorkerRemoveConfirmDialog" @yes="handleRemoveWorker" title="Remove worker"
             description="Removing this worker will result in their points not being recorded.">
