@@ -78,6 +78,8 @@ function useWip() {
             work_centers: workCenters.value,
             filter: 'done',
             page: page.value,
+            startDate: selectedDateRange.value?.start,
+            endDate: selectedDateRange.value?.end,
             ...params
         })
         if (res) wipTaskGrouped.value?.push(...res)
