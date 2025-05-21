@@ -1,6 +1,9 @@
 import { ref, type Ref } from "vue";
 
-export function usePrint<T extends Ref<HTMLElement | null>>(element: T) {
+export function usePrint<T extends Ref<HTMLElement | null>>(
+  element: T,
+  callback?: () => void,
+) {
   const cloneElement = ref<Node>();
 
   window.addEventListener("afterprint", cleanUp);
@@ -16,6 +19,10 @@ export function usePrint<T extends Ref<HTMLElement | null>>(element: T) {
       "z-[99999]",
       "visible",
     );
+
+    if (callback) {
+      callback();
+    }
   }
   function print() {
     if (!element.value) return;

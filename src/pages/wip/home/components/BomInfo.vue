@@ -2,27 +2,32 @@
 import { useProductStore } from '@/stores/productStore';
 import type { Product, ProductRoutingBOM } from '@/types/products';
 import { storeToRefs } from 'pinia';
-import { computed, inject, ref, useTemplateRef } from 'vue';
+import { computed, inject, onMounted, ref, useTemplateRef } from 'vue';
 import { bomInfoDataTableColumns, selectedPlanKey } from '../../data';
 import type { WipTask } from '@/types/wip';
 import { ButtonApp } from '@/components/app/button';
-import { Printer } from 'lucide-vue-next';
-import { useBomPrintStore } from '@/stores/prints/bomPrintStore';
 import { DataTable } from '@/components/app/data-table';
 import { TableCell } from '@/components/ui/table';
 import { usePrint } from '@/composables/usePrint';
 const props = defineProps<{
     task: WipTask
+    autoPrint?: boolean
 }>()
 
+const emit = defineEmits<{
+    (e: 'afterprint'): void
+}>()
 const productStore = useProductStore()
 const { errors } = storeToRefs(productStore)
 const product = ref<Product>()
 const boms = ref<ProductRoutingBOM[]>()
 const plan = inject(selectedPlanKey)
-const bomPrintStore = useBomPrintStore()
-const { plan: planPrint, product: productPrint, task: taskPrint } = storeToRefs(bomPrintStore)
 const routing = computed(() => product.value?.routings?.find(r => r.operation_code === props.task.operation_code))
+const printable = useTemplateRef('printable')
+
+const { print } = usePrint(printable, () => {
+    emit('afterprint')
+})
 
 try {
     product.value = await productStore.getProduct(props.task.sku, {
@@ -32,20 +37,23 @@ try {
         boms.value = await productStore.getProductRoutingBom(props.task.sku, { routing_link_code: props.task.operation_code })
     }
 
-    planPrint.value = plan?.value
-    productPrint.value = product.value
-    taskPrint.value = props.task
+
 
 } catch (e) {
 
 }
 
-const printable = useTemplateRef('printable')
 
-const { print } = usePrint(printable)
 function printBom() {
     print()
 }
+
+onMounted(() => {
+    if (props.autoPrint) {
+        print()
+    }
+})
+
 
 </script>
 <template>
