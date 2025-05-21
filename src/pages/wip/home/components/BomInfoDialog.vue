@@ -3,6 +3,8 @@ import { Dialog, DialogDescription, DialogHeader, DialogScrollContent, DialogTit
 
 import BomInfo from './BomInfo.vue';
 import type { WipTask } from '@/types/wip';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DataTableLoader } from '@/components/app/data-table';
 
 const props = defineProps<{
     task: WipTask
@@ -23,7 +25,10 @@ const dialog = defineModel({ default: false })
 
                 </BomInfo>
                 <template #fallback>
-                    loading...
+                    <div>
+                        <Skeleton class="h-[13rem]" />
+                        <DataTableLoader />
+                    </div>
                 </template>
             </Suspense>
         </DialogScrollContent>

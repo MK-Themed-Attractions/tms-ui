@@ -2,7 +2,7 @@
 import { useProductStore } from '@/stores/productStore';
 import type { Product, ProductRoutingBOM } from '@/types/products';
 import { storeToRefs } from 'pinia';
-import { computed, inject, ref } from 'vue';
+import { computed, inject, ref, useTemplateRef } from 'vue';
 import { bomInfoDataTableColumns, selectedPlanKey } from '../../data';
 import type { WipTask } from '@/types/wip';
 import { ButtonApp } from '@/components/app/button';
@@ -10,6 +10,7 @@ import { Printer } from 'lucide-vue-next';
 import { useBomPrintStore } from '@/stores/prints/bomPrintStore';
 import { DataTable } from '@/components/app/data-table';
 import { TableCell } from '@/components/ui/table';
+import { usePrint } from '@/composables/usePrint';
 const props = defineProps<{
     task: WipTask
 }>()
@@ -39,68 +40,66 @@ try {
 
 }
 
+const printable = useTemplateRef('printable')
+
+const { print } = usePrint(printable)
+function printBom() {
+    print()
+}
+
 </script>
 <template>
     <div>
-        <ul class="border rounded-md shadow-sm p-4 flex flex-col max-h-[10rem] flex-wrap gap-y-1">
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">SKU</span>
-                <span class="font-medium">{{ product?.sku }}</span>
-            </li>
+        <div ref="printable">
+            <ul class="border rounded-md shadow-sm p-4 flex flex-col gap-2 md:h-[13rem] md:flex-wrap">
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">SKU</span>
+                    <span class="font-medium ">{{ product?.sku }}</span>
+                </li>
 
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Title</span>
-                <span class="font-medium">{{ product?.title }}</span>
-            </li>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Title</span>
+                    <span class="font-medium">{{ product?.title }}</span>
+                </li>
 
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Plan Code</span>
-                <span class="font-medium">{{ plan?.code }}</span>
-            </li>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Plan Code</span>
+                    <span class="font-medium">{{ plan?.code }}</span>
+                </li>
 
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Task UUID</span>
-                <span class="font-medium">{{ task.task_plan_id }}</span>
-            </li>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Task UUID</span>
+                    <span class="font-medium">{{ task.task_plan_id }}</span>
+                </li>
 
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Process</span>
-                <span class="font-medium">{{ routing?.workcenters.name }}</span>
-            </li>
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Runtime</span>
-                <span class="font-medium">{{ routing?.runtime }}<span class="text-xs text-muted-foreground">mins</span>
-                </span>
-            </li>
-            <li class="inline-flex flex-col">
-                <span class="text-xs text-muted-foreground">Manpower</span>
-                <span class="font-medium">{{ routing?.manpower }}
-                </span>
-            </li>
-        </ul>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Process</span>
+                    <span class="font-medium">{{ routing?.workcenters.name }}</span>
+                </li>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Runtime</span>
+                    <span class="font-medium">{{ routing?.runtime }}<span
+                            class="text-xs text-muted-foreground">mins</span>
+                    </span>
+                </li>
+                <li class="inline-flex flex-col">
+                    <span class="text-xs text-muted-foreground">Manpower</span>
+                    <span class="font-medium">{{ routing?.manpower }}
+                    </span>
+                </li>
+            </ul>
 
-        <DataTable v-if="boms" :items="boms" :columns="bomInfoDataTableColumns">
-            <template #item.quantity_per="{ item }">
-                <TableCell>
-                    <span>{{ item.quantity_per }}</span> <span class="text-xs text-muted-foreground">{{
-                        item.unit_of_measure_code }}</span>
-                </TableCell>
-            </template>
-        </DataTable>
+            <DataTable v-if="boms" :items="boms" :columns="bomInfoDataTableColumns">
+                <template #item.quantity_per="{ item }">
+                    <TableCell>
+                        <span>{{ item.quantity_per }}</span> <span class="text-xs text-muted-foreground">{{
+                            item.unit_of_measure_code }}</span>
+                    </TableCell>
+                </template>
+            </DataTable>
+        </div>
         <div class="w-fit">
-            <RouterLink :to="{
-                name: 'printBom',
-                query: {
-                    product: JSON.stringify(product),
-                    planCode: plan?.code,
-                    routing: JSON.stringify(routing),
-                    task: JSON.stringify(task),
-                    boms: JSON.stringify(boms)
-                }
-            }" target="_blank">
-                <ButtonApp :prepend-icon="Printer">Print</ButtonApp>
-            </RouterLink>
-
+            <ButtonApp @click="printBom">Print</ButtonApp>
         </div>
     </div>
 </template>
