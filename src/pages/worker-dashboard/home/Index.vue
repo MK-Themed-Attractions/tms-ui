@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, h, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import RFIDInfo from './components/RFIDInfo.vue';
 import NoTaskFound from './components/NoTaskFound.vue';
 import WorkerInfo from './components/WorkerInfo.vue';
@@ -34,17 +34,21 @@ import { useRouter } from 'vue-router';
 import { useProductStore } from '@/stores/productStore';
 import { useToastUIStore } from '@/stores/ui/toastUIStore';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import BomInfo from '@/pages/wip/home/components/BomInfo.vue';
+import BomInfoDialog from '@/pages/wip/home/components/BomInfoDialog.vue';
+import { selectedPlanKey } from '@/pages/wip/data';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
 const productStore = useProductStore()
 const router = useRouter()
+const showBomInfoDialog = ref(false)
 const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
 const { fetchWorkerTasks, wipLoading, changeTaskStatus, checkWorkerAvailability } = useWip()
-const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone, canFinish, canPause, canStart } = useBatchOperation()
+const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone, canFinish, canPause, canStart, selectedTask } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
 const { handleShowPriorityDialog, priorityTask, showPriorityDialog, handlePriorityConfirm } = usePriorityDialog()
 
@@ -187,6 +191,7 @@ function useWip() {
 
 function useBatchOperation() {
     const selectedTaskIds = ref<string[]>()
+    const selectedTask = ref<WipTask>()
     const selectedTaskOperationType = ref<TaskOperationType>()
     const showConfirmationDialog = ref(false)
     const confirmationDialogMessage = ref<string>()
@@ -247,11 +252,9 @@ function useBatchOperation() {
      */
     async function handleTaskOperation(taskOperationType: TaskOperationType, task: WipTask) {
         if (taskOperationType === 'print') {
-            const t = toast.loading('Please wait', {
-                description: 'Generating BOM, please wait...'
-            })
-            useToastUIStore().setToast(t)
-            await printBom(task)
+            selectedTask.value = task
+
+            showBomInfoDialog.value = true
         } else {
             await changeTaskStatus(taskOperationType, [task.id])
         }
@@ -273,6 +276,7 @@ function useBatchOperation() {
 
     return {
         selectedTaskIds,
+        selectedTask,
         selectedTaskOperationType,
         showConfirmationDialog,
         confirmationDialogMessage,
@@ -352,29 +356,11 @@ function usePriorityDialog() {
     }
 }
 
-async function printBom(task: WipTask) {
-    const planCode = workerTasksInfiniteScroll.value.find(wt => wt.plan_id === task.plan_id)?.code
-    const product = await productStore.getProduct(task.sku, {
-        includes: 'routings'
-    })
-    const boms = await productStore.getProductRoutingBom(task.sku, {
-        routing_link_code: task.operation_code
-    })
-    useToastUIStore().dismissLastAddedToast()
-    const routing = computed(() => product?.routings?.find(r => r.operation_code === task.operation_code))
+/* used by BomInfo */
+const planCode = computed(() => workerTasksInfiniteScroll.value.find(wt => wt.plan_id === selectedTask.value?.plan_id))
 
-    const routeData = router.resolve({
-        name: 'printBom', query: {
-            planCode: planCode,
-            product: JSON.stringify(product),
-            routing: JSON.stringify(routing.value),
-            task: JSON.stringify(task),
-            boms: JSON.stringify(boms)
-        }
-    })
+provide(selectedPlanKey, planCode)
 
-    window.open(routeData.href, '_blank')
-}
 
 onMounted(() => {
     window.addEventListener("keydown", handleKeydown);
@@ -554,6 +540,8 @@ onUnmounted(() => {
 
         <ConfirmationDialog v-model="showConfirmationDialog" :description="confirmationDialogMessage"
             @yes="handleBatchOperationConfirm" />
+
+        <BomInfoDialog v-model="showBomInfoDialog" v-if="selectedTask" :task="selectedTask" auto-print/>
 
         <ConfirmationDialog v-if="priorityTask" v-model="showPriorityDialog" title="You don't have any tasks"
             description="You may manually assign yourself to the task listed below if you'd like. However, please note that even after assigning yourself, 
