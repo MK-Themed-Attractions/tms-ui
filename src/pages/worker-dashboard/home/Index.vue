@@ -17,38 +17,32 @@ import type { ProductRoutingWorkCenterType } from '@/types/products';
 import { useSimplePaginate } from '@/composables/usePaginate';
 import { InfiniteScroll } from '@/components/app/infinite-scroll';
 import { Card } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { DataTable } from '@/components/app/data-table';
 import { getIconByTaskStatus, getS3Link, toOrdinal } from '@/lib/utils';
-import { Boxes, Calendar, CircleCheck, Ellipsis, Eye, Flag, Pause, Play, Printer, XCircle } from 'lucide-vue-next';
+import { Calendar, CircleCheck, Ellipsis, Eye, Flag, Pause, Play, Printer, XCircle } from 'lucide-vue-next';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import WorkerDropdown from './components/WorkerDropdown.vue';
 import { ButtonApp } from '@/components/app/button';
 import InfiniteScrollTrigger from '@/components/app/infinite-scroll/InfiniteScrollTrigger.vue';
 import WorkerBatchOperationDropdown from './components/WorkerBatchOperationDropdown.vue';
 import { ImageApp } from '@/components/app/image';
 import { TaskGroupLabel } from '@/components/app/task-group';
 import type { WorkerTaskPriority } from '../../../types/wip';
-import { useRouter } from 'vue-router';
-import { useProductStore } from '@/stores/productStore';
-import { useToastUIStore } from '@/stores/ui/toastUIStore';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
-import BomInfo from '@/pages/wip/home/components/BomInfo.vue';
 import BomInfoDialog from '@/pages/wip/home/components/BomInfoDialog.vue';
 import { selectedPlanKey } from '@/pages/wip/data';
+import SideButton from './components/SideButton.vue';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
-const productStore = useProductStore()
-const router = useRouter()
 const showBomInfoDialog = ref(false)
+const showAllTasks = ref(false)
 const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
 const { fetchWorkerTasks, wipLoading, changeTaskStatus, checkWorkerAvailability } = useWip()
-const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone, canFinish, canPause, canStart, selectedTask } = useBatchOperation()
+const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, canFinish, canPause, canStart, selectedTask } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
 const { handleShowPriorityDialog, priorityTask, showPriorityDialog, handlePriorityConfirm } = usePriorityDialog()
 
@@ -107,6 +101,7 @@ function useWorker() {
         const data = await workerStore.getWorkerByRfid(rfid)
 
         if (data) {
+            showAllTasks.value = false
             rfidState.value = 'detected'
             worker.value = data;
             resetInfiniteScroll()
@@ -119,6 +114,7 @@ function useWorker() {
 
     function handleWorkerLogout() {
         worker.value = undefined;
+        showAllTasks.value = false;
         rfidState.value = 'not-detected'
         resetInfiniteScroll()
     }
@@ -373,6 +369,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container p-6 space-y-6 h-screen">
+        <SideButton v-model="showAllTasks" hide-when-click/>
         <div>
             <h1 class="text-2xl font-medium">Worker Dashboard</h1>
             <p class="text-sm text-muted-foreground max-w-[78ch]"> Scan your RFID and select your assigned tasks. You
@@ -388,7 +385,8 @@ onUnmounted(() => {
 
         <InfiniteScroll v-if="workerTasksInfiniteScroll && workerTasksInfiniteScroll.length && worker"
             class="flex flex-wrap gap-4" @trigger="fetchNextWorkerTasks">
-            <Card v-for="plan in workerTasksInfiniteScroll" :key="plan.id" class="grow p-4">
+            <Card v-for="(plan, planIndex) in workerTasksInfiniteScroll" :key="plan.id" class="grow p-4"
+                v-show="!showAllTasks ? planIndex === 0 ? true : false : true">
                 <div class="border rounded-md p-2 bg-muted/20 flex justify-between gap-4 text-sm">
                     <div class="flex gap-4">
                         <div>
@@ -541,7 +539,7 @@ onUnmounted(() => {
         <ConfirmationDialog v-model="showConfirmationDialog" :description="confirmationDialogMessage"
             @yes="handleBatchOperationConfirm" />
 
-        <BomInfoDialog v-model="showBomInfoDialog" v-if="selectedTask" :task="selectedTask" auto-print/>
+        <BomInfoDialog v-model="showBomInfoDialog" v-if="selectedTask" :task="selectedTask" auto-print />
 
         <ConfirmationDialog v-if="priorityTask" v-model="showPriorityDialog" title="You don't have any tasks"
             description="You may manually assign yourself to the task listed below if you'd like. However, please note that even after assigning yourself, 
