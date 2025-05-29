@@ -3,7 +3,7 @@ import { useWipStore } from '@/stores/wipStore';
 import Toolbar from './components/Toolbar.vue';
 import { storeToRefs } from 'pinia';
 import { computed, onBeforeMount, onBeforeUnmount, ref, watch, watchEffect } from 'vue';
-import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped } from '@/types/wip';
+import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from '@/types/wip';
 import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
 import { formatReadableDate, getIconByPlanStatus, getS3Link } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -74,12 +74,22 @@ function useWip() {
 
     //Get all DONE plans > batches > tasks  
     async function getTasksByWorkCenters(params?: Partial<WipPlanQueryParams>) {
-        const res = await wipStore.getWipPlansByWorkCenters({
+        const myParams: Partial<WipPlanQueryParams> = {
             work_centers: workCenters.value,
             filter: 'done',
             page: page.value,
-            startDate: selectedDateRange.value?.start,
-            endDate: selectedDateRange.value?.end,
+        }
+
+        if (search.value) {
+            myParams.keyword = search.value;
+            myParams.filterBy = <"product-sku" | "plan-code">filter.value.key
+        } else {
+            myParams.startDate = selectedDateRange.value?.start
+            myParams.endDate = selectedDateRange.value?.end
+        }
+
+        const res = await wipStore.getWipPlansByWorkCenters({
+            ...myParams,
             ...params
         })
         if (res) wipTaskGrouped.value?.push(...res)
@@ -93,14 +103,6 @@ function useWip() {
         wipTaskGrouped.value = []
         page.value = 1
         const params: Partial<WipPlanQueryParams> = {}
-
-        if (search.value) {
-            params.keyword = search.value;
-            params.filterBy = <"product-sku" | "plan-code">filter.value.key
-        } else {
-            params.startDate = selectedDateRange.value?.start
-            params.endDate = selectedDateRange.value?.end
-        }
 
         //reset the page to 1 everytime filter is applied
         const res = await getTasksByWorkCenters(params)
@@ -119,12 +121,17 @@ function useWip() {
 
     //Get all done tasks for a batch
     async function fetchBatchWip(batch: WipBatch) {
-        const res = await wipStore.getTasksByBatchId(batch.batch_id, {
+        const params: Partial<WipTaskQueryParams> = {
             filter: 'done',
             operation_code: workCenters.value,
-            startDate: selectedDateRange.value?.start,
-            endDate: selectedDateRange.value?.end,
-        })
+
+        }
+        if (!search.value) {
+            params.startDate = selectedDateRange.value?.start
+            params.endDate = selectedDateRange.value?.end
+        }
+
+        const res = await wipStore.getTasksByBatchId(batch.batch_id, params)
 
         if (res) {
             batch.tasks = res;
