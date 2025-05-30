@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, h, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import RFIDInfo from './components/RFIDInfo.vue';
 import NoTaskFound from './components/NoTaskFound.vue';
 import WorkerInfo from './components/WorkerInfo.vue';
@@ -17,34 +17,32 @@ import type { ProductRoutingWorkCenterType } from '@/types/products';
 import { useSimplePaginate } from '@/composables/usePaginate';
 import { InfiniteScroll } from '@/components/app/infinite-scroll';
 import { Card } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { DataTable } from '@/components/app/data-table';
 import { getIconByTaskStatus, getS3Link, toOrdinal } from '@/lib/utils';
-import { Boxes, Calendar, CircleCheck, Ellipsis, Eye, Flag, Pause, Play, Printer, XCircle } from 'lucide-vue-next';
+import { Calendar, CircleCheck, Ellipsis, Eye, Flag, Pause, Play, Printer, XCircle } from 'lucide-vue-next';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import WorkerDropdown from './components/WorkerDropdown.vue';
 import { ButtonApp } from '@/components/app/button';
 import InfiniteScrollTrigger from '@/components/app/infinite-scroll/InfiniteScrollTrigger.vue';
 import WorkerBatchOperationDropdown from './components/WorkerBatchOperationDropdown.vue';
 import { ImageApp } from '@/components/app/image';
 import { TaskGroupLabel } from '@/components/app/task-group';
 import type { WorkerTaskPriority } from '../../../types/wip';
-import { useRouter } from 'vue-router';
-import { useProductStore } from '@/stores/productStore';
-import { useToastUIStore } from '@/stores/ui/toastUIStore';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import BomInfoDialog from '@/pages/wip/home/components/BomInfoDialog.vue';
+import { selectedPlanKey } from '@/pages/wip/data';
+import SideButton from './components/SideButton.vue';
 
 
 const workerStore = useWorkerStore()
 const wipStore = useWipStore()
-const productStore = useProductStore()
-const router = useRouter()
+const showBomInfoDialog = ref(false)
+const showAllTasks = ref(false)
 const { errors: wipErrors } = storeToRefs(wipStore)
 const { fetchNextWorkerTasks, resetInfiniteScroll, workerTasksInfiniteScroll } = useInfiniteScroll()
 const { fetchWorker, worker, handleWorkerLogout } = useWorker()
 const { fetchWorkerTasks, wipLoading, changeTaskStatus, checkWorkerAvailability } = useWip()
-const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, isNotDone, canFinish, canPause, canStart } = useBatchOperation()
+const { handleBatchOperation, showConfirmationDialog, confirmationDialogMessage, handleBatchOperationConfirm, handleTaskOperation, canFinish, canPause, canStart, selectedTask } = useBatchOperation()
 const { handleKeydown } = useScanner(fetchWorker)
 const { handleShowPriorityDialog, priorityTask, showPriorityDialog, handlePriorityConfirm } = usePriorityDialog()
 
@@ -103,6 +101,7 @@ function useWorker() {
         const data = await workerStore.getWorkerByRfid(rfid)
 
         if (data) {
+            showAllTasks.value = false
             rfidState.value = 'detected'
             worker.value = data;
             resetInfiniteScroll()
@@ -115,6 +114,7 @@ function useWorker() {
 
     function handleWorkerLogout() {
         worker.value = undefined;
+        showAllTasks.value = false;
         rfidState.value = 'not-detected'
         resetInfiniteScroll()
     }
@@ -187,6 +187,7 @@ function useWip() {
 
 function useBatchOperation() {
     const selectedTaskIds = ref<string[]>()
+    const selectedTask = ref<WipTask>()
     const selectedTaskOperationType = ref<TaskOperationType>()
     const showConfirmationDialog = ref(false)
     const confirmationDialogMessage = ref<string>()
@@ -247,11 +248,9 @@ function useBatchOperation() {
      */
     async function handleTaskOperation(taskOperationType: TaskOperationType, task: WipTask) {
         if (taskOperationType === 'print') {
-            const t = toast.loading('Please wait', {
-                description: 'Generating BOM, please wait...'
-            })
-            useToastUIStore().setToast(t)
-            await printBom(task)
+            selectedTask.value = task
+
+            showBomInfoDialog.value = true
         } else {
             await changeTaskStatus(taskOperationType, [task.id])
         }
@@ -273,6 +272,7 @@ function useBatchOperation() {
 
     return {
         selectedTaskIds,
+        selectedTask,
         selectedTaskOperationType,
         showConfirmationDialog,
         confirmationDialogMessage,
@@ -352,29 +352,11 @@ function usePriorityDialog() {
     }
 }
 
-async function printBom(task: WipTask) {
-    const planCode = workerTasksInfiniteScroll.value.find(wt => wt.plan_id === task.plan_id)?.code
-    const product = await productStore.getProduct(task.sku, {
-        includes: 'routings'
-    })
-    const boms = await productStore.getProductRoutingBom(task.sku, {
-        routing_link_code: task.operation_code
-    })
-    useToastUIStore().dismissLastAddedToast()
-    const routing = computed(() => product?.routings?.find(r => r.operation_code === task.operation_code))
+/* used by BomInfo */
+const planCode = computed(() => workerTasksInfiniteScroll.value.find(wt => wt.plan_id === selectedTask.value?.plan_id))
 
-    const routeData = router.resolve({
-        name: 'printBom', query: {
-            planCode: planCode,
-            product: JSON.stringify(product),
-            routing: JSON.stringify(routing.value),
-            task: JSON.stringify(task),
-            boms: JSON.stringify(boms)
-        }
-    })
+provide(selectedPlanKey, planCode)
 
-    window.open(routeData.href, '_blank')
-}
 
 onMounted(() => {
     window.addEventListener("keydown", handleKeydown);
@@ -387,6 +369,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container p-6 space-y-6 h-screen">
+        <SideButton v-model="showAllTasks" hide-when-click/>
         <div>
             <h1 class="text-2xl font-medium">Worker Dashboard</h1>
             <p class="text-sm text-muted-foreground max-w-[78ch]"> Scan your RFID and select your assigned tasks. You
@@ -402,7 +385,8 @@ onUnmounted(() => {
 
         <InfiniteScroll v-if="workerTasksInfiniteScroll && workerTasksInfiniteScroll.length && worker"
             class="flex flex-wrap gap-4" @trigger="fetchNextWorkerTasks">
-            <Card v-for="plan in workerTasksInfiniteScroll" :key="plan.id" class="grow p-4">
+            <Card v-for="(plan, planIndex) in workerTasksInfiniteScroll" :key="plan.id" class="grow p-4"
+                v-show="!showAllTasks ? planIndex === 0 ? true : false : true">
                 <div class="border rounded-md p-2 bg-muted/20 flex justify-between gap-4 text-sm">
                     <div class="flex gap-4">
                         <div>
@@ -492,22 +476,25 @@ onUnmounted(() => {
                                                 </TableCell>
                                             </template>
                                             <template #item.actions="{ item }">
-                                                <TableCell class="flex items-center gap-2" v-if="item.is_startable">
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canStart(item.status)"
-                                                        @click="handleTaskOperation('start', item)">
-                                                        <Play />
-                                                    </ButtonApp>
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canPause(item.status)"
-                                                        @click="handleTaskOperation('pause', item)">
-                                                        <Pause />
-                                                    </ButtonApp>
-                                                    <ButtonApp size="icon" class="size-6"
-                                                        :disabled="!canFinish(item.status)"
-                                                        @click="handleTaskOperation('done', item)">
-                                                        <Flag />
-                                                    </ButtonApp>
+                                                <TableCell class="flex items-center gap-2">
+                                                    <template v-if="item.is_startable">
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canStart(item.status)"
+                                                            @click="handleTaskOperation('start', item)">
+                                                            <Play />
+                                                        </ButtonApp>
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canPause(item.status)"
+                                                            @click="handleTaskOperation('pause', item)">
+                                                            <Pause />
+                                                        </ButtonApp>
+                                                        <ButtonApp size="icon" class="size-6"
+                                                            :disabled="!canFinish(item.status)"
+                                                            @click="handleTaskOperation('done', item)">
+                                                            <Flag />
+                                                        </ButtonApp>
+                                                    </template>
+
                                                     <ButtonApp size="icon" class="size-6 ml-2"
                                                         @click="handleTaskOperation('print', item)">
                                                         <Printer />
@@ -551,6 +538,8 @@ onUnmounted(() => {
 
         <ConfirmationDialog v-model="showConfirmationDialog" :description="confirmationDialogMessage"
             @yes="handleBatchOperationConfirm" />
+
+        <BomInfoDialog v-model="showBomInfoDialog" v-if="selectedTask" :task="selectedTask" auto-print />
 
         <ConfirmationDialog v-if="priorityTask" v-model="showPriorityDialog" title="You don't have any tasks"
             description="You may manually assign yourself to the task listed below if you'd like. However, please note that even after assigning yourself, 

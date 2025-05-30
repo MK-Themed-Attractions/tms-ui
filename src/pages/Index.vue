@@ -61,7 +61,7 @@ if (!workers.value && user.value) {
 </script>
 <template>
   <div class="flex items-center">
-    <h1 class="text-lg font-semibold md:text-2xl">MKTA Task management system</h1>
+    <h1 class="text-lg font-semibold md:text-2xl ">MKTA Task management system</h1>
   </div>
   <div class="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm" v-if="!user">
     <div class="flex flex-col items-center gap-1 text-center">
