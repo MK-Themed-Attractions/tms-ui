@@ -17,6 +17,8 @@ import { errorPages } from "./errorPages";
 import { outputPosting } from "./outputPosting";
 import { inventory } from "./inventory";
 import { printRoutes } from "./prints";
+import { productRoutes } from "./product";
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,29 +33,7 @@ const router = createRouter({
           name: "home",
           component: () => import("@/pages/Index.vue"),
         },
-        {
-          path: "products",
-          name: "products",
-          redirect: { name: "productIndex" },
-          component: () => import("@/pages/products/Index.vue"),
-          meta: {
-            requiresAuth: true,
-            permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
-          },
-          children: [
-            {
-              path: "",
-              name: "productIndex",
-              component: () => import("@/pages/products/Product.vue"),
-            },
-            {
-              path: ":productId",
-              name: "productShow",
-              component: () => import("@/pages/products/show/Index.vue"),
-              props: true,
-            },
-          ],
-        },
+        ...productRoutes,
         {
           path: "worker-management",
           name: "workerManagement",

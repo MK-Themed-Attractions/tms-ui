@@ -17,6 +17,7 @@ import {
   User,
   UserCircle,
   Wrench,
+  Tags
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
 
@@ -24,9 +25,23 @@ export const navItemData: NavItem[] = [
   { name: "Home", to: { name: "home" }, icon: Home },
   {
     name: "Products",
-    to: { name: "productIndex" },
+    // to: { name: "productIndex" },
     icon: Package,
     permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
+     children: [
+      {
+        name: "Products",
+        icon: Package,
+        to: { name: "productIndex" },
+        permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
+      },
+      {
+        name: "Custom Label",
+        icon: Tags,
+        to: { name: "customLabel" },
+        permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
+      },
+    ]
   },
   {
     name: "Task History",
