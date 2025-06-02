@@ -3,9 +3,7 @@
     <CardHeader>
       <FormField #default="{ componentField }" name="sku">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']"
-            >Product SKU</FormLabel
-          >
+          <FormLabel class="relative after:text-rose-500 after:content-['*']">Product SKU</FormLabel>
           <FormControl>
             <Input v-bind="componentField" />
           </FormControl>
@@ -25,28 +23,18 @@
         <TableBody>
           <TableRow class="" v-for="(content, index) in dataSource">
             <TableCell>
-              <FormField
-                #default="{ componentField }"
-                :name="`data.${index}.key`"
-              >
+              <FormField #default="{ componentField }" :name="`data.${index}.key`">
                 <FormItem>
                   <FormControl>
-                    <Input
-                      v-bind="componentField"
-                      :disabled="
-                        ['client_code', 'client_desc'].includes(content.key)
-                      "
-                    />
+                    <Input v-bind="componentField" :disabled="['client_code', 'client_desc'].includes(content.key)
+                      " />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               </FormField>
             </TableCell>
             <TableCell>
-              <FormField
-                #default="{ componentField }"
-                :name="`data.${index}.value`"
-              >
+              <FormField #default="{ componentField }" :name="`data.${index}.value`">
                 <FormItem>
                   <FormControl>
                     <Input v-bind="componentField" />
@@ -56,22 +44,18 @@
               </FormField>
             </TableCell>
             <TableCell>
-              <ButtonApp
-                :prepend-icon="Trash"
-                v-if="!['client_code', 'client_desc'].includes(content.key)"
-                @click="removeKVP(index)"
-                class="justify-self-end rounded bg-red-600 text-white"
-              >
+
+              <ButtonApp v-if="!['client_code', 'client_desc'].includes(content.key)" @click="removeKVP(index)"
+                size="icon" variant="ghost" class="border ">
+                <Trash class="stroke-rose-500" />
               </ButtonApp>
             </TableCell>
           </TableRow>
           <TableRow>
             <TableCell colspan="3">
-              <ButtonApp
-                :prepend-icon="PlusCircle"
-                @click="addKVP()"
-                class="justify-self-center rounded bg-green-600 text-white"
-              >
+
+              <ButtonApp @click="addKVP()" size="icon" variant="secondary" class="border ml-auto">
+                <PlusCircle />
               </ButtonApp>
             </TableCell>
           </TableRow>
@@ -79,11 +63,7 @@
       </Table>
     </CardContent>
     <CardFooter>
-      <ButtonApp
-        type="submit"
-        class="rounded bg-blue-600 px-4 py-2 text-white"
-        @click="onSubmit"
-      >
+      <ButtonApp type="submit" @click="onSubmit">
         Submit
       </ButtonApp>
     </CardFooter>

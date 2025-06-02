@@ -60,9 +60,11 @@ const {
   hasPrevPage,
   customLabels,
 } = useCustomLabel();
+
 const search = ref<string>();
 await fetchCustomLabels();
 const page = ref(1);
+
 function useCustomLabel() {
   const {
     hasNextPage,
@@ -96,6 +98,7 @@ function useCustomLabel() {
     customLabels,
   };
 }
+
 // Custom Label Print Components
 import PrintComponentIndex from "../../custom-labels/print-components/Index.vue";
 import type { Product } from "@/types/products";
@@ -111,55 +114,35 @@ const showPrintDialog = ref(false);
       <CardDescription>Print this product custom label</CardDescription>
     </CardHeader>
     <CardContent>
-      <Input
-        placeholder="Search Custom Labels..."
-        class="h-9 w-full"
-        v-model="search"
-        @keydown.enter="fetchCustomLabels()"
-      />
-      <DataTable
-        v-if="customLabels"
-        :items="customLabels"
-        :columns="[...customLabelColumns]"
-      >
+      <Input placeholder="Search custom labels..." class="h-9 max-w-sm" v-model="search"
+        @keydown.enter="fetchCustomLabels()" />
+      <DataTable v-if="customLabels" :items="customLabels" :columns="[...customLabelColumns]">
         <template #item.actions="item">
-          <ButtonApp
-            class="my-2 bg-green-500"
-            :prepend-icon="Printer"
-            @click="
-              () => {
-                showPrintDialog = true;
-                selectedCustomLabel = item.item;
-              }
-            "
-            >Print</ButtonApp
-          >
+          <ButtonApp :prepend-icon="Printer" size="icon" variant="secondary" class="border my-1" @click="
+            () => {
+              showPrintDialog = true;
+              selectedCustomLabel = item.item;
+            }
+          "></ButtonApp>
         </template>
         <template #footer>
-          <PaginationApp
-            :disable-next="!hasNextPage"
-            :disalble-prev="!hasPrevPage"
-          />
+          <PaginationApp :disable-next="!hasNextPage" :disalble-prev="!hasPrevPage" />
         </template>
       </DataTable>
     </CardContent>
+
     <!-- Start of Dialog -->
     <Dialog v-model:open="showPrintDialog">
       <DialogTrigger> Activate this Shit </DialogTrigger>
-      <DialogScrollContent
-        class="mx-auto flex w-[80vw] max-w-[80vw] flex-col rounded-none p-0"
-      >
+      <DialogScrollContent class="mx-auto flex w-[80vw] max-w-[80vw] flex-col rounded-none p-0">
         <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4">
           <DialogTitle>Custom Label Configuration</DialogTitle>
           <DialogDescription>
             Make changes to your profile here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <PrintComponentIndex
-          :customLabel="selectedCustomLabel"
-          :products="[{ ...curProduct }]"
-          :dataSource="selectedCustomLabel.custom_data"
-        />
+        <PrintComponentIndex :customLabel="selectedCustomLabel" :products="[{ ...curProduct }]"
+          :dataSource="selectedCustomLabel.custom_data" />
       </DialogScrollContent>
     </Dialog>
     <!-- Start of Dialog -->

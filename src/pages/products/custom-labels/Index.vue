@@ -1,10 +1,31 @@
-<template>
-  <div>
-    <h1 class="text-lg font-semibold md:text-2xl">Custom Label</h1>
-    <Separator class="mb-2" />
-    <p class="text-sm text-muted-foreground">Configuration for Custom Label</p>
-  </div>
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
 
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SectionHeader } from '@/components/app/section-header'
+const props = defineProps<{
+  customLabelID: string;
+}>();
+const emits = defineEmits<{
+  (e: "refresh"): void;
+}>();
+import LabelConfiguration from "./components/LabelConfiguration.vue"; // import the extracted form
+import LabelDataSource from "./components/LabelDataSource.vue"; // import the extracted form
+
+import { useCustomLabelStore } from "@/stores/customLabelStore";
+const customLabelStore = useCustomLabelStore();
+const { customLabel } = storeToRefs(customLabelStore);
+
+const refresh = async () => {
+  if (customLabel.value) {
+    await customLabelStore.getCustomLabel(customLabel.value?.id);
+  }
+};
+</script>
+
+
+<template>
   <Tabs default-value="configuration">
     <TabsList class="grid grid-cols-6">
       <TabsTrigger value="configuration">Configuration</TabsTrigger>
@@ -26,28 +47,3 @@
     </TabsContent>
   </Tabs>
 </template>
-
-<script setup lang="ts">
-import { storeToRefs } from "pinia";
-
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-const props = defineProps<{
-  customLabelID: string;
-}>();
-const emits = defineEmits<{
-  (e: "refresh"): void;
-}>();
-import LabelConfiguration from "./components/LabelConfiguration.vue"; // import the extracted form
-import LabelDataSource from "./components/LabelDataSource.vue"; // import the extracted form
-
-import { useCustomLabelStore } from "@/stores/customLabelStore";
-const customLabelStore = useCustomLabelStore();
-const { customLabel } = storeToRefs(customLabelStore);
-
-const refresh = async () => {
-  if (customLabel.value) {
-    await customLabelStore.getCustomLabel(customLabel.value?.id);
-  }
-};
-</script>

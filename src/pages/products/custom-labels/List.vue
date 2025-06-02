@@ -27,7 +27,7 @@ import {
 import { customLabelColumns } from "./components/data";
 import { ButtonApp } from "@/components/app/button";
 import { Input } from "@/components/ui/input";
-import { LoaderCircle, Search } from "lucide-vue-next";
+import { LoaderCircle, Plus, Search } from "lucide-vue-next";
 const route = useRoute();
 
 /*
@@ -99,38 +99,22 @@ onBeforeMount(() => {
 <template>
   <!-- Product Index -->
   <div class="space-y-6">
-    <SectionHeader
-      title="Custom Labels"
-      description="List of all custom labels in MK Themed Attractions"
-    />
-    <Separator class="my-"></Separator>
-    <div class="w-full">
-      <RouterLink
-        :to="{ name: 'customLabelCreate' }"
-        class="flex justify-self-end rounded bg-blue-600 px-4 py-2 text-white"
-      >
-        Create
+    <SectionHeader title="Custom Labels" description="List of all custom labels in MK Themed Attractions" />
+    <div class="w-full flex justify-between">
+      <Input placeholder="Search custom labels..." class="h-9 w-[clamp(10rem,50vw,20rem)]" v-model="search"
+        @keydown.enter="fetchCustomLabels()" />
+
+      <RouterLink :to="{ name: 'customLabelCreate' }">
+        <ButtonApp :prepend-icon="Plus">
+          Create
+        </ButtonApp>
       </RouterLink>
     </div>
 
-    <Input
-      placeholder="Search Custom Labels..."
-      class="h-9 w-[clamp(10rem,50vw,20rem)]"
-      v-model="search"
-      @keydown.enter="fetchCustomLabels()"
-    />
-    <DataTable
-      v-if="customLabels"
-      :items="customLabels"
-      :columns="customLabelColumns"
-      @navigate-to="gotoShow"
-    >
+
+    <DataTable v-if="customLabels" :items="customLabels" :columns="customLabelColumns" @navigate-to="gotoShow">
       <template #footer>
-        <PaginationApp
-          @change:query="handlePagination"
-          :disable-next="!hasNextPage"
-          :disalble-prev="!hasPrevPage"
-        />
+        <PaginationApp @change:query="handlePagination" :disable-next="!hasNextPage" :disalble-prev="!hasPrevPage" />
       </template>
     </DataTable>
   </div>

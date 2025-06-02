@@ -1,45 +1,3 @@
-<template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Data Source</CardTitle>
-      <CardDescription>Data being used by the Custom Label</CardDescription>
-    </CardHeader>
-    <CardFooter> Note: If the Product SKU is not registered </CardFooter>
-    <CardContent class="space-y-2">
-      <!-- Start of Custom Data -->
-      <Accordion
-        type="single"
-        class="w-full rounded-sm border p-3"
-        collapsible
-        :default-value="'NewData'"
-      >
-        <AccordionItem :value="'NewData'">
-          <AccordionTrigger> New Data</AccordionTrigger>
-          <AccordionContent>
-            <NewLabelCustomDataCard @refresh="$emit('refresh')" />
-          </AccordionContent>
-        </AccordionItem>
-        <!-- Start of Existing Custom Data Source -->
-        <AccordionItem
-          v-for="(data, index) in customLabel.custom_data"
-          :value="data.sku"
-        >
-          <AccordionTrigger>Product SKU: {{ data.sku }}</AccordionTrigger>
-          <AccordionContent>
-            <LabelCustomDataCard
-              @refresh="refresh()"
-              :sumIndex="index"
-              :data="data"
-            ></LabelCustomDataCard>
-          </AccordionContent>
-        </AccordionItem>
-        <!-- End of Existing Custom Data Source -->
-      </Accordion>
-      <!-- End of Custom Data -->
-    </CardContent>
-  </Card>
-</template>
-
 <script setup lang="ts">
 import { reactive, watch, toRefs, emits } from "vue";
 import { storeToRefs } from "pinia";
@@ -66,7 +24,41 @@ const emits = defineEmits<{
 }>();
 // Stores
 import { useCustomLabelStore } from "@/stores/customLabelStore";
+import { Info } from "lucide-vue-next";
 const customLabelStore = useCustomLabelStore();
 const { customLabel } = storeToRefs(customLabelStore);
 // Functions
 </script>
+
+<template>
+  <Card>
+    <CardHeader>
+      <CardTitle>Data Source</CardTitle>
+      <CardDescription>Data being used by the Custom Label</CardDescription>
+    </CardHeader>
+    <CardFooter class="flex gap-2 text-muted-foreground">
+      <Info class="size-4"></Info>
+      <em class="text-sm"> If the Product SKU is not registered</em>
+    </CardFooter>
+    <CardContent class="space-y-2">
+      <!-- Start of Custom Data -->
+      <Accordion type="single" class="w-full rounded-sm border p-3" collapsible :default-value="'NewData'">
+        <AccordionItem :value="'NewData'">
+          <AccordionTrigger> New Data</AccordionTrigger>
+          <AccordionContent>
+            <NewLabelCustomDataCard @refresh="$emit('refresh')" />
+          </AccordionContent>
+        </AccordionItem>
+        <!-- Start of Existing Custom Data Source -->
+        <AccordionItem v-for="(data, index) in customLabel.custom_data" :value="data.sku">
+          <AccordionTrigger>Product SKU: {{ data.sku }}</AccordionTrigger>
+          <AccordionContent>
+            <LabelCustomDataCard @refresh="refresh()" :sumIndex="index" :data="data"></LabelCustomDataCard>
+          </AccordionContent>
+        </AccordionItem>
+        <!-- End of Existing Custom Data Source -->
+      </Accordion>
+      <!-- End of Custom Data -->
+    </CardContent>
+  </Card>
+</template>

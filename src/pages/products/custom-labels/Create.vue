@@ -1,16 +1,12 @@
 <template>
-  <div>
-    <h1 class="text-lg font-semibold md:text-2xl">Custom Label</h1>
-    <Separator class="mb-2" />
-    <p class="text-sm text-muted-foreground">Configuration for Custom Label</p>
+  <div class="space-y-4">
+    <SectionHeader title="Custom Label" description="Configuration for Custom Label" />
 
     <div class="flex flex-col gap-2">
       <!-- Title -->
       <FormField #default="{ componentField }" name="title">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']"
-            >Title</FormLabel
-          >
+          <FormLabel class="relative after:text-rose-500 after:content-['*']">Title</FormLabel>
           <FormControl>
             <Input v-bind="componentField" />
           </FormControl>
@@ -34,10 +30,7 @@
           <TableBody>
             <TableRow v-for="(param, index) in values.parameters" :key="index">
               <TableCell>
-                <FormField
-                  :name="`parameters[${index}].key`"
-                  #default="{ componentField }"
-                >
+                <FormField :name="`parameters[${index}].key`" #default="{ componentField }">
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -47,10 +40,7 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField
-                  :name="`parameters[${index}].desc`"
-                  #default="{ componentField }"
-                >
+                <FormField :name="`parameters[${index}].desc`" #default="{ componentField }">
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -60,21 +50,16 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <ButtonApp
-                  :prepend-icon="Trash"
-                  @click="removeItem('parameters', index)"
-                  class="rounded bg-red-600 text-white"
-                >
+
+                <ButtonApp @click="removeItem('parameters', index)" class="border" size="icon" variant="ghost">
+                  <Trash class="stroke-rose-500" />
                 </ButtonApp>
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell :colspan="3">
-                <ButtonApp
-                  :prepend-icon="PlusCircle"
-                  @click="addItem('parameters')"
-                  class="rounded bg-green-600 text-white"
-                >
+                <ButtonApp @click="addItem('parameters')" class="border ml-auto" size="icon" variant="secondary">
+                  <PlusCircle />
                 </ButtonApp>
               </TableCell>
             </TableRow>
@@ -97,15 +82,9 @@
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow
-              v-for="(lbl_param, index) in values.label_parameters"
-              :key="index"
-            >
+            <TableRow v-for="(lbl_param, index) in values.label_parameters" :key="index">
               <TableCell>
-                <FormField
-                  :name="`label_parameters[${index}].key`"
-                  #default="{ componentField }"
-                >
+                <FormField :name="`label_parameters[${index}].key`" #default="{ componentField }">
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -115,10 +94,7 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField
-                  :name="`label_parameters[${index}].desc`"
-                  #default="{ componentField }"
-                >
+                <FormField :name="`label_parameters[${index}].desc`" #default="{ componentField }">
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -128,10 +104,7 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField
-                  :name="`label_parameters[${index}].value`"
-                  #default="{ componentField }"
-                >
+                <FormField :name="`label_parameters[${index}].value`" #default="{ componentField }">
                   <FormItem>
                     <FormControl>
                       <Select v-bind="componentField">
@@ -139,13 +112,9 @@
                           <SelectValue placeholder="Select a value" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem
-                            v-for="value_item in Object.values(
-                              LabelParameterValueList,
-                            )"
-                            :key="value_item"
-                            :value="value_item"
-                          >
+                          <SelectItem v-for="value_item in Object.values(
+                            LabelParameterValueList,
+                          )" :key="value_item" :value="value_item">
                             {{ value_item }}
                           </SelectItem>
                         </SelectContent>
@@ -156,20 +125,16 @@
                 </FormField>
               </TableCell>
               <TableCell class="w-fit">
-                <ButtonApp
-                  :prepend-icon="Trash"
-                  @click="removeItem('label_parameters', index)"
-                  class="rounded bg-red-600 text-white"
-                />
+                <ButtonApp @click="removeItem('label_parameters', index)" class="border" size="icon" variant="ghost">
+                  <Trash class="stroke-rose-500" />
+                </ButtonApp>
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell :colspan="4">
-                <ButtonApp
-                  :prepend-icon="PlusCircle"
-                  @click="addItem('label_parameters')"
-                  class="rounded bg-green-600 text-white"
-                />
+                <ButtonApp @click="addItem('label_parameters')" class="border ml-auto" size="icon" variant="secondary">
+                  <PlusCircle />
+                </ButtonApp>
               </TableCell>
             </TableRow>
           </TableBody>
@@ -181,14 +146,9 @@
       <!-- HTML Code -->
       <FormField #default="{ componentField }" name="html_code">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']"
-            >HTML Code</FormLabel
-          >
+          <FormLabel class="relative after:text-rose-500 after:content-['*']">HTML Code</FormLabel>
           <FormControl>
-            <Textarea
-              v-bind="componentField"
-              placeholder="Type your HTML code here."
-            />
+            <Textarea v-bind="componentField" placeholder="Type your HTML code here." />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -196,13 +156,9 @@
 
       <!-- Buttons -->
       <div class="mt-4 flex gap-2">
-        <button
-          type="submit"
-          class="rounded bg-blue-600 px-4 py-2 text-white"
-          @click="onSubmit"
-        >
+        <ButtonApp type="submit" @click="onSubmit">
           Submit
-        </button>
+        </ButtonApp>
       </div>
     </div>
   </div>
@@ -301,6 +257,7 @@ import { storeToRefs } from "pinia";
 import { useCustomLabelStore } from "@/stores/customLabelStore";
 const customLabelStore = useCustomLabelStore();
 import { useRouter } from "vue-router";
+import { SectionHeader } from "@/components/app/section-header";
 const router = useRouter();
 
 // Submit handler
