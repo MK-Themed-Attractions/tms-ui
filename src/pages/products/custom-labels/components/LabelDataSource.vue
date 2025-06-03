@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { reactive, watch, toRefs, emits } from "vue";
 import { storeToRefs } from "pinia";
 // Start of UI
 import {
@@ -42,7 +41,12 @@ const { customLabel } = storeToRefs(customLabelStore);
     </CardFooter>
     <CardContent class="space-y-2">
       <!-- Start of Custom Data -->
-      <Accordion type="single" class="w-full rounded-sm border p-3" collapsible :default-value="'NewData'">
+      <Accordion
+        type="single"
+        class="w-full rounded-sm border p-3"
+        collapsible
+        :default-value="'NewData'"
+      >
         <AccordionItem :value="'NewData'">
           <AccordionTrigger> New Data</AccordionTrigger>
           <AccordionContent>
@@ -50,10 +54,18 @@ const { customLabel } = storeToRefs(customLabelStore);
           </AccordionContent>
         </AccordionItem>
         <!-- Start of Existing Custom Data Source -->
-        <AccordionItem v-for="(data, index) in customLabel.custom_data" :value="data.sku">
+        <AccordionItem
+          v-if="customLabel"
+          v-for="(data, index) in customLabel.custom_data"
+          :value="data.sku"
+        >
           <AccordionTrigger>Product SKU: {{ data.sku }}</AccordionTrigger>
           <AccordionContent>
-            <LabelCustomDataCard @refresh="refresh()" :sumIndex="index" :data="data"></LabelCustomDataCard>
+            <LabelCustomDataCard
+              @refresh="$emit('refresh')"
+              :sumIndex="index"
+              :data="data"
+            ></LabelCustomDataCard>
           </AccordionContent>
         </AccordionItem>
         <!-- End of Existing Custom Data Source -->

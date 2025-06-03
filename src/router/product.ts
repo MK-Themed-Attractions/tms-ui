@@ -37,14 +37,14 @@ export const productRoutes: RouteRecordRaw[] = [
           {
             path: "",
             name: "customLabelList",
-            component: () => import("@/pages/products/custom-labels/List.vue"),
+            component: () => import("@/pages/products/custom-labels/Index.vue"),
             props: true,
             beforeEnter: checkCustomLabel,
           },
           {
             path: ":customLabelID",
             name: "customLabelShow",
-            component: () => import("@/pages/products/custom-labels/Index.vue"),
+            component: () => import("@/pages/products/custom-labels/Show.vue"),
             props: true,
             beforeEnter: checkCustomLabel,
           },

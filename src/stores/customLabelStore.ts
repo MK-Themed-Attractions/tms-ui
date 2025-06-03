@@ -33,7 +33,6 @@ export const useCustomLabelStore = defineStore("customLabel", () => {
   });
   setHeader("Bearer-Token", bearerToken);
   const customLabel = ref<CustomLabel>();
-  const cLabels = ref<CustomLabel[]>;
   const {
     hasNextPage,
     hasPrevPage,

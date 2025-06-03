@@ -3,7 +3,9 @@
     <CardHeader>
       <FormField #default="{ componentField }" name="sku">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']">Product SKU</FormLabel>
+          <FormLabel class="relative after:text-rose-500 after:content-['*']"
+            >Product SKU</FormLabel
+          >
           <FormControl>
             <Input v-bind="componentField" />
           </FormControl>
@@ -23,18 +25,28 @@
         <TableBody>
           <TableRow class="" v-for="(content, index) in dataSource">
             <TableCell>
-              <FormField #default="{ componentField }" :name="`data.${index}.key`">
+              <FormField
+                #default="{ componentField }"
+                :name="`data.${index}.key`"
+              >
                 <FormItem>
                   <FormControl>
-                    <Input v-bind="componentField" :disabled="['client_code', 'client_desc'].includes(content.key)
-                      " />
+                    <Input
+                      v-bind="componentField"
+                      :disabled="
+                        ['client_code', 'client_desc'].includes(content.key)
+                      "
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               </FormField>
             </TableCell>
             <TableCell>
-              <FormField #default="{ componentField }" :name="`data.${index}.value`">
+              <FormField
+                #default="{ componentField }"
+                :name="`data.${index}.value`"
+              >
                 <FormItem>
                   <FormControl>
                     <Input v-bind="componentField" />
@@ -44,17 +56,25 @@
               </FormField>
             </TableCell>
             <TableCell>
-
-              <ButtonApp v-if="!['client_code', 'client_desc'].includes(content.key)" @click="removeKVP(index)"
-                size="icon" variant="ghost" class="border ">
+              <ButtonApp
+                v-if="!['client_code', 'client_desc'].includes(content.key)"
+                @click="removeKVP(index)"
+                size="icon"
+                variant="ghost"
+                class="border"
+              >
                 <Trash class="stroke-rose-500" />
               </ButtonApp>
             </TableCell>
           </TableRow>
           <TableRow>
             <TableCell colspan="3">
-
-              <ButtonApp @click="addKVP()" size="icon" variant="secondary" class="border ml-auto">
+              <ButtonApp
+                @click="addKVP()"
+                size="icon"
+                variant="secondary"
+                class="ml-auto border"
+              >
                 <PlusCircle />
               </ButtonApp>
             </TableCell>
@@ -63,15 +83,13 @@
       </Table>
     </CardContent>
     <CardFooter>
-      <ButtonApp type="submit" @click="onSubmit">
-        Submit
-      </ButtonApp>
+      <ButtonApp :loading="loading" type="submit" @click="onSubmit"> Submit </ButtonApp>
     </CardFooter>
   </Card>
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, toRefs, ref, emits } from "vue";
+import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -80,16 +98,13 @@ import { useForm } from "vee-validate";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import Input from "@/components/ui/input/Input.vue";
 import {
   Table,
   TableBody,
-  TableHead,
   TableRow,
   TableCell,
   TableHeader,
@@ -101,12 +116,6 @@ import {
   FormMessage,
   FormLabel,
 } from "@/components/ui/form";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { ButtonApp } from "@/components/app/button";
 import { PlusCircle, Trash } from "lucide-vue-next";
 // End of UI
@@ -114,9 +123,8 @@ import { PlusCircle, Trash } from "lucide-vue-next";
 // Stores
 import { useCustomLabelStore } from "@/stores/customLabelStore";
 const customLabelStore = useCustomLabelStore();
-const { customLabel } = storeToRefs(customLabelStore);
+const { customLabel, loading } = storeToRefs(customLabelStore);
 // TypeScript
-import { type CustomLabelData } from "@/types/customLabel.ts";
 // Emits
 const emits = defineEmits<{
   (e: "refresh"): void;
@@ -134,7 +142,7 @@ const dataSource = ref([
 ]);
 const formSchema = toTypedSchema(
   z.object({
-    custom_label_id: z.string().optional(),
+    custom_label_id: z.string(),
     sku: z.string().nonempty(),
     data: z.array(
       z.object({
@@ -147,14 +155,14 @@ const formSchema = toTypedSchema(
 const { handleSubmit } = useForm({
   validationSchema: formSchema,
   initialValues: {
-    custom_label_id: customLabel.value.id,
+    custom_label_id: customLabel.value?.id ?? "",
     sku: "",
     data: [...dataSource.value],
   },
 });
 console.log(dataSource.value);
 // Function
-const removeKVP = (index) => {
+const removeKVP = (index: number) => {
   dataSource.value.splice(index, 1);
 };
 const addKVP = () => {
@@ -164,9 +172,12 @@ const addKVP = () => {
   });
 };
 const onSubmit = handleSubmit(async (values) => {
+  const payload = {
+    ...values,
+  };
   const res = await customLabelStore.saveCustomLabelData(
-    customLabel.value.id,
-    values,
+    customLabel.value?.id ?? "",
+    payload,
   );
   emits("refresh");
 });

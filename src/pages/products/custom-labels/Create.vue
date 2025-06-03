@@ -1,12 +1,17 @@
 <template>
   <div class="space-y-4">
-    <SectionHeader title="Custom Label" description="Configuration for Custom Label" />
+    <SectionHeader
+      title="Custom Label"
+      description="Configuration for Custom Label"
+    />
 
     <div class="flex flex-col gap-2">
       <!-- Title -->
       <FormField #default="{ componentField }" name="title">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']">Title</FormLabel>
+          <FormLabel class="relative after:text-rose-500 after:content-['*']"
+            >Title</FormLabel
+          >
           <FormControl>
             <Input v-bind="componentField" />
           </FormControl>
@@ -30,7 +35,10 @@
           <TableBody>
             <TableRow v-for="(param, index) in values.parameters" :key="index">
               <TableCell>
-                <FormField :name="`parameters[${index}].key`" #default="{ componentField }">
+                <FormField
+                  :name="`parameters[${index}].key`"
+                  #default="{ componentField }"
+                >
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -40,7 +48,10 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField :name="`parameters[${index}].desc`" #default="{ componentField }">
+                <FormField
+                  :name="`parameters[${index}].desc`"
+                  #default="{ componentField }"
+                >
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -50,15 +61,24 @@
                 </FormField>
               </TableCell>
               <TableCell>
-
-                <ButtonApp @click="removeItem('parameters', index)" class="border" size="icon" variant="ghost">
+                <ButtonApp
+                  @click="removeItem('parameters', index)"
+                  class="border"
+                  size="icon"
+                  variant="ghost"
+                >
                   <Trash class="stroke-rose-500" />
                 </ButtonApp>
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell :colspan="3">
-                <ButtonApp @click="addItem('parameters')" class="border ml-auto" size="icon" variant="secondary">
+                <ButtonApp
+                  @click="addItem('parameters')"
+                  class="ml-auto border"
+                  size="icon"
+                  variant="secondary"
+                >
                   <PlusCircle />
                 </ButtonApp>
               </TableCell>
@@ -82,9 +102,15 @@
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="(lbl_param, index) in values.label_parameters" :key="index">
+            <TableRow
+              v-for="(lbl_param, index) in values.label_parameters"
+              :key="index"
+            >
               <TableCell>
-                <FormField :name="`label_parameters[${index}].key`" #default="{ componentField }">
+                <FormField
+                  :name="`label_parameters[${index}].key`"
+                  #default="{ componentField }"
+                >
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -94,7 +120,10 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField :name="`label_parameters[${index}].desc`" #default="{ componentField }">
+                <FormField
+                  :name="`label_parameters[${index}].desc`"
+                  #default="{ componentField }"
+                >
                   <FormItem>
                     <FormControl>
                       <Input v-bind="componentField" />
@@ -104,7 +133,10 @@
                 </FormField>
               </TableCell>
               <TableCell>
-                <FormField :name="`label_parameters[${index}].value`" #default="{ componentField }">
+                <FormField
+                  :name="`label_parameters[${index}].value`"
+                  #default="{ componentField }"
+                >
                   <FormItem>
                     <FormControl>
                       <Select v-bind="componentField">
@@ -112,9 +144,13 @@
                           <SelectValue placeholder="Select a value" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem v-for="value_item in Object.values(
-                            LabelParameterValueList,
-                          )" :key="value_item" :value="value_item">
+                          <SelectItem
+                            v-for="value_item in Object.values(
+                              LabelParameterValueList,
+                            )"
+                            :key="value_item"
+                            :value="value_item"
+                          >
                             {{ value_item }}
                           </SelectItem>
                         </SelectContent>
@@ -125,14 +161,24 @@
                 </FormField>
               </TableCell>
               <TableCell class="w-fit">
-                <ButtonApp @click="removeItem('label_parameters', index)" class="border" size="icon" variant="ghost">
+                <ButtonApp
+                  @click="removeItem('label_parameters', index)"
+                  class="border"
+                  size="icon"
+                  variant="ghost"
+                >
                   <Trash class="stroke-rose-500" />
                 </ButtonApp>
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell :colspan="4">
-                <ButtonApp @click="addItem('label_parameters')" class="border ml-auto" size="icon" variant="secondary">
+                <ButtonApp
+                  @click="addItem('label_parameters')"
+                  class="ml-auto border"
+                  size="icon"
+                  variant="secondary"
+                >
                   <PlusCircle />
                 </ButtonApp>
               </TableCell>
@@ -146,9 +192,14 @@
       <!-- HTML Code -->
       <FormField #default="{ componentField }" name="html_code">
         <FormItem>
-          <FormLabel class="relative after:text-rose-500 after:content-['*']">HTML Code</FormLabel>
+          <FormLabel class="relative after:text-rose-500 after:content-['*']"
+            >HTML Code</FormLabel
+          >
           <FormControl>
-            <Textarea v-bind="componentField" placeholder="Type your HTML code here." />
+            <Textarea
+              v-bind="componentField"
+              placeholder="Type your HTML code here."
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -156,9 +207,7 @@
 
       <!-- Buttons -->
       <div class="mt-4 flex gap-2">
-        <ButtonApp type="submit" @click="onSubmit">
-          Submit
-        </ButtonApp>
+        <ButtonApp type="submit" @click="onSubmit"> Submit </ButtonApp>
       </div>
     </div>
   </div>
@@ -262,7 +311,14 @@ const router = useRouter();
 
 // Submit handler
 const onSubmit = handleSubmit(async (formValues) => {
-  const res = await customLabelStore.saveCustomLabel(formValues);
+  // Ensure required fields are present and not undefined
+  const payload = {
+    title: values.title ?? "",
+    html_code: values.html_code ?? "",
+    parameters: values.parameters ?? [],
+    label_parameters: values.label_parameters ?? [],
+  };
+  const res = await customLabelStore.saveCustomLabel(payload);
   router.push({ name: "customLabel" });
 });
 const normalizeKeyInput = (value: string): string => {

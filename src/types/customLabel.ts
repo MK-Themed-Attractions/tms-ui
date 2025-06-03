@@ -1,4 +1,3 @@
-import type { User } from "./auth";
 import type { QueryParams } from "./general";
 
 // Custom Label
@@ -9,7 +8,7 @@ export interface CustomLabel {
   parameters: Parameters[];
   label_parameters: LabelParameter[];
   html_code: string;
-  custom_data: CustomLabelData[];
+  custom_data?: CustomLabelData[];
 }
 export type CustomLabelPostPayload = Omit<CustomLabel, "id"> & {
   id?: string;

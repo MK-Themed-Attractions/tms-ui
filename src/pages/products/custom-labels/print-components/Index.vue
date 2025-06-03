@@ -30,18 +30,9 @@
 </template>
 <script setup lang="ts">
 // Set-up
-import {
-  computed,
-  inject,
-  onActivated,
-  ref,
-  watchEffect,
-  reactive,
-  useTemplateRef,
-} from "vue";
-import { storeToRefs } from "pinia";
+import { ref, useTemplateRef } from "vue";
 // UI
-import { LoaderCircle, Search, Printer } from "lucide-vue-next";
+import { Printer } from "lucide-vue-next";
 import {
   Card,
   CardHeader,
@@ -73,9 +64,7 @@ const props = withDefaults(
     products: Product[];
     customLabel: CustomLabel;
   }>(),
-  {
-    autoPrint: true,
-  },
+  { autoPrint: true },
 );
 const dataSource = ref<CustomLabelData[]>();
 dataSource.value = props.customLabel.custom_data;
