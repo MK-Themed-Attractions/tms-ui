@@ -47,21 +47,17 @@ function useFilter() {
 <template>
   <Card>
     <CardHeader>
-      <CardTitle class="text-lg">Routings</CardTitle>
-      <CardDescription
-        >Product routing based on Business Central data.</CardDescription
-      >
+      <CardTitle class="text-lg">
+        Routings
+      </CardTitle>
+      <CardDescription>Product routing based on Business Central data.</CardDescription>
     </CardHeader>
     <CardContent>
       <Tabs v-model="selectedRouting">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <TabsList class="flex w-fit flex-wrap">
-            <TabsTrigger
-              v-if="routingsWithFilter.length"
-              v-for="routing in routingsWithFilter"
-              :key="routing.id"
-              :value="routing.operation_code"
-            >
+            <TabsTrigger v-if="routingsWithFilter.length" v-for="routing in routingsWithFilter" :key="routing.id"
+              :value="routing.operation_code">
               {{
                 routing.workcenters
                   ? routing.workcenters.name
@@ -75,12 +71,8 @@ function useFilter() {
           </TabsList>
 
           <div>
-            <Badge
-              variant="secondary"
-              role="button"
-              class="inline-flex items-center gap-1 text-muted-foreground"
-              @click="viewHidden = !viewHidden"
-            >
+            <Badge variant="secondary" role="button" class="inline-flex items-center gap-1 text-muted-foreground"
+              @click="viewHidden = !viewHidden">
               <template v-if="viewHidden">
                 <EyeClosed :size="18" /> remove hidden
               </template>

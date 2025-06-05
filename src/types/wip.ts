@@ -49,7 +49,8 @@ export type TaskStatus =
   | "cancelled"
   | "qc-failed"
   | "paused"
-  | "qc-passed";
+  | "qc-passed"
+  | "override";
 
 export type WipTaskGrouped = WipPlanProduct & {
   product_data: (WipPlanProduct & {

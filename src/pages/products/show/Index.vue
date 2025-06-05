@@ -27,6 +27,7 @@ import ProductAttachmentDropdown from "./components/ProductAttachmentDropdown.vu
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AttachmentDialog from "./components/AttachmentDialog.vue";
 import IndexSkeleton from "./components/IndexSkeleton.vue";
+import ProductCustomLabel from "./components/ProductCustomLabel.vue";
 
 const props = defineProps<{
   productId: string;
@@ -267,6 +268,8 @@ onActivated(() => {
         </p>
       </div>
     </ProductRouting>
+
+    <ProductCustomLabel  class="col-span-full"/>
 
     <Teleport to="#overlay">
       <AttachmentDialog v-model="attachmentDialog" :attachments="attachments[selectedAttachmentType]"
