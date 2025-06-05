@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SectionHeader } from '@/components/app/section-header'
 const props = defineProps<{
   customLabelID: string;
 }>();
@@ -24,8 +21,10 @@ const refresh = async () => {
 };
 </script>
 
-
 <template>
+  <RouterLink :to="{ name: 'customLabelList' }" class="bg-red-500 p-2 text-white rounded-md">
+    Back to List
+  </RouterLink>
   <Tabs default-value="configuration">
     <TabsList class="grid grid-cols-6">
       <TabsTrigger value="configuration">Configuration</TabsTrigger>

@@ -206,8 +206,11 @@
       </FormField>
 
       <!-- Buttons -->
-      <div class="mt-4 flex gap-2">
+      <div class="mt-4 flex justify-between gap-2">
         <ButtonApp type="submit" @click="onSubmit"> Submit </ButtonApp>
+        <RouterLink :to="{ name: 'customLabelList' }"class="bg-red-500 p-2 text-white rounded-md">
+          Cancel
+        </RouterLink>
       </div>
     </div>
   </div>
@@ -317,9 +320,9 @@ const onSubmit = handleSubmit(async (formValues) => {
     html_code: values.html_code ?? "",
     parameters: values.parameters ?? [],
     label_parameters: values.label_parameters ?? [],
-  };
+  };  
   const res = await customLabelStore.saveCustomLabel(payload);
-  router.push({ name: "customLabel" });
+  router.push({ name: "customLabelList" });
 });
 const normalizeKeyInput = (value: string): string => {
   return value
