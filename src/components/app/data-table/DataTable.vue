@@ -63,9 +63,9 @@ const selectedColumns = computed<DataTableColumns[]>(() => {
 
     <TableBody>
       <TableRow v-if="!loading" v-for="item in items" :key="item[Object.keys(item)[0]]"
-        @click="emits('navigateTo', item, $router)" class="group break-inside-avoid-page">
-        <template v-for="column in selectedColumns" :key="column.key">
-          <slot :name="`item.${column.key as string}`" :item="item">
+        @click="emits('navigateTo', item, $router)" class="group">
+        <template v-for="(column, colIndex) in selectedColumns" :key="column.key">
+          <slot :name="`item.${column.key as string}`" :item="item" :index="colIndex">
             <TableCell> {{ resolveNestedKey(item, column.key) }}</TableCell>
           </slot>
         </template>
