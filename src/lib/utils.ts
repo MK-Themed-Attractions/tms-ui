@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Pause,
   RefreshCcw,
+  Settings,
   Slash,
   ThumbsDown,
   ThumbsUp,
@@ -138,6 +139,8 @@ export function getIconByTaskStatus(status: TaskStatus) {
       return ThumbsUp;
     case "paused":
       return Pause;
+    case "override":
+      return Settings;
   }
 }
 
