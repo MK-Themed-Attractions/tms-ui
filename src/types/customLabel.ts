@@ -29,23 +29,21 @@ export type LabelParameterValue =
   | "description"
   | "title"
   | "parent_code"
-
   | "image"
   | "Height (cm)"
   | "Length (cm)"
   | "Width (cm)"
-
   | "Volume (cb.m)"
   | "GW (kgs)"
   | "NW (kgs)"
-
   | "Height (in)"
   | "Length (in)"
   | "Width (in)"
-  
   | "Volume (cb.ft)"
   | "GW (lbs)"
-  | "NW (lbs)";
+  | "NW (lbs)"
+  ;
+
 export enum LabelParameterValueList {
   "sku" = "sku",
   "description" = "description",

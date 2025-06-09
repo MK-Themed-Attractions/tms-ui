@@ -55,7 +55,7 @@ function useProduct() {
     loading.value = false
     loading.value = true
     await productStore.getProduct(productId, {
-      includes: "routings,images",
+      includes: "routings,images,product_parts",
       ...params,
     });
     loading.value = false
