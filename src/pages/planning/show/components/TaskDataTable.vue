@@ -36,7 +36,7 @@ async function handleOverride(item: BatchTask) {
     status_code: 'override'
   })
 
-  if (!planErrors) {
+  if (!planErrors.value) {
     toast.info('Override Success Info', {
       description: 'task successfully overridden, it will now move to the next process.'
     })
