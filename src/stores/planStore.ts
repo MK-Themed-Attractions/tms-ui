@@ -18,17 +18,15 @@ import type {
   SimplePaginate,
   SimplePaginateAPIResource,
 } from "@/types/pagination";
-import { computed, ref } from "vue";
-import {
-  useSimplePaginate,
-  useSimplePaginateAPIResource,
-} from "@/composables/usePaginate";
+import { ref } from "vue";
+import { useSimplePaginateAPIResource } from "@/composables/usePaginate";
 import type { TaskHistory, TaskHistoryParams } from "@/types/taskHistory";
 import type {
   OutputPosting,
   OutputPostingForm,
   OutputPostingQueryParams,
 } from "@/types/outputPosting";
+import type { TaskStatus } from "@/types/wip";
 
 export const usePlanStore = defineStore("plans", () => {
   const baseUrl = import.meta.env.VITE_PLANNING;
@@ -36,9 +34,10 @@ export const usePlanStore = defineStore("plans", () => {
     import.meta.env.VITE_PLANNING_BEARER_TOKEN_KEY,
     "",
   );
-  const { get, errors, loading, setHeader, post, put, destroy } = useAxios({
-    baseURL: baseUrl,
-  });
+  const { get, errors, loading, setHeader, post, put, destroy, patch } =
+    useAxios({
+      baseURL: baseUrl,
+    });
   const {
     hasNextPage,
     hasPrevPage,
@@ -258,6 +257,20 @@ export const usePlanStore = defineStore("plans", () => {
     await put("/api/output-posting/approve", form);
   }
 
+  async function overrideTask(
+    planId: string,
+    batchId: string,
+    taskId: string,
+    payload: { status_code: TaskStatus },
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await patch(`/api/plan/${planId}/batch/${batchId}/task/${taskId}`, payload);
+  }
+
   return {
     paginatedResponse,
     plans,
@@ -282,5 +295,6 @@ export const usePlanStore = defineStore("plans", () => {
     postOutputPosting,
     errors,
     loading,
+    overrideTask,
   };
 });
