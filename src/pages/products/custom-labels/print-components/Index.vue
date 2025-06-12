@@ -14,17 +14,18 @@
         <small>{{ parameter.desc }}</small>
       </div>
       <Separator />
-      <div ref="printable">
-        <div v-for="product in products" v-html="configHTML(product)"></div>
-      </div>
-    </CardContent>
-    <CardFooter>
+      <!-- <pre v-for="product in products">{{ product.product_parts }}</pre> -->
       <ButtonApp
         class="my-2 bg-green-500"
         :prepend-icon="Printer"
         @click="print"
         >Print Label</ButtonApp
       >
+    </CardContent>
+    <CardFooter>
+      <div ref="printable" class="w-full">
+        <div v-for="product in products" v-html="configHTML(product)"></div>
+      </div>
     </CardFooter>
   </Card>
 </template>
@@ -52,6 +53,8 @@ import type { CustomLabel, CustomLabelData } from "@/types/customLabel";
 import type { Product } from "@/types/products";
 const printable = useTemplateRef("printable");
 const { print } = usePrint(printable, () => {
+  // printable.innerHTML = "";
+  // this.$refs.printable.innerHTML = "<strong>This is dynamic content!</strong>";
   emit("afterprint");
 });
 // TypeScript
@@ -74,20 +77,69 @@ const emit = defineEmits<{
 }>();
 const configHTML = (product: Product) => {
   var html = props.customLabel.html_code;
+  // Start of Parameters
+  const parameters = props.customLabel.parameters;
+  parameters.forEach((element) => {
+    const regex = new RegExp(element.key, "g");
+    html = html.replace(regex, element.value ?? "");
+  });
+  // End of Parameters
+  // Start of Label Parameters and Custom Label Data Source
   const label_parameters = props.customLabel.label_parameters;
-
+  const ItemSource = getData(product.sku);
   label_parameters.forEach((element) => {
     const regex = new RegExp(element.key, "g");
-    html = html.replace(regex, replaceLabelParameter(element.value, product));
+    var replacementString = replaceLabelParameter(element.value, product);
+    if (ItemSource) {
+      var dataSourceValue = ItemSource.data.find(
+        (keys) => keys.key == element.value,
+      );
+      if (dataSourceValue) {
+        replacementString = dataSourceValue.value;
+      }
+    }
+    html = html.replace(regex, replacementString);
   });
-
-  const ItemSource = getData(product.sku);
-  if (ItemSource) {
-    ItemSource.data.forEach((element) => {
-      const regex = new RegExp(element.key, "g");
-      html = html.replace(regex, element.value);
+  // End of Label Parameters and Custom Label Data Source
+  // Start of Constant Parameters
+  if (true) {
+    // CurrentDate
+    html = html.replace(
+      /CurrentDate/g,
+      new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+      }),
+    );
+  }
+  if (true) {
+    // CurrentProductPartName
+    const mirrorHtml = html;
+    if (product.product_parts && product.product_parts.length > 0) {
+      html = "";
+      product.product_parts.forEach((part, index) => {
+        html += mirrorHtml.replace(
+          /CurrentProductPartName/g,
+          part.part_description +
+            " ( " +
+            (index + 1) +
+            " of " +
+            product.product_parts?.length +
+            " ) ",
+        );
+      });
+    }
+  }
+  if (true) {
+    // Removal of Constant Parameter
+    var constantParameters = ["CurrentDate", "CurrentProductPartName"];
+    constantParameters.forEach((param) => {
+      const regex = new RegExp(param, "g");
+      html = html.replace(regex, "");
     });
   }
+  // End of Constant Parameters
   return html;
 };
 const replaceLabelParameter = (
@@ -96,7 +148,7 @@ const replaceLabelParameter = (
 ): string => {
   switch (paramValue) {
     case "sku":
-      return product.sku;
+      return product.sku.replace(/-(EU|US)/, "");
       break;
     case "description":
       return product.description;
@@ -147,7 +199,7 @@ const replaceLabelParameter = (
       return (product.weight_net * 2.20462).toFixed(2) + " lbs";
       break;
   }
-  return "Key Not Found";
+  return "";
 };
 const getData = (sku: string) => {
   const item = dataSource.value?.find((item) => item.sku === sku);
