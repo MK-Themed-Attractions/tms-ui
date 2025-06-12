@@ -7,6 +7,13 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 // UI Tabs
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+import {
   Card,
   CardContent,
   CardDescription,
@@ -16,6 +23,8 @@ import {
 } from "@/components/ui/card";
 // UI Components
 import Input from "@/components/ui/input/Input.vue";
+import Label from "@/components/ui/label/Label.vue";
+
 import {
   Select,
   SelectContent,
@@ -128,7 +137,7 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <Card>
+  <Card class="no-border">
     <CardHeader>
       <CardTitle>Configuration</CardTitle>
       <CardDescription> Label Configuration </CardDescription>
@@ -204,7 +213,7 @@ const onSubmit = handleSubmit(async (values) => {
                 @click="removeItem('parameters', index)"
                 size="icon"
                 variant="ghost"
-                class="border ml-auto"
+                class="ml-auto border"
               >
                 <Trash class="stroke-rose-500" />
               </ButtonApp>
@@ -347,8 +356,8 @@ const onSubmit = handleSubmit(async (values) => {
           <TableRow>
             <TableCell> CurrentProductPartName </TableCell>
             <TableCell>
-              Display the current product part name of the Product Item ( default is
-              blank )
+              Display the current product part name of the Product Item (
+              default is blank )
             </TableCell>
           </TableRow>
           <TableRow>
@@ -361,11 +370,11 @@ const onSubmit = handleSubmit(async (values) => {
       <FormField #default="{ componentField }" name="html_code">
         <FormItem>
           <FormLabel class="relative after:text-rose-500 after:content-['*']"
-            >HTML Code</FormLabel
+            >HTML Code (Inline CSS ONLY)</FormLabel
           >
           <FormControl>
             <Textarea
-             class="min-h-[250px]"
+              class="min-h-[250px]"
               v-bind="componentField"
               placeholder="Type your message here."
             />
@@ -373,8 +382,20 @@ const onSubmit = handleSubmit(async (values) => {
           <FormMessage />
         </FormItem>
       </FormField>
+      <Separator class="my-2" />
+      <Accordion
+        type="single"
+        class="w-full rounded-sm border p-3"
+        collapsible
+      >
+        <AccordionItem :value="'Preview'">
+          <AccordionTrigger> <Label> Preview </Label></AccordionTrigger>
+          <AccordionContent>
+            <div v-html="customLabel?.html_code"></div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </CardContent>
-    <div v-html="customLabel?.html_code"></div>
     <CardFooter>
       <ButtonApp type="submit" @click="onSubmit" :loading="loading">
         Submit

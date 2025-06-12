@@ -28,7 +28,7 @@ export const useCustomLabelStore = defineStore("customLabel", () => {
     import.meta.env.VITE_PRODUCT_BEARER_TOKEN_KEY,
     "",
   );
-  const { errors, loading, get, put, post, setHeader } = useAxios({
+  const { errors, loading, get, put, post, destroy, setHeader } = useAxios({
     baseURL: baseUrl,
   });
   setHeader("Bearer-Token", bearerToken);
@@ -123,6 +123,14 @@ export const useCustomLabelStore = defineStore("customLabel", () => {
     });
     return res;
   }
+  async function deleteCustomLabelData(custom_label_data_id: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+    const res = await destroy(`/api/custom-label-data/${custom_label_data_id}`);
+    return res;
+  }
 
   /* CustomLabel Data */
   return {
@@ -138,5 +146,6 @@ export const useCustomLabelStore = defineStore("customLabel", () => {
     getCustomLabel,
     saveCustomLabelData,
     updateCustomLabelData,
+    deleteCustomLabelData,
   };
 });

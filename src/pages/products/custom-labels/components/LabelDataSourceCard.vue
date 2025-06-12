@@ -26,12 +26,19 @@
         <TableBody>
           <TableRow v-for="(field, index) in fields" :key="field.key">
             <TableCell>
-              <FormField :name="`data.${index}.key`" #default="{ componentField }">
+              <FormField
+                :name="`data.${index}.key`"
+                #default="{ componentField }"
+              >
                 <FormItem>
                   <FormControl>
                     <Select v-bind="componentField">
                       <SelectTrigger>
-                        <SelectValue :placeholder="(formValues.data ?? [])[index]?.key || 'Select Key'" />
+                        <SelectValue
+                          :placeholder="
+                            (formValues.data ?? [])[index]?.key || 'Select Key'
+                          "
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem
@@ -50,7 +57,10 @@
             </TableCell>
 
             <TableCell>
-              <FormField :name="`data.${index}.value`" #default="{ componentField }">
+              <FormField
+                :name="`data.${index}.value`"
+                #default="{ componentField }"
+              >
                 <FormItem>
                   <FormControl>
                     <Input v-bind="componentField" />
@@ -89,9 +99,18 @@
       </Table>
     </CardContent>
 
-    <CardFooter>
+    <CardFooter class="flex justify-between">
       <ButtonApp :loading="loading" type="submit" @click="onSubmit">
         Submit
+      </ButtonApp>
+      <ButtonApp
+        class="bg-red-500"
+        :loading="loading"
+        type="submit"
+        @click="deleteCustomLabelData"
+        v-if="mode == 'edit'"
+      >
+        Delete
       </ButtonApp>
     </CardFooter>
   </Card>
@@ -159,9 +178,7 @@ const generateId = () => Math.random().toString(36).substring(2, 10);
 // Get initial data
 const getInitialData = () => {
   if (props.mode === "edit" && props.sumIndex != null) {
-    return (
-      customLabel.value?.custom_data?.[props.sumIndex]?.data || []
-    );
+    return customLabel.value?.custom_data?.[props.sumIndex]?.data || [];
   }
   return [{ key: "", value: "" }];
 };
@@ -177,20 +194,24 @@ const formSchema = toTypedSchema(
         z.object({
           key: z.string().nonempty("Key is required"),
           value: z.string().nonempty("Value is required"),
-        })
+        }),
       )
       .refine(
         (items) => {
           const keys = items.map((i) => i.key);
           return new Set(keys).size === keys.length;
         },
-        { message: "Duplicate keys are not allowed", path: ["data"] }
+        { message: "Duplicate keys are not allowed", path: ["data"] },
       ),
-  })
+  }),
 );
 
 // Form setup
-const { handleSubmit, values: formValues, resetForm } = useForm({
+const {
+  handleSubmit,
+  values: formValues,
+  resetForm,
+} = useForm({
   validationSchema: formSchema,
   initialValues: {
     id:
@@ -200,7 +221,7 @@ const { handleSubmit, values: formValues, resetForm } = useForm({
     custom_label_id:
       props.mode === "edit"
         ? customLabel.value?.custom_data?.[props.sumIndex!]?.custom_label_id
-        : customLabel.value?.id ?? "",
+        : (customLabel.value?.id ?? ""),
     sku:
       props.mode === "edit"
         ? customLabel.value?.custom_data?.[props.sumIndex!]?.sku
@@ -213,7 +234,7 @@ const { fields, push, remove } = useFieldArray("data");
 
 // Button guard: allow add only if all fields are filled
 const canAdd = computed(() =>
-  (formValues.data ?? []).every((item) => item.key && item.value)
+  (formValues.data ?? []).every((item) => item.key && item.value),
 );
 
 // Add new key-value pair
@@ -231,7 +252,10 @@ const onSubmit = handleSubmit(async (values) => {
   if (props.mode === "edit") {
     await customLabelStore.updateCustomLabelData(values.id!, payload);
   } else {
-    await customLabelStore.saveCustomLabelData(payload.custom_label_id, payload);
+    await customLabelStore.saveCustomLabelData(
+      payload.custom_label_id,
+      payload,
+    );
     // Reset form after creation
     resetForm({
       values: {
@@ -242,7 +266,17 @@ const onSubmit = handleSubmit(async (values) => {
       },
     });
   }
-
   emits("refresh");
 });
+
+const deleteCustomLabelData = async () => {
+  if (props.mode === "edit" && props.sumIndex != null) {
+    if (customLabel.value?.custom_data) {
+      const custom_label_data_id =
+        customLabel.value?.custom_data[props.sumIndex]?.id;
+      await customLabelStore.deleteCustomLabelData(custom_label_data_id);
+    }
+  }
+  emits("refresh");
+};
 </script>
