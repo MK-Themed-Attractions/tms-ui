@@ -15,8 +15,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import LabelCustomDataCard from "./LabelCustomDataCard.vue";
-import NewLabelCustomDataCard from "./NewLabelCustomDataCard.vue";
 // End of UI
 const emits = defineEmits<{
   (e: "refresh"): void;
@@ -24,6 +22,7 @@ const emits = defineEmits<{
 // Stores
 import { useCustomLabelStore } from "@/stores/customLabelStore";
 import { Info } from "lucide-vue-next";
+import LabelDataSourceCard from "./LabelDataSourceCard.vue";
 const customLabelStore = useCustomLabelStore();
 const { customLabel } = storeToRefs(customLabelStore);
 // Functions
@@ -50,7 +49,7 @@ const { customLabel } = storeToRefs(customLabelStore);
         <AccordionItem :value="'NewData'">
           <AccordionTrigger> New Data</AccordionTrigger>
           <AccordionContent>
-            <NewLabelCustomDataCard @refresh="$emit('refresh')" />
+            <LabelDataSourceCard mode="create" @refresh="$emit('refresh')" />
           </AccordionContent>
         </AccordionItem>
         <!-- Start of Existing Custom Data Source -->
@@ -61,11 +60,11 @@ const { customLabel } = storeToRefs(customLabelStore);
         >
           <AccordionTrigger>Product SKU: {{ data.sku }}</AccordionTrigger>
           <AccordionContent>
-            <LabelCustomDataCard
+            <LabelDataSourceCard
+              mode="edit"
+              :sumIndex="0"
               @refresh="$emit('refresh')"
-              :sumIndex="index"
-              :data="data"
-            ></LabelCustomDataCard>
+            />
           </AccordionContent>
         </AccordionItem>
         <!-- End of Existing Custom Data Source -->

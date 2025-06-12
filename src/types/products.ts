@@ -17,10 +17,19 @@ export interface Product {
   sku: string;
   title: string;
   routings?: ProductRouting[];
+  product_parts?: ProductParts[];
   product_bom_no: string;
   routing_link_code: string;
 }
-
+export interface ProductParts {
+  sku: string;
+  part_no: string;
+  part_description: string;
+  part_unit_of_measure: string;
+  created_at: string;
+  updated_at: string;
+  id: string;
+}
 export interface ProductRouting {
   created_at: string;
   id: string;
