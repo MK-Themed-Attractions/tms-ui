@@ -114,27 +114,26 @@ const configHTML = (product: Product) => {
     );
   }
   if (true) {
-    // CurrentProductPartName
+    // CurrentProductPartName && CurrentProductPartNumber && ProductPartCount
     const mirrorHtml = html;
     if (product.product_parts && product.product_parts.length > 0) {
       html = "";
       product.product_parts.forEach((part, index) => {
-        html += mirrorHtml.replace(
-          /CurrentProductPartName/g,
-          part.part_description +
-            " ( " +
-            (index + 1) +
-            " of " +
-            product.product_parts?.length +
-            " ) ",
-        );
+        html += mirrorHtml
+          .replace(/CurrentProductPartName/g, part.part_description)
+          .replace(/CurrentProductPartNumber/g, index + 1)
+          .replace(/ProductPartCount/g, product.product_parts.length);
       });
     }
   }
   if (true) {
     // Removal of Constant Parameter
-    var constantParameters = ["CurrentDate", "CurrentProductPartName"];
-    constantParameters.forEach((param) => {
+    [
+      "CurrentDate",
+      "CurrentProductPartName",
+      "CurrentProductPartNumber",
+      "ProductPartCount",
+    ].forEach((param) => {
       const regex = new RegExp(param, "g");
       html = html.replace(regex, "");
     });

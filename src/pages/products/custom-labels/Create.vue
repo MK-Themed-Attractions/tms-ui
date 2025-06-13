@@ -29,6 +29,8 @@
             <TableRow>
               <TableHead>Keyword</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Default Value</TableHead>
+
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -61,6 +63,19 @@
                 </FormField>
               </TableCell>
               <TableCell>
+                <FormField
+                  :name="`parameters[${index}].value`"
+                  #default="{ componentField }"
+                >
+                  <FormItem>
+                    <FormControl>
+                      <Input v-bind="componentField" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </FormField>
+              </TableCell>
+              <TableCell>
                 <ButtonApp
                   @click="removeItem('parameters', index)"
                   class="border"
@@ -72,7 +87,7 @@
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell :colspan="3">
+              <TableCell :colspan="4">
                 <ButtonApp
                   @click="addItem('parameters')"
                   class="ml-auto border"
@@ -208,7 +223,10 @@
       <!-- Buttons -->
       <div class="mt-4 flex justify-between gap-2">
         <ButtonApp type="submit" @click="onSubmit"> Submit </ButtonApp>
-        <RouterLink :to="{ name: 'customLabelList' }"class="bg-red-500 p-2 text-white rounded-md">
+        <RouterLink
+          :to="{ name: 'customLabelList' }"
+          class="rounded-md bg-red-500 p-2 text-white"
+        >
           Cancel
         </RouterLink>
       </div>
@@ -254,6 +272,7 @@ import { watch } from "vue";
 const parameterSchema = z.object({
   key: z.string().nonempty(),
   desc: z.string().nonempty(),
+  value: z.string().optional()
 });
 
 const labelParameterSchema = z.object({
@@ -320,7 +339,7 @@ const onSubmit = handleSubmit(async (formValues) => {
     html_code: values.html_code ?? "",
     parameters: values.parameters ?? [],
     label_parameters: values.label_parameters ?? [],
-  };  
+  };
   const res = await customLabelStore.saveCustomLabel(payload);
   router.push({ name: "customLabelList" });
 });
@@ -331,7 +350,7 @@ const normalizeKeyInput = (value: string): string => {
     .toUpperCase(); // all caps
 };
 watch(
-  () => values.parameters,
+  () => values?.parameters,
   (newVal) => {
     if (newVal) {
       newVal.forEach((param, index) => {
@@ -345,7 +364,7 @@ watch(
 );
 
 watch(
-  () => values.label_parameters,
+  () => values?.label_parameters,
   (newVal) => {
     if (newVal) {
       newVal.forEach((param, index) => {
