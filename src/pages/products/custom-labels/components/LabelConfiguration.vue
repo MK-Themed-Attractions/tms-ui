@@ -136,39 +136,13 @@ const onSubmit = handleSubmit(async (formValues) => {
   emits("refresh");
 });
 
-const normalizeKeyInput = (value: string): string => {
-  return value
+const normalizeKeyInput = (strInput: string): string => {
+  strInput.modelValue = strInput.modelValue
     .replace(/\s+/g, "_") // spaces → underscore
     .replace(/-/g, "_") // remove dashes
     .toUpperCase(); // all caps
+  return strInput;
 };
-watch(
-  () => values.parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
-
-watch(
-  () => values.label_parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
 </script>
 
 <template>
@@ -221,6 +195,7 @@ watch(
                 <FormItem>
                   <FormControl>
                     <Input
+                      @blur="componentField = normalizeKeyInput(componentField)"
                       v-bind="componentField"
                       :placeholder="lbl_param.key"
                     />
@@ -238,6 +213,11 @@ watch(
                   <FormControl>
                     <Input
                       v-bind="componentField"
+                      @blur="
+                        componentField.value = normalizeKeyInput(
+                          componentField.value,
+                        )
+                      "
                       :placeholder="lbl_param.desc"
                     />
                   </FormControl>
@@ -316,7 +296,10 @@ watch(
               >
                 <FormItem>
                   <FormControl>
-                    <Input v-bind="componentField" />
+                    <Input
+                      @blur="componentField = normalizeKeyInput(componentField)"
+                      v-bind="componentField"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

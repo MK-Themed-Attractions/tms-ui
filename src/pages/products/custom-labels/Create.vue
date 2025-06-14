@@ -43,7 +43,12 @@
                 >
                   <FormItem>
                     <FormControl>
-                      <Input v-bind="componentField" />
+                      <Input
+                        v-bind="componentField"
+                        @blur="
+                          componentField = normalizeKeyInput(componentField)
+                        "
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -128,7 +133,12 @@
                 >
                   <FormItem>
                     <FormControl>
-                      <Input v-bind="componentField" />
+                      <Input
+                        v-bind="componentField"
+                        @blur="
+                          componentField = normalizeKeyInput(componentField)
+                        "
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -272,7 +282,7 @@ import { watch } from "vue";
 const parameterSchema = z.object({
   key: z.string().nonempty(),
   desc: z.string().nonempty(),
-  value: z.string().optional()
+  value: z.string().optional(),
 });
 
 const labelParameterSchema = z.object({
@@ -343,37 +353,11 @@ const onSubmit = handleSubmit(async (formValues) => {
   const res = await customLabelStore.saveCustomLabel(payload);
   router.push({ name: "customLabelList" });
 });
-const normalizeKeyInput = (value: string): string => {
-  return value
+const normalizeKeyInput = (strInput: string): string => {
+  strInput.modelValue = strInput.modelValue
     .replace(/\s+/g, "_") // spaces → underscore
     .replace(/-/g, "_") // remove dashes
     .toUpperCase(); // all caps
+  return strInput;
 };
-watch(
-  () => values?.parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
-
-watch(
-  () => values?.label_parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
 </script>
