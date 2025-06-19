@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Initial
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { custom, z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -78,6 +78,7 @@ const formSchema = toTypedSchema(
       z.object({
         key: z.string().nonempty(),
         desc: z.string().nonempty(),
+        value: z.string().optional(),
       }),
     ),
     label_parameters: z.array(
@@ -91,7 +92,7 @@ const formSchema = toTypedSchema(
   }),
 );
 
-const { handleSubmit } = useForm({
+const { handleSubmit, values } = useForm({
   validationSchema: formSchema,
   initialValues: {
     id: customLabel.value?.id,
@@ -127,13 +128,21 @@ const removeItem = (type: string, index: number) => {
   }
 };
 
-const onSubmit = handleSubmit(async (values) => {
+const onSubmit = handleSubmit(async (formValues) => {
   const payload = {
-    ...values,
+    ...formValues,
   };
   await customLabelStore.updateCustomLabel(payload);
   emits("refresh");
 });
+
+const normalizeKeyInput = (strInput: string): string => {
+  strInput.modelValue = strInput.modelValue
+    .replace(/\s+/g, "_") // spaces → underscore
+    .replace(/-/g, "_") // remove dashes
+    .toUpperCase(); // all caps
+  return strInput;
+};
 </script>
 
 <template>
@@ -168,6 +177,8 @@ const onSubmit = handleSubmit(async (values) => {
           <TableRow>
             <TableHead> Keyword </TableHead>
             <TableHead> Description </TableHead>
+            <TableHead> Default Value </TableHead>
+
             <TableHead> </TableHead>
           </TableRow>
         </TableHeader>
@@ -184,6 +195,7 @@ const onSubmit = handleSubmit(async (values) => {
                 <FormItem>
                   <FormControl>
                     <Input
+                      @blur="componentField = normalizeKeyInput(componentField)"
                       v-bind="componentField"
                       :placeholder="lbl_param.key"
                     />
@@ -201,7 +213,28 @@ const onSubmit = handleSubmit(async (values) => {
                   <FormControl>
                     <Input
                       v-bind="componentField"
+                      @blur="
+                        componentField.value = normalizeKeyInput(
+                          componentField.value,
+                        )
+                      "
                       :placeholder="lbl_param.desc"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+            </TableCell>
+            <TableCell>
+              <FormField
+                #default="{ componentField }"
+                :name="`parameters[${index}].value`"
+              >
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      v-bind="componentField"
+                      :placeholder="lbl_param.value"
                     />
                   </FormControl>
                   <FormMessage />
@@ -220,7 +253,7 @@ const onSubmit = handleSubmit(async (values) => {
             </TableCell>
           </TableRow>
           <TableRow>
-            <TableCell :colspan="3">
+            <TableCell :colspan="4">
               <ButtonApp
                 @click="addItem('parameters')"
                 size="icon"
@@ -263,7 +296,10 @@ const onSubmit = handleSubmit(async (values) => {
               >
                 <FormItem>
                   <FormControl>
-                    <Input v-bind="componentField" />
+                    <Input
+                      @blur="componentField = normalizeKeyInput(componentField)"
+                      v-bind="componentField"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -361,6 +397,20 @@ const onSubmit = handleSubmit(async (values) => {
             </TableCell>
           </TableRow>
           <TableRow>
+            <TableCell> CurrentProductPartNumber </TableCell>
+            <TableCell>
+              Display the current product part number of the Product Item (
+              default is blank )
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell> ProductPartCount </TableCell>
+            <TableCell>
+              Display the total number of part of the Product Item ( default is
+              blank )
+            </TableCell>
+          </TableRow>
+          <TableRow>
             <TableCell> CurrentDate </TableCell>
             <TableCell> Display the printing date </TableCell>
           </TableRow>
@@ -383,11 +433,7 @@ const onSubmit = handleSubmit(async (values) => {
         </FormItem>
       </FormField>
       <Separator class="my-2" />
-      <Accordion
-        type="single"
-        class="w-full rounded-sm border p-3"
-        collapsible
-      >
+      <Accordion type="single" class="w-full rounded-sm border p-3" collapsible>
         <AccordionItem :value="'Preview'">
           <AccordionTrigger> <Label> Preview </Label></AccordionTrigger>
           <AccordionContent>

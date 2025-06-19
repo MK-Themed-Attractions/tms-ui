@@ -29,6 +29,8 @@
             <TableRow>
               <TableHead>Keyword</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Default Value</TableHead>
+
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -41,7 +43,12 @@
                 >
                   <FormItem>
                     <FormControl>
-                      <Input v-bind="componentField" />
+                      <Input
+                        v-bind="componentField"
+                        @blur="
+                          componentField = normalizeKeyInput(componentField)
+                        "
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -50,6 +57,19 @@
               <TableCell>
                 <FormField
                   :name="`parameters[${index}].desc`"
+                  #default="{ componentField }"
+                >
+                  <FormItem>
+                    <FormControl>
+                      <Input v-bind="componentField" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </FormField>
+              </TableCell>
+              <TableCell>
+                <FormField
+                  :name="`parameters[${index}].value`"
                   #default="{ componentField }"
                 >
                   <FormItem>
@@ -72,7 +92,7 @@
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell :colspan="3">
+              <TableCell :colspan="4">
                 <ButtonApp
                   @click="addItem('parameters')"
                   class="ml-auto border"
@@ -113,7 +133,12 @@
                 >
                   <FormItem>
                     <FormControl>
-                      <Input v-bind="componentField" />
+                      <Input
+                        v-bind="componentField"
+                        @blur="
+                          componentField = normalizeKeyInput(componentField)
+                        "
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,7 +233,10 @@
       <!-- Buttons -->
       <div class="mt-4 flex justify-between gap-2">
         <ButtonApp type="submit" @click="onSubmit"> Submit </ButtonApp>
-        <RouterLink :to="{ name: 'customLabelList' }"class="bg-red-500 p-2 text-white rounded-md">
+        <RouterLink
+          :to="{ name: 'customLabelList' }"
+          class="rounded-md bg-red-500 p-2 text-white"
+        >
           Cancel
         </RouterLink>
       </div>
@@ -254,6 +282,7 @@ import { watch } from "vue";
 const parameterSchema = z.object({
   key: z.string().nonempty(),
   desc: z.string().nonempty(),
+  value: z.string().optional(),
 });
 
 const labelParameterSchema = z.object({
@@ -320,41 +349,15 @@ const onSubmit = handleSubmit(async (formValues) => {
     html_code: values.html_code ?? "",
     parameters: values.parameters ?? [],
     label_parameters: values.label_parameters ?? [],
-  };  
+  };
   const res = await customLabelStore.saveCustomLabel(payload);
   router.push({ name: "customLabelList" });
 });
-const normalizeKeyInput = (value: string): string => {
-  return value
+const normalizeKeyInput = (strInput: string): string => {
+  strInput.modelValue = strInput.modelValue
     .replace(/\s+/g, "_") // spaces → underscore
     .replace(/-/g, "_") // remove dashes
     .toUpperCase(); // all caps
+  return strInput;
 };
-watch(
-  () => values.parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
-
-watch(
-  () => values.label_parameters,
-  (newVal) => {
-    if (newVal) {
-      newVal.forEach((param, index) => {
-        if (param.key) {
-          param.key = normalizeKeyInput(param.key);
-        }
-      });
-    }
-  },
-  { deep: true },
-);
 </script>
