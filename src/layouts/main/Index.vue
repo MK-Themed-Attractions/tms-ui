@@ -139,7 +139,7 @@ provide(mainScrollerKey, useMainScroller);
           </Popover>
         </div>
 
-        <Notification v-if="user" />
+        <!-- <Notification v-if="user" /> -->
         <UserMenu v-if="user" />
         <ButtonApp v-else variant="outline" @click="gotoLogin">Login</ButtonApp>
       </header>

@@ -42,9 +42,11 @@ export const useWebsocket = () => {
       );
 
       await workCenterChannel.subscribe(
-        permission,
+        `${permission}`,
         (message: Notification<any>) => {
-          console.log(message);
+          toast.info("Task notice", {
+            description: message.data.message,
+          });
         },
       );
     });
