@@ -2,7 +2,7 @@
 import { navItemData } from "./data";
 
 import { Button } from "@/components/ui/button";
-import { Info, Menu } from "lucide-vue-next";
+import { Bell, Info, Menu } from "lucide-vue-next";
 import SideNavigation from "./components/SideNavigation.vue";
 import SearchForm from "./components/SearchForm.vue";
 import UserMenu from "./components/UserMenu.vue";
@@ -25,8 +25,10 @@ import { getS3Link } from "@/lib/utils";
 import { ButtonApp } from "@/components/app/button";
 import { useRouter } from "vue-router";
 import { Loader } from "@/components/app/loader";
+import Notification from "./components/Notification.vue";
 
 const main = templateRef("main");
+
 const { y } = useScroll(main);
 const productStore = useProductStore();
 const { handleSearch, loading, products, productPopover } = useSearch();
@@ -89,7 +91,7 @@ provide(mainScrollerKey, useMainScroller);
   <div class="fixed grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
     <SideNavigation class="hidden border-r bg-muted/40 lg:block" :items="navItemData" />
     <div class="flex flex-col">
-      <header class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+      <header class="flex h-14 items-center gap-2 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
         <MobileNavigation>
           <Button variant="outline" size="icon" class="shrink-0 lg:hidden">
             <Menu class="h-5 w-5" />
@@ -136,6 +138,8 @@ provide(mainScrollerKey, useMainScroller);
             </PopoverContent>
           </Popover>
         </div>
+
+        <!-- <Notification v-if="user" /> -->
         <UserMenu v-if="user" />
         <ButtonApp v-else variant="outline" @click="gotoLogin">Login</ButtonApp>
       </header>

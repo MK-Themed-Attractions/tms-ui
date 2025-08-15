@@ -49,6 +49,7 @@ export const useAuthStore = defineStore("auth", () => {
       serializer: StorageSerializers.object,
     },
   );
+
   const accessToken = useStorage<Token | null>(
     "access-token",
     null,
@@ -103,6 +104,12 @@ export const useAuthStore = defineStore("auth", () => {
       .filter((permission) => permission.startsWith("ui-"))
       .map((permission) => permission.replace("ui-", "").toLowerCase());
   });
+
+  const userOperationCodesPermissions = computed(() =>
+    userUIPermissionSet.value
+      .filter((p) => p.toUpperCase().includes("DEPT"))
+      .map((p) => p.split("_")?.[0]?.toUpperCase()),
+  );
 
   function invalidate() {
     user.value = null;
@@ -361,6 +368,7 @@ export const useAuthStore = defineStore("auth", () => {
     userPermissionSet,
     roles,
     rolesWithPermission,
-    userUIPermissionSet
+    userUIPermissionSet,
+    userOperationCodesPermissions,
   };
 });
