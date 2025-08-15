@@ -37,10 +37,6 @@ function canShowNavItem(item: NavItem) {
           <span class="">Task Management System</span>
         </RouterLink>
 
-        <Button variant="outline" size="icon" class="ml-auto h-8 w-8">
-          <Bell class="h-4 w-4" />
-          <span class="sr-only">Toggle notifications</span>
-        </Button>
       </div>
       <div class="flex-1">
         <nav class="grid items-start px-2 text-sm font-medium lg:px-4">
