@@ -15,7 +15,7 @@ export const useWebsocket = () => {
 
   async function init() {
     const authStore = useAuthStore();
-    const { user } = storeToRefs(authStore);
+    const { user, userOperationCodesPermissions } = storeToRefs(authStore);
 
     if (!user.value) {
       console.warn("No user found, skipping websocket initialization");
@@ -35,14 +35,21 @@ export const useWebsocket = () => {
       handlePlanningEvent(message);
     });
 
-    const workCenterChannel = realtime.channels.get(`notifications.DET`);
+    //notifications for tasks notifications per workcenter
+    userOperationCodesPermissions.value.forEach(async (permission) => {
+      const workCenterChannel = realtime.channels.get(
+        `notifications.${permission}`,
+      );
 
-    await workCenterChannel.subscribe(
-      "common",
-      (message: Notification<any>) => {
-        console.log(message);
-      },
-    );
+      await workCenterChannel.subscribe(
+        `${permission}`,
+        (message: Notification<any>) => {
+          toast.info("Task notice", {
+            description: message.data.message,
+          });
+        },
+      );
+    });
   }
 
   function handlePlanningEvent(message: Notification<any>) {
@@ -68,7 +75,9 @@ export const useWebsocket = () => {
   function notifyPlanCreate(message: Notification<Plan>) {
     if (route.name === "planningShow" && message.data.status) {
       if (message.data.data)
-        planStore.getPlan(message.data.data.id, {includes: 'batches'}).then(() => showToast());
+        planStore
+          .getPlan(message.data.data.id, { includes: "batches" })
+          .then(() => showToast());
     } else {
       planStore.getPlans().then(() => showToast());
     }
