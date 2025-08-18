@@ -18,6 +18,7 @@ import {
   UserCircle,
   Wrench,
   Tags,
+  Ticket,
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
 
@@ -131,5 +132,11 @@ export const navItemData: NavItem[] = [
     icon: Boxes,
     to: { name: "inventoryIndex" },
     permissionKey: import.meta.env.VITE_INVENTORY_KEY,
+  },
+  {
+    name: "Report Tickets",
+    icon: Ticket,
+    to: { name: "ticketIndex" },
+    permissionKey: import.meta.env.VITE_TICKET_KEY,
   },
 ];

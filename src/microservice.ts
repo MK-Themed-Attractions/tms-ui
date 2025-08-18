@@ -13,6 +13,7 @@ export const routingMicroservices = [
   "qc",
   "workers",
   "ui",
+  "tickets"
 ] as const;
 
 export type RoutingMicroserviceType = (typeof routingMicroservices)[number];

@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_QC: string;
   readonly VITE_INVENTORY: string;
   readonly VITE_NOTIFICATIONS: string;
+  readonly VITE_TICKET: string;
+
   readonly VITE_PRODUCT_BEARER_TOKEN_KEY: string;
   readonly VITE_WORKERS_BEARER_TOKEN_KEY: string;
   readonly VITE_PLANNING_BEARER_TOKEN_KEY: string;
@@ -18,6 +20,8 @@ interface ImportMetaEnv {
   readonly VITE_QC_BEARER_TOKEN_KEY: string;
   readonly VITE_INVENTORY_BEARER_TOKEN_KEY: string;
   readonly VITE_NOTIFICATIONS_BEARER_TOKEN_KEY: string;
+  readonly VITE_TICKET_BEARER_TOKEN_KEY: string;
+
   readonly VITE_ABLY_PUBLIC_KEY: string;
   readonly VITE_S3_ENDPOINT: string;
   readonly VITE_DEV_TEAM_EMAIL: string;
@@ -35,6 +39,10 @@ interface ImportMetaEnv {
   readonly VITE_USERS_PERMISSION_KEY: string;
   readonly VITE_OUTPUT_POSTING_KEY: string;
   readonly VITE_INVENTORY_KEY: string;
+  readonly VITE_TICKET_KEY: string;
+  readonly VITE_TICKET_CREATE_KEY: string;
+  readonly VITE_TICKET_CHANGE_STATUS_KEY: string;
+  readonly VITE_TICKET_DELETE_KEY: string;
 
   readonly VITE_SUPERADMIN_IDS: string;
 }
