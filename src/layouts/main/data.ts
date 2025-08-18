@@ -134,9 +134,21 @@ export const navItemData: NavItem[] = [
     permissionKey: import.meta.env.VITE_INVENTORY_KEY,
   },
   {
-    name: "Report Tickets",
+    name: "Ticket Management",
     icon: Ticket,
-    to: { name: "ticketIndex" },
-    permissionKey: import.meta.env.VITE_TICKET_KEY,
+    children: [
+      {
+        name: "Report Ticket",
+        icon: Ticket,
+        to: { name: "ticketIndex" },
+        permissionKey: import.meta.env.VITE_TICKET_KEY,
+      },
+      {
+        name: "Ticket Types",
+        icon: Ticket,
+        to: { name: "ticketTypesIndex" },
+        permissionKey: import.meta.env.VITE_TICKET_TYPE_KEY,
+      },
+    ],
   },
 ];

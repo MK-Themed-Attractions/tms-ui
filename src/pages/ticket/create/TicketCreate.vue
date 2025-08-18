@@ -5,10 +5,13 @@ import { useTicketStore } from '@/stores/ticketStore';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
 
 const ticketStore = useTicketStore()
 const { loading, errors } = storeToRefs(ticketStore)
 const router = useRouter()
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 
 async function handleSubmit(data: TicketSchema) {
     await ticketStore.createTicket(data as CreateTicketPayload)
@@ -28,7 +31,7 @@ async function handleSubmit(data: TicketSchema) {
 
 <template>
     <div class="max-w-lg mx-auto">
-        <TicketForm @submit="handleSubmit" :loading="loading" />
+        <TicketForm @submit="handleSubmit" :loading="loading" :initial-values="{ user_id: user.id }" />
     </div>
 </template>
 

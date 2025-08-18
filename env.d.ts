@@ -39,10 +39,18 @@ interface ImportMetaEnv {
   readonly VITE_USERS_PERMISSION_KEY: string;
   readonly VITE_OUTPUT_POSTING_KEY: string;
   readonly VITE_INVENTORY_KEY: string;
+
   readonly VITE_TICKET_KEY: string;
   readonly VITE_TICKET_CREATE_KEY: string;
+  readonly VITE_TICKET_SHOW_KEY: string;
+  readonly VITE_TICKET_UPDATE_KEY: string;
   readonly VITE_TICKET_CHANGE_STATUS_KEY: string;
   readonly VITE_TICKET_DELETE_KEY: string;
+  readonly VITE_TICKET_TYPE_KEY: string;
+  readonly VITE_TICKET_TYPE_SHOW_KEY: string;
+  readonly VITE_TICKET_TYPE_CREATE_KEY: string;
+  readonly VITE_TICKET_TYPE_UPDATE_KEY: string;
+  readonly VITE_TICKET_TYPE_DELETE_KEY: string;
 
   readonly VITE_SUPERADMIN_IDS: string;
 }

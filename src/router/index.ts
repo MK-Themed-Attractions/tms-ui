@@ -19,6 +19,7 @@ import { inventory } from "./inventory";
 import { printRoutes } from "./prints";
 import { productRoutes } from "./product";
 import { ticketRoutes } from "./ticket";
+import { ticketTypeRoutes } from "./ticketType";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -62,6 +63,7 @@ const router = createRouter({
         ...errorPages,
         ...inventory,
         ...ticketRoutes,
+        ...ticketTypeRoutes,
       ],
     },
     ...auth,

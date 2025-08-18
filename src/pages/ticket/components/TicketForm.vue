@@ -2,9 +2,7 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuthStore } from '@/stores/authStore';
 import { toTypedSchema } from '@vee-validate/zod';
-import { storeToRefs } from 'pinia';
 import { useForm } from 'vee-validate';
 import TicketFormTicketTypeSelect from './TicketFormTicketTypeSelect.vue';
 import { ButtonApp } from '@/components/app/button';
@@ -22,16 +20,11 @@ const props = defineProps<{
 }>()
 
 
-const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
 const formSchema = toTypedSchema(ticketSchema)
 
 const { handleSubmit } = useForm({
     validationSchema: formSchema,
-    initialValues: {
-        ...props.initialValues,
-        user_id: user.value?.id
-    }
+    initialValues: props.initialValues,
 })
 
 const submit = handleSubmit(async (values) => {

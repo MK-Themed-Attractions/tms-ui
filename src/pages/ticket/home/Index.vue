@@ -11,6 +11,8 @@ import type { SimplePaginate } from '@/types/pagination';
 import { ButtonApp } from '@/components/app/button';
 import { storeToRefs } from 'pinia';
 import { FilterApp } from '@/components/app/filter';
+import { usePermission } from '@/layouts/main/usePermission';
+import { useAuthStore } from '@/stores/authStore';
 
 const ticketStore = useTicketStore()
 const { loading } = storeToRefs(ticketStore)
@@ -23,13 +25,29 @@ const tickets = ref<Ticket[]>([])
 const ticketTypes = ref<TicketType[]>([])
 const ticketTypesFilter = ref<string[]>([])
 const ticketStatusFilter = ref<TicketStatus[]>([])
+const { hasPermission } = usePermission()
+const canCreateTicket = hasPermission(import.meta.env.VITE_TICKET_CREATE_KEY)
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 
-const params = computed<Partial<GetTicketsQueryParams>>(() => ({ includes: 'ticket_type', page: page.value, type: ticketTypesFilter.value, status: ticketStatusFilter.value, }))
+const params = computed<Partial<GetTicketsQueryParams>>(() => {
+
+    const params: Partial<GetTicketsQueryParams> = {
+        includes: 'ticket_type', page: page.value, type: ticketTypesFilter.value, status: ticketStatusFilter.value,
+    }
+
+    const adminKeys = <string[]>JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS);
+    if (!adminKeys.includes(user.value.id)) {
+        params.user_ids = [user.value.id]
+    }
+
+
+    return params
+})
 
 async function fetchTickets() {
 
     const promises = Array.from({ length: page.value }).map(async (_, index) => {
-        console.log(_, index + 1)
         return (ticketStore.getTickets({ ...params.value, page: index + 1 }))
     })
 
@@ -57,7 +75,6 @@ async function fetchNextTickets() {
 
 
 if (!tickets.value || !tickets.value.length) {
-    console.log('walang tickets')
     await fetchTickets()
 }
 
@@ -114,7 +131,7 @@ async function handleTicketStatusSelect(ticketStatuses: { id: string, name: Tick
             <div class="flex flex-wrap justify-between gap-4">
                 <SectionHeader title="Ticket"
                     description="This section lets you track and manage all the tickets, including create, update, and delete tickets." />
-                <Button class="w-full md:w-auto" as-child>
+                <Button class="w-full md:w-auto" as-child v-if="canCreateTicket">
                     <RouterLink :to="{ name: 'ticketCreate' }">
                         <Plus /> Create Ticket
                     </RouterLink>

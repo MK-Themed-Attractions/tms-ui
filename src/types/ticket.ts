@@ -17,7 +17,7 @@ export const ticketSchema = z.object({
   title: z.string().nonempty("Required"),
   details: z.string().optional(),
   ticket_type_id: z.string().nonempty("Required"),
-  user_id: z.string(),
+  user_id: z.string().optional(),
 });
 
 export type TicketSchema = z.infer<typeof ticketSchema>;
@@ -35,4 +35,5 @@ export type TicketType = TimeStamp & {
 export type GetTicketsQueryParams = QueryParams & {
   type: string[];
   status: TicketStatus[];
+  user_ids: string[]
 };

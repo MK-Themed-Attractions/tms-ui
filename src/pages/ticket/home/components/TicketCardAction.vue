@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { usePermission } from '@/layouts/main/usePermission';
+import { useAuthStore } from '@/stores/authStore';
 import { useTicketStore } from '@/stores/ticketStore';
 import type { Ticket } from '@/types/ticket';
 import { LoaderCircle, MoreVertical, Pencil, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-vue-next';
@@ -12,6 +14,9 @@ defineOptions({ inheritAttrs: false })
 const router = useRouter()
 const ticketStore = useTicketStore()
 const { loading } = storeToRefs(ticketStore)
+const { hasPermission } = usePermission()
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 
 
 async function handleApprove() {
@@ -28,6 +33,8 @@ async function handleDelete() {
     router.replace({ name: 'ticketIndex', query: { submitted: 'true' } })
 }
 
+const canChangeStatus = hasPermission(import.meta.env.VITE_TICKET_CHANGE_STATUS_KEY)
+
 </script>
 <template>
     <DropdownMenu>
@@ -37,10 +44,11 @@ async function handleDelete() {
                 <LoaderCircle class="animate-spin" v-else />
             </Button>
         </DropdownMenuTrigger>
+
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuGroup>
-                <DropdownMenuItem as-child>
+                <DropdownMenuItem as-child v-if="user.id === ticket.user_id">
                     <RouterLink :to="{ name: 'updateTicket', params: { id: props.ticket.id } }">
                         <Pencil /> Edit
 
@@ -50,15 +58,18 @@ async function handleDelete() {
                     <Trash2 /> Delete
                 </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Admin</DropdownMenuLabel>
-            <DropdownMenuItem @select="handleApprove" v-if="ticket.status !== 'approved'">
-                <ThumbsUp /> Approve
-            </DropdownMenuItem>
-            <DropdownMenuItem @select="handleReject" v-if="ticket.status !== 'rejected'">
-                <ThumbsDown />
-                Reject
-            </DropdownMenuItem>
+
+            <template v-if="canChangeStatus">
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Admin</DropdownMenuLabel>
+                <DropdownMenuItem @select="handleApprove" v-if="ticket.status !== 'approved'">
+                    <ThumbsUp /> Approve
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="handleReject" v-if="ticket.status !== 'rejected'">
+                    <ThumbsDown />
+                    Reject
+                </DropdownMenuItem>
+            </template>
         </DropdownMenuContent>
     </DropdownMenu>
 </template>
