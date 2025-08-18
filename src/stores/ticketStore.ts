@@ -7,9 +7,13 @@ import type {
   GetTicketsQueryParams,
   Ticket,
   TicketStatus,
-  TicketType,
   UpdateTicketPayload,
 } from "@/types/ticket";
+import type {
+  CreateTicketTypePayload,
+  TicketType,
+  UpdateTicketTypePayload,
+} from "@/types/TicketType";
 import type { SimplePaginate } from "@/types/pagination";
 import { computed, ref } from "vue";
 
@@ -118,6 +122,45 @@ export const useTicketStore = defineStore("tickets", () => {
     return res?.data;
   }
 
+  async function getTicketType(ticketTypeId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<TicketType>(`/api/ticket-type/${ticketTypeId}`);
+    return res;
+  }
+
+  async function createTicketType(payload: CreateTicketTypePayload) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await post("/api/ticket-type", payload);
+  }
+  async function updateTicketType(
+    ticketTypeId: string,
+    payload: UpdateTicketTypePayload,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await put(`/api/ticket-type/${ticketTypeId}`, payload);
+  }
+
+  async function deleteTicketType(ticketTypeId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await destroy(`/api/ticket-type/${ticketTypeId}`);
+  }
+
   return {
     getTickets,
     invalidate,
@@ -125,11 +168,15 @@ export const useTicketStore = defineStore("tickets", () => {
     errors,
     tickets,
     getTicketTypes,
+    getTicketType,
     getTicket,
     ticketTypes,
     createTicket,
     updateTicket,
     changeTicketStatus,
     deleteTicket,
+    createTicketType,
+    updateTicketType,
+    deleteTicketType
   };
 });

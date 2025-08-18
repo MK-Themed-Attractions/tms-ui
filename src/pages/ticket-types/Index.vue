@@ -4,7 +4,7 @@
     <div>
         <RouterView>
             <template #default="{ Component }">
-                <KeepAlive exclude="TicketEdit,TicketCreate">
+                <KeepAlive exclude="TicketTypesEdit,TicketTypesCreate">
                     <component :is="Component"></component>
                 </KeepAlive>
             </template>

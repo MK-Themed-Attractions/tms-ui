@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { QueryParams, TimeStamp } from "./general";
 import type { InferInput } from "vee-validate";
+import type { TicketType } from "./TicketType";
 
 export type Ticket = TimeStamp & {
   id: string;
@@ -25,12 +26,6 @@ export type TicketSchema = z.infer<typeof ticketSchema>;
 export type CreateTicketPayload = z.infer<typeof ticketSchema>;
 
 export type UpdateTicketPayload = Partial<CreateTicketPayload>;
-
-export type TicketType = TimeStamp & {
-  name: string;
-  description?: string;
-  id: string;
-};
 
 export type GetTicketsQueryParams = QueryParams & {
   type: string[];

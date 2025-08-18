@@ -20,12 +20,18 @@ export const ticketRoutes: RouteRecordRaw[] = [
         path: "create",
         name: "ticketCreate",
         component: () => import("@/pages/ticket/create/TicketCreate.vue"),
+        meta: {
+          permissionKey: import.meta.env.VITE_TICKET_CREATE_KEY,
+        }
       },
       {
         path: ":id/edit",
         name: "updateTicket",
         component: () => import("@/pages/ticket/edit/TicketEdit.vue"),
         props: true,
+        meta: {
+          permissionKey: import.meta.env.VITE_TICKET_UPDATE_KEY,
+        }
       },
     ],
   },
