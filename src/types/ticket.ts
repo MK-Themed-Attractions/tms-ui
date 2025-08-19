@@ -27,8 +27,20 @@ export type CreateTicketPayload = z.infer<typeof ticketSchema>;
 
 export type UpdateTicketPayload = Partial<CreateTicketPayload>;
 
-export type GetTicketsQueryParams = QueryParams & {
+export type GetTicketsQueryParams = Omit<QueryParams, "filters"> & {
   type: string[];
   status: TicketStatus[];
-  user_ids: string[]
+  user_ids: string[];
+  filters: string;
+};
+
+export type TicketNotification = {
+  title: string;
+  details: string;
+  user_id: string;
+  status: TicketStatus;
+  ticket_type_id: string;
+  updated_at: string;
+  created_at: string;
+  id: string;
 };
