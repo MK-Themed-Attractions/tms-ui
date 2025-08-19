@@ -9,12 +9,19 @@ export const useTaskControls = function useTaskControl() {
 
   function canStart(status: TaskStatus) {
     return (
-      status === "pending" || status === "paused" || status === "qc-failed"
+      status === "pending" ||
+      status === "paused" ||
+      status === "qc-failed" ||
+      status === "repair"
     );
   }
 
   function canPause(status: TaskStatus) {
     return status === "ongoing";
+  }
+
+  function canReportIncident(status: TaskStatus) {
+    return canPause(status) || status === "repair";
   }
 
   function canFinish(status: TaskStatus) {
@@ -82,5 +89,6 @@ export const useTaskControls = function useTaskControl() {
     pauseTask,
     finishTask,
     hasWorkers,
+    canReportIncident,
   };
 };
