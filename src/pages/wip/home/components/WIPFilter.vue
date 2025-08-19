@@ -17,6 +17,7 @@ const filters: { key: TaskStatus, value: string }[] = [
     { key: 'paused', value: 'Paused' },
     { key: 'done', value: 'Done' },
     { key: 'qc-passed', value: 'QC Passed' },
+    { key: 'repair', value: 'Repair' },
 ]
 
 </script>
