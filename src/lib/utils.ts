@@ -12,6 +12,7 @@ import {
   Slash,
   ThumbsDown,
   ThumbsUp,
+  Wrench,
 } from "lucide-vue-next";
 import type { Updater } from "@tanstack/vue-table";
 import type { Ref } from "vue";
@@ -141,6 +142,8 @@ export function getIconByTaskStatus(status: TaskStatus) {
       return Pause;
     case "override":
       return Settings;
+    case "repair":
+      return Wrench;
   }
 }
 

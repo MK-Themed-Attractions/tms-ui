@@ -13,6 +13,9 @@ import type {
   WipPlan,
   WorkerTasksQueryParams,
   WorkerAvailability,
+  CreateReportIncidentPayload,
+  IncidentReport,
+  UpdateReportIncidentPayload,
 } from "@/types/wip";
 import type { DepartmentKPIPayload } from "@/types/qc";
 import type { ProductRoutingWorkCenterType } from "@/types/products";
@@ -32,6 +35,7 @@ export const useWipStore = defineStore("wips", () => {
     setHeader,
     post,
     patch,
+    put,
     axios: axiosInstance,
   } = useAxios({
     baseURL: baseUrl.value,
@@ -262,6 +266,31 @@ export const useWipStore = defineStore("wips", () => {
     }
   }
 
+  async function createReportIncident(payload: CreateReportIncidentPayload) {
+    const res = await post("/api/incident", payload);
+
+    return res;
+  }
+
+  async function updateReportIncident(
+    incidentId: string,
+    payload: UpdateReportIncidentPayload,
+  ) {
+    const res = await put(`/api/incident/${incidentId}`, payload);
+
+    return res;
+  }
+
+  async function getIncidentReport(plan_task_id: string) {
+    const res = await get<{ data: IncidentReport[] }>(
+      `/api/incident/show-task-incident-report/${plan_task_id}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     invalidate,
     errors,
@@ -281,5 +310,8 @@ export const useWipStore = defineStore("wips", () => {
     getWorkerTasks,
     getWorkerAvailability,
     getWorkerTaskPriority,
+    createReportIncident,
+    updateReportIncident,
+    getIncidentReport,
   };
 });
