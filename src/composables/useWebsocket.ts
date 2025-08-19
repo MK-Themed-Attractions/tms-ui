@@ -1,14 +1,17 @@
 import { useAuthStore } from "@/stores/authStore";
 import { usePlanStore } from "@/stores/planStore";
+import { useTicketStore } from "@/stores/ticketStore";
 import { useToastUIStore } from "@/stores/ui/toastUIStore";
 import type { Notification } from "@/types/notification";
 import type { Plan, PlanBatch } from "@/types/planning";
+import type { TicketNotification } from "@/types/ticket";
 import { storeToRefs } from "pinia";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 
 export const useWebsocket = () => {
   const route = useRoute();
+  const router = useRouter();
   const planStore = usePlanStore();
   const { paginatedResponse, plan } = storeToRefs(planStore);
   const toastStore = useToastUIStore();
@@ -50,6 +53,25 @@ export const useWebsocket = () => {
         },
       );
     });
+
+    //notifications for tickets
+    await channel.subscribe(
+      "tickets",
+      (message: Notification<TicketNotification>) => {
+        const ticketStore = useTicketStore();
+        
+        toast.info("Ticket notice", {
+          description: `${message.data.message} with title ${message.data.data?.title}`,
+        });
+
+        //refresh the tickets page if we are on the tickets page
+        if (route.name === "ticketIndex") {
+          ticketStore
+            .getTickets()
+            .then((res) => router.replace({ query: { submitted: "true" } }));
+        }
+      },
+    );
   }
 
   function handlePlanningEvent(message: Notification<any>) {

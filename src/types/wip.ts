@@ -1,5 +1,5 @@
 import type { DateValue } from "reka-ui";
-import type { QueryParams } from "./general";
+import type { QueryParams, TimeStamp } from "./general";
 import type { InventoryAllocatedBom } from "./inventory";
 import type { PlanBatch, PlanStatus, PlanStatusCode } from "./planning";
 import type {
@@ -50,7 +50,8 @@ export type TaskStatus =
   | "qc-failed"
   | "paused"
   | "qc-passed"
-  | "override";
+  | "override"
+  | "repair";
 
 export type WipTaskGrouped = WipPlanProduct & {
   product_data: (WipPlanProduct & {
@@ -119,3 +120,17 @@ export interface WipTaskQueryParams {
 export interface WorkerTasksQueryParams extends QueryParams {
   work_centers: ProductRoutingWorkCenterType[];
 }
+
+export type IncidentReport = TimeStamp & {
+  id: string;
+  reason: string;
+  plan_task_id: string;
+  incident_number: string;
+};
+
+
+export type CreateReportIncidentPayload = {
+  task_plan_id: string;
+  reason: string;
+};
+export type UpdateReportIncidentPayload = Partial<CreateReportIncidentPayload>

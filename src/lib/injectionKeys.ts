@@ -20,3 +20,4 @@ export const mainScrollerKey = Symbol() as InjectionKey<
     scrollMainTo: (yScroll: number) => void;
   }
 >;
+

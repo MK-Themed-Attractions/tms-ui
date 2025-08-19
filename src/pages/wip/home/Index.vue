@@ -2,7 +2,7 @@
 import { useWipStore } from "@/stores/wipStore";
 import Toolbar from "./components/Toolbar.vue";
 import { storeToRefs } from "pinia";
-import type { TaskStatus, WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
+import type { CreateReportIncidentPayload, IncidentReport, TaskStatus, UpdateReportIncidentPayload, WipBatch, WipPlan, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from "@/types/wip";
 
 import { formatReadableDate, getIconByPlanStatus, } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Building,
   Ellipsis,
+  TriangleAlert,
   Wrench,
 } from "lucide-vue-next";
 
@@ -41,6 +42,7 @@ import { EmptyResource } from "@/components/app/empty-resource";
 import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
 import WipDateFilter from "./components/WipDateFilter.vue";
+import IncidentReportDialog from "./components/IncidentReportDialog.vue";
 
 
 const authStore = useAuthStore()
@@ -79,6 +81,7 @@ const { handleFinishTask,
   changeTasksStatus,
   removeTasksWorkers } = useTaskOperations()
 const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, selectedDateRange, fetchWipPlansNext, page } = useTaskStatusFilter()
+const { handleShowIncidentReportDialog, showIncidentReportDialog, handleReportIncidentSubmit, selectedTaskReason } = useIncidentReport()
 
 function useWip() {
   const { loading: wipLoading } = storeToRefs(wipStore);
@@ -525,6 +528,65 @@ function useTaskStatusFilter() {
   }
 }
 
+function useIncidentReport() {
+
+  const showIncidentReportDialog = ref(false)
+  const selectedBatch = ref<WipBatch>()
+  const selectedTask = ref<WipTask>()
+  const selectedIncident = ref<IncidentReport>()
+  const selectedTaskReason = ref('')
+
+  async function handleShowIncidentReportDialog(task: WipTask, batch: WipBatch,) {
+    selectedBatch.value = batch
+    selectedTask.value = task
+    selectedIncident.value = undefined;
+    selectedTaskReason.value = ''
+
+    if (task.status === 'repair') {
+      const res = await wipStore.getIncidentReport(task.task_plan_id)
+      if (res) {
+        selectedIncident.value = res[0]
+        selectedTaskReason.value = selectedIncident.value.reason
+      }
+
+    }
+
+
+    showIncidentReportDialog.value = true
+  }
+
+  async function handleReportIncidentSubmit(reason: string) {
+    if (!selectedBatch.value || !selectedTask.value) return;
+
+    const payload: CreateReportIncidentPayload = {
+      task_plan_id: selectedTask.value.task_plan_id,
+      reason
+    }
+
+
+    let success = false;
+
+    if (selectedTask.value.status === 'repair') {
+      if (selectedIncident.value)
+        /* update the incident report */
+        success = !!(await wipStore.updateReportIncident(selectedIncident.value.id, payload as UpdateReportIncidentPayload))
+    } else {
+      /* create an incident report */
+      success = !!(await wipStore.createReportIncident(payload))
+    }
+
+    showWipToast(success)
+    await fetchBatchWip(selectedBatch.value)
+  }
+
+  return {
+    showIncidentReportDialog,
+    handleShowIncidentReportDialog,
+    handleReportIncidentSubmit,
+    selectedTaskReason
+  }
+}
+
 function isBatchDone(batch: WipBatch) {
   if (!batch.tasks) return false;
   return batch.tasks.every(task => task.status === 'done' || task.status === 'qc-passed');
@@ -703,6 +765,13 @@ onBeforeMount(() => {
                           </DropdownMenuItem>
 
                         </template>
+
+                        <template v-if="canPause(task.status)">
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem @click.stop="handleShowIncidentReportDialog(task, batch)">
+                            <TriangleAlert /> Report an incedent
+                          </DropdownMenuItem>
+                        </template>
                       </WipTaskDropdown>
 
                     </template>
@@ -759,6 +828,10 @@ onBeforeMount(() => {
         removed.
         Do you want to proceed?</p>
     </ConfirmationDialog>
+
+    <!-- Incedent Report Dialog -->
+    <IncidentReportDialog v-model:reason="selectedTaskReason" v-model="showIncidentReportDialog"
+      @submit="handleReportIncidentSubmit" />
   </div>
 </template>
 
