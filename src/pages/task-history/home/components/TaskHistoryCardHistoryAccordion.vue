@@ -3,7 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { formatReadableDate } from '@/lib/utils';
 import type { ProductRoutingWorkCenterType } from '@/types/products';
 import type { HistoryContent, HistoryContentType } from '@/types/taskHistory';
-import { CheckCircle, Dot, Pause, Play, PlusCircle, RefreshCw, ShieldCheck, ShieldX, UserCheck, UserX, XCircle } from 'lucide-vue-next';
+import { CheckCircle, Dot, Pause, Play, PlusCircle, RefreshCw, ShieldCheck, ShieldX, TriangleAlert, UserCheck, UserX, XCircle } from 'lucide-vue-next';
 import { useRoute } from 'vue-router';
 
 
@@ -43,6 +43,8 @@ const getIconByContentType = (type: HistoryContentType) => {
 
         case "qc-failed":
             return ShieldX;
+        case 'incident-report':
+            return TriangleAlert
 
         default:
             return XCircle;  // Fallback icon for unknown types

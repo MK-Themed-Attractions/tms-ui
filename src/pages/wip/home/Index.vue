@@ -66,7 +66,7 @@ const { fetchWipPlans,
 const { openAssignWorkerDialog, selectedDepartment, workCenters } = useWorker()
 
 const { handleShowWipDialog, showWipDialog } = useWipShow()
-const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask } = useTaskControls()
+const { canAssign, canFinish, canPause, canStart, hasWorkers, isNotDone, finishTask, showWipToast, startTask, pauseTask, canReportIncident } = useTaskControls()
 const { handleFinishTask,
   handlePauseTask,
   handleStartTask,
@@ -766,10 +766,10 @@ onBeforeMount(() => {
 
                         </template>
 
-                        <template v-if="canPause(task.status)">
+                        <template v-if="canReportIncident(task.status)">
                           <DropdownMenuSeparator />
                           <DropdownMenuItem @click.stop="handleShowIncidentReportDialog(task, batch)">
-                            <TriangleAlert /> Report an incedent
+                            <TriangleAlert /> Report an incident
                           </DropdownMenuItem>
                         </template>
                       </WipTaskDropdown>

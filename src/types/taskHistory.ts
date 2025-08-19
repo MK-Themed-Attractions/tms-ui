@@ -49,7 +49,8 @@ export type HistoryContentType =
   | "cancelled"
   | "override"
   | "qc-passed"
-  | "qc-failed";
+  | "qc-failed"
+  | "incident-report";
 
 export interface TaskHistoryParams {
   plan_id: string;
