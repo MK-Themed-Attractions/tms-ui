@@ -180,10 +180,10 @@ async function handleFinishTask(task: WipTask) {
 }
 
 async function fetchTask() {
-    task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
+    task.value = await wipStore.getWipTaskById(props.taskId)
 }
 /* INITIALIZE */
-task.value = await wipStore.getWipTask(props.taskId, props.operationCode)
+task.value = await wipStore.getWipTaskById(props.taskId)
 
 </script>
 <template>

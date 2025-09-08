@@ -168,6 +168,21 @@ export const useWipStore = defineStore("wips", () => {
     }
   }
 
+  async function getWipTaskById(taskId: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl.value}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: WipTask }>(
+      `/api/tasks/get-task-details-by-task-id/${taskId}`,
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   /**
    * Change the status of the WIP task
    * @param taskId WIP task id
@@ -299,6 +314,7 @@ export const useWipStore = defineStore("wips", () => {
     getWipPlansByWorkCenters,
     getTasksByBatchId,
     getWipTask,
+    getWipTaskById,
     assignWorkersToTasks,
     unassignWorkersFromTasks,
     wipTasksGrouped,

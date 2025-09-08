@@ -59,7 +59,7 @@ const { fetchWipPlans,
   handleSingleTaskAssign,
   fetchBatchWip,
   handleShowMultipleTaskAssignDialog,
-  selectedTaskPlanId,
+  selectedTaskId,
   handleShowSingleTaskAssignDialog,
   selectedOperationCode,
   selectedPlan } = useWip();
@@ -89,7 +89,7 @@ function useWip() {
   //task ids on common ms
   const selectedTaskIds = ref<string[]>([])
   //id on planning ms
-  const selectedTaskPlanId = ref<string>()
+  const selectedTaskId = ref<string>()
 
   const selectedPlan = ref<WipPlan>()
 
@@ -162,7 +162,7 @@ function useWip() {
     selectedTaskIds.value = []
     selectedTaskIds.value.push(task.id)
 
-    selectedTaskPlanId.value = task.task_plan_id
+    selectedTaskId.value = task.id
     selectedOperationCode.value = <ProductRoutingWorkCenterType>task.operation_code;
   }
 
@@ -205,7 +205,7 @@ function useWip() {
     handleGetBatchWip,
     assigningBatch,
     selectedTaskIds,
-    selectedTaskPlanId,
+    selectedTaskId,
     selectedOperationCode,
     selectedPlan,
     handleSingleTaskAssign,
@@ -812,8 +812,8 @@ onBeforeMount(() => {
       v-if="assigningBatch" :batch="assigningBatch">
     </WorkerAssignDialog>
 
-    <WipTaskShowDialog v-if="selectedTaskPlanId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
-      :batch="assigningBatch.batch" :task-id="selectedTaskPlanId" :operation-code="selectedOperationCode">
+    <WipTaskShowDialog v-if="selectedTaskId && assigningBatch && selectedOperationCode" v-model="showWipDialog"
+      :batch="assigningBatch.batch" :task-id="selectedTaskId" :operation-code="selectedOperationCode">
 
     </WipTaskShowDialog>
 
