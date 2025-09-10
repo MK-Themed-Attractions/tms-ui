@@ -53,6 +53,10 @@ interface ImportMetaEnv {
   readonly VITE_TICKET_TYPE_DELETE_KEY: string;
 
   readonly VITE_SUPERADMIN_IDS: string;
+
+  /* Feature: Production Tag */
+  readonly VITE_PROD_TAG_WC: string;
+  readonly VITE_PRINT_PROD_TAG_KEY: string;
 }
 
 interface ImportMeta {
