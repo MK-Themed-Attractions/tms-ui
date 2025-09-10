@@ -63,7 +63,11 @@ function useBatch() {
   <div class="container">
     <div class="grid gap-4 lg:grid-cols-2">
       <ProductImage v-if="productData" :product="productData" class="mx-auto" />
-      <PlanInfo v-if="plan" :plan="plan" @edit="() => (openEditDialog = true)" />
+      <PlanInfo
+        v-if="plan"
+        :plan="plan"
+        @edit="() => (openEditDialog = true)"
+      />
 
       <div class="col-span-full text-sm">
         <h3 class="font-medium">Batches:</h3>
@@ -72,7 +76,11 @@ function useBatch() {
         </p>
 
         <div v-if="plan?.batches?.length" class="mt-2">
-          <PlanBatchTabs v-model="selectedBatchId" :batches="plan.batches" :loading="batchLoading">
+          <PlanBatchTabs
+            v-model="selectedBatchId"
+            :batches="plan.batches"
+            :loading="batchLoading"
+          >
             <template #append>
               <DropdownMenu v-if="plan.status_code === 'pending'">
                 <DropdownMenuTrigger>
@@ -88,7 +96,9 @@ function useBatch() {
                       <Plus />
                       Add batch
                     </DropdownMenuItem>
-                    <DropdownMenuItem @click="openBatchChangePriorityDialog = true">
+                    <DropdownMenuItem
+                      @click="openBatchChangePriorityDialog = true"
+                    >
                       <ArrowUpWideNarrow />
                       Change batch priority
                     </DropdownMenuItem>
@@ -104,7 +114,10 @@ function useBatch() {
                 <h3 class="mb-2 font-medium">Task information</h3>
 
                 <div class="rounded-md border shadow">
-                  <TaskDataTable :tasks="batch.tasks" />
+                  <TaskDataTable
+                    :tasks="batch.tasks"
+                    :plan="plan"
+                  />
                 </div>
               </div>
             </div>
@@ -113,10 +126,25 @@ function useBatch() {
       </div>
     </div>
 
-    <PlanEditDialog v-model="openEditDialog" v-if="plan" :plan="plan" :key="plan.id" />
+    <PlanEditDialog
+      v-model="openEditDialog"
+      v-if="plan"
+      :plan="plan"
+      :key="plan.id"
+    />
 
-    <BatchAddDialog v-if="plan" v-model="openAddBatchDialog" :key="plan.id" :plan="plan" />
-    <BatchChangePriorityDialog v-if="plan" v-model="openBatchChangePriorityDialog" :plan="plan" :key="plan.id" />
+    <BatchAddDialog
+      v-if="plan"
+      v-model="openAddBatchDialog"
+      :key="plan.id"
+      :plan="plan"
+    />
+    <BatchChangePriorityDialog
+      v-if="plan"
+      v-model="openBatchChangePriorityDialog"
+      :plan="plan"
+      :key="plan.id"
+    />
   </div>
 </template>
 
