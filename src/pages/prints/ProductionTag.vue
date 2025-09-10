@@ -65,7 +65,8 @@ const xtimeStamp = ref(
               <span class="col-span-3 me-2 place-content-center text-left">{{
                 wc
               }}</span>
-              <span class="col-span-3 w-full place-content-center border-b border-black"
+              <span
+                class="col-span-3 w-full place-content-center border-b border-black"
                 >:&nbsp;&nbsp;&nbsp;&nbsp;</span
               >
             </div>
@@ -95,9 +96,7 @@ const xtimeStamp = ref(
       task_id
     }}</span>
     <small class="absolute bottom-2 right-2 text-xs font-bold text-gray-700">
-      <small>
-        <small>Date Printed: {{ xtimeStamp }}</small>
-      </small>
+      <small>Date Printed: {{ xtimeStamp }}</small>
     </small>
   </div>
 </template>
