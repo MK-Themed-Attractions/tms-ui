@@ -55,7 +55,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPERADMIN_IDS: string;
 
   /* Feature: Production Tag */
-  readonly VITE_PROD_TAG_WC: string;
+  readonly VITE_PROD_TAG_WORK_CENTER: string;
   readonly VITE_PRINT_PROD_TAG_KEY: string;
 }
 

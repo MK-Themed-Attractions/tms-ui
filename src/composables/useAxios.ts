@@ -29,7 +29,7 @@ export const useAxios = (config: CreateAxiosDefaults) => {
     },
     async (error) => {
       if (error.status === 401) {
-        // await authStore.logout();
+        await authStore.logout();
       } else if (error.status === 404) {
         redirectToNotFoundPage();
       }

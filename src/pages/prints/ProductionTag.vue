@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { ref } from "vue";
 
 const fix_work_centers = JSON.parse(
-  import.meta.env.VITE_PROD_TAG_FIXED_WC || JSON.stringify(props.work_centers),
+  import.meta.env.VITE_PROD_TAG_FIXED_WORK_CENTER || JSON.stringify(props.work_centers),
 ) as string[];
 
 const xtimeStamp = ref(
