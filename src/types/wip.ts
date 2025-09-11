@@ -128,9 +128,9 @@ export type IncidentReport = TimeStamp & {
   incident_number: string;
 };
 
-
 export type CreateReportIncidentPayload = {
   task_plan_id: string;
+  task_id: string;
   reason: string;
 };
-export type UpdateReportIncidentPayload = Partial<CreateReportIncidentPayload>
+export type UpdateReportIncidentPayload = Partial<CreateReportIncidentPayload>;

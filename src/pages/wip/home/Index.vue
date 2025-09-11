@@ -560,6 +560,7 @@ function useIncidentReport() {
 
     const payload: CreateReportIncidentPayload = {
       task_plan_id: selectedTask.value.task_plan_id,
+      task_id: selectedTask.value.id,
       reason
     }
 
