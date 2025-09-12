@@ -9,11 +9,12 @@ export function usePermission() {
   function hasPermission(key?: string) {
     if (!key || !user.value || !userPermissionSet.value) return false;
 
-    const adminKeys = <string[]>JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS);
+    return userPermissionSet.value.includes(key) || isAdmin(user.value.id);
+  }
 
-    return (
-      userPermissionSet.value.includes(key) || adminKeys.includes(user.value.id)
-    );
+  function isAdmin(userId: string) {
+    const adminKeys = <string[]>JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS);
+    return adminKeys.includes(userId);
   }
 
   /**
@@ -30,5 +31,6 @@ export function usePermission() {
   return {
     hasPermission,
     someChildHasPermission,
+    isAdmin,
   };
 }

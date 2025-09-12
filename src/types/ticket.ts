@@ -11,6 +11,7 @@ export type Ticket = TimeStamp & {
   ticket_type_id: string;
   ticket_type?: TicketType;
   user_id: string;
+  ticket_number: string;
 };
 export type TicketStatus = "pending" | "rejected" | "approved";
 
