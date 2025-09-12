@@ -4,28 +4,54 @@ import { storeToRefs } from "pinia";
 import WorkerDataTable from "./components/WorkerDataTable.vue";
 
 import WorkerToolbar from "./components/WorkerToolbar.vue";
-import { provide } from "vue";
+import { provide, ref } from "vue";
 import { workerOnSuccessKey } from "@/lib/injectionKeys";
-import { useRouterQuery } from "@/composables/useRouterQuery";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import type { WorkerQueryParams } from "@/types/workers";
 import { useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
+import { usePermission } from "@/layouts/main/usePermission";
+import type { FilterQueryParams } from "@/types/general";
+import { useRouteQuery } from "@vueuse/router";
 
 const { fetchWorkers, workers, loading } = useWorkers();
 const { handleSearch, q } = useSearch();
 const { departments, fetchWorkerDepartments } = useWorkerDepartment();
 const route = useRoute();
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
+const { isAdmin } = usePermission()
+
+const filters = ref<FilterQueryParams[]>([
+  {
+    column: "department_id",
+    values: [],
+  },
+  {
+    column: "is_active",
+    values: [],
+  },
+])
 
 function useWorkers() {
   const workerStore = useWorkerStore();
   const { workers, loading } = storeToRefs(workerStore);
 
   async function fetchWorkers(params?: Partial<WorkerQueryParams>) {
+
+    /* when the user is not an admin , filter the workers by their department */
+    if (!isAdmin(user.value.id)) {
+      const hasNoDepartmentValue = filters.value.find(f => f.column === 'department_id' && f.values.length === 0)
+      if (hasNoDepartmentValue) {
+        return;
+      }
+    }
     await workerStore.getWorkers({
       q: q.value?.toString(),
       includes: "department",
       page: route.query.page ? +route.query.page : 1,
       per_page: route.query["per-page"] ? +route.query["per-page"] : 30,
+      filters: filters.value,
       ...params,
     });
   }
@@ -53,12 +79,10 @@ function useWorkerDepartment() {
 
 function useSearch() {
   /* Search query URL */
-  const [q, setQ] = useRouterQuery("q", async () => {
-    await fetchWorkers();
-  });
+  const q = useRouteQuery("q", "");
 
-  function handleSearch(search: string) {
-    setQ(search);
+  async function handleSearch(search: string) {
+    await fetchWorkers()
   }
   return {
     q,
@@ -75,7 +99,7 @@ provide(workerOnSuccessKey, async (params?: Partial<WorkerQueryParams>) => {
 });
 
 /* INIT */
-if (!workers.value) await fetchWorkers();
+if (!workers.value && isAdmin(user.value.id)) await fetchWorkers();
 if (!departments.value) await fetchWorkerDepartments();
 </script>
 
@@ -90,7 +114,7 @@ if (!departments.value) await fetchWorkerDepartments();
     </div>
 
     <div class="space-y-4">
-      <WorkerToolbar @search="handleSearch" :loading="loading" :search-default-value="q?.toString()" />
+      <WorkerToolbar v-model:filters="filters" v-model:search="q" @search="handleSearch" :loading="loading" />
       <WorkerDataTable v-if="workers" :workers="workers" class="rounded-lg border shadow-sm">
       </WorkerDataTable>
     </div>
