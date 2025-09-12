@@ -3,19 +3,23 @@ import { DataTable } from '@/components/app/data-table';
 import { SectionHeader } from '@/components/app/section-header';
 import { usePlanStore } from '@/stores/planStore';
 import type { OutputPosting, OutputPostingQueryParams } from '@/types/outputPosting';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { outputPostingDataTableColumns } from './data';
 import { TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDataTableChecks } from '@/composables/useDataTableChecks';
 import { ButtonApp } from '@/components/app/button';
-import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
+import { PaginationApp, PaginationApp2, type PaginationQuery } from '@/components/app/pagination';
 import { useRoute } from 'vue-router';
 import { useSimplePaginate } from '@/composables/usePaginate';
 import { Send } from 'lucide-vue-next';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
+import { cn } from '@/lib/utils';
+import Toolbar from '../qc/home/components/Toolbar.vue';
+import type { WorkerDepartment } from '@/types/workers';
+import { useRouteParams, useRouteQuery } from '@vueuse/router';
 
 
 const planStore = usePlanStore()
@@ -24,6 +28,9 @@ const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
 const { getOutputPostings, outputPostings, hasNextPage, hasPrevPage, handlePostToBc } = usePlan()
 const { handleShowConfirmationDialog, showConfirmationDialog } = useConfirmationDialog()
 const viewSelected = ref(false)
+const selectedDepartment = ref<WorkerDepartment>()
+const page = useRouteQuery('page', '1')
+const perPage = useRouteQuery('pages', '30')
 
 /* @ts-ignore */
 const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useDataTableChecks<OutputPosting>(outputPostings)
@@ -31,15 +38,8 @@ const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useD
 function usePlan() {
     const { hasNextPage, hasPrevPage, items: outputPostings, paginate } = useSimplePaginate<OutputPosting>()
 
-    async function getOutputPostings(params?: Partial<OutputPostingQueryParams | PaginationQuery>) {
-        const paginationQueryParams = params as PaginationQuery
-        const outputPostingQueryParams = params as OutputPostingQueryParams
-        const finalParams: Partial<OutputPostingQueryParams> = {
-            page: params?.page ?? 1,
-            pages: paginationQueryParams.perPage || outputPostingQueryParams.pages || 30
-        }
-
-        const data = await planStore.getOutputPosting(finalParams)
+    async function getOutputPostings(params?: Partial<OutputPostingQueryParams>) {
+        const data = await planStore.getOutputPosting(params)
 
 
         if (data) {
@@ -60,8 +60,9 @@ function usePlan() {
 
         if (!planErrors.value) {
             await getOutputPostings({
-                page: route.query.page?.toString() || 1,
-                pages: route.query.pages?.toString() || 30
+                page: page.value,
+                pages: perPage.value,
+                operation_code: selectedDepartment.value?.work_centers || []
             })
 
             toast.info('Output Posting Info', {
@@ -98,9 +99,34 @@ function useConfirmationDialog() {
 
 const route = useRoute()
 await getOutputPostings({
-    page: route.query.page?.toString() || 1,
-    pages: route.query.pages?.toString() || 30
+    page: page.value,
+    pages: perPage.value
 })
+
+async function handleDepartmentChange(department: WorkerDepartment) {
+    selectedDepartment.value = department
+    await getOutputPostings({
+        page: 1,
+        pages: 30,
+        operation_code: department.work_centers
+    })
+}
+
+watch(page, async () => {
+    await getOutputPostings({
+        page: page.value,
+        pages: perPage.value,
+        operation_code: selectedDepartment.value?.work_centers
+    })
+})
+watch(perPage, async () => {
+    await getOutputPostings({
+        page: page.value,
+        pages: perPage.value,
+        operation_code: selectedDepartment.value?.work_centers
+    })
+})
+
 </script>
 
 <template>
@@ -115,6 +141,7 @@ await getOutputPostings({
         </header>
 
         <main class="border rounded-md shadow-sm">
+            <Toolbar class="border-none" @change="handleDepartmentChange" />
             <DataTable v-if="outputPostings" :items="viewSelected ? checkedItems : outputPostings"
                 :columns="outputPostingDataTableColumns" :loading="planLoading">
                 <template #header.check="{ item }">
@@ -135,9 +162,22 @@ await getOutputPostings({
                 </template>
                 <template #item.plan_task_id="{ item }">
                     <TableCell class="flex flex-wrap gap-2">
-                        <span class="uppercase rounded-md border px-2 text-xs" v-for="task in item.plan_task_id"
-                            :key="task"> {{
-                                task }}</span>
+                        <span class="uppercase rounded-md border px-2 text-xs"
+                            v-for="(task, index) in item.plan_task_id" :key="`${item.id}-${index}`"> {{ task
+                            }}</span>
+                    </TableCell>
+                </template>
+                <template #item.task_count="{ item }">
+                    <TableCell>
+                        <span class="uppercase rounded-md border px-2 text-xs"> {{ item.plan_task_id.length }}</span>
+                    </TableCell>
+                </template>
+
+                <template #item.is_approved="{ item }">
+                    <TableCell>
+                        <span
+                            :class="cn('border rounded-lg py-1 px-2 font-medium text-xs', item.is_approved ? 'bg-emerald-400/30 text-emerald-500 border-emerald-500' : 'bg-amber-400/30 text-amber-500 border-amber-500')">{{
+                                item.is_approved ? 'Approved' : 'Pending' }}</span>
                     </TableCell>
                 </template>
 
@@ -145,8 +185,8 @@ await getOutputPostings({
                     <div class="flex justify-between">
                         <ButtonApp variant="secondary" size="sm" @click="viewSelected = !viewSelected">View selected
                         </ButtonApp>
-                        <PaginationApp per-page-name="pages" @change:query="getOutputPostings"
-                            :disable-prev="!hasPrevPage" :disable-next="!hasNextPage" />
+                        <PaginationApp2 v-model:page="page" v-model:pages="perPage" :disable-prev="!hasPrevPage"
+                            :disable-next="!hasNextPage" />
                     </div>
                 </template>
             </DataTable>

@@ -6,16 +6,19 @@ export interface OutputPosting extends TimeStamp {
   batch_id: string;
   is_approved: boolean;
   operation_code: ProductRoutingWorkCenterType;
+  operation_number: string;
   plan_code: string;
   plan_id: string;
   plan_task_id: string[];
   runtime: number;
   sku: string;
+  is_finished: false;
 }
 
 export interface OutputPostingQueryParams
   extends Omit<QueryParams, "per_page"> {
   pages: string | number;
+  operation_code: string[];
 }
 
 /**

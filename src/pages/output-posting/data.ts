@@ -21,4 +21,12 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     key: "plan_task_id",
     title: "Task UUIDs",
   },
+  {
+    key: "task_count",
+    title: "Task Count",
+  },
+  {
+    key: 'is_approved',
+    title: 'BC Status'
+  }
 ];
