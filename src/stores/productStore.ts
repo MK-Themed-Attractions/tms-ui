@@ -10,6 +10,7 @@ import {
 import type {
   Product,
   ProductAttachment,
+  ProductBomQueryParams,
   ProductQueryParameter,
   ProductRoutingBOM,
   ProductRoutingQueryParams,
@@ -78,6 +79,13 @@ export const useProductStore = defineStore("products", () => {
     return res?.data;
   }
 
+  /**
+   * Gets the product routing BOM
+   * @deprecated This function is depricated. Please use `getProductRoutingBomV2` instead.
+   * @param productSku
+   * @param params
+   * @returns
+   */
   async function getProductRoutingBom(
     productSku: string,
     params?: Partial<ProductRoutingQueryParams>,
@@ -89,6 +97,25 @@ export const useProductStore = defineStore("products", () => {
 
     const res = await get<{ data: ProductRoutingBOM[] }>(
       `/api/products/get-bom-line/${productSku}`,
+      {
+        params,
+      },
+    );
+
+    return res?.data;
+  }
+
+  async function getProductRoutingBomV2(
+    productSku: string,
+    params?: Partial<ProductRoutingQueryParams>,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: ProductRoutingBOM[] }>(
+      `/api/bom/product-bom-for-consumption/${productSku}`,
       {
         params,
       },
@@ -168,6 +195,35 @@ export const useProductStore = defineStore("products", () => {
     }
   }
 
+  async function getBom(bomNo: string) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: ProductRoutingBOM }>(`/api/bom/${bomNo}`);
+
+    if (res) {
+      return res.data;
+    }
+  }
+
+  async function getBoms(params?: ProductBomQueryParams) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<{ data: ProductRoutingBOM[] }>(
+      `/api/bom/bom-line-list`,
+      { params },
+    );
+
+    if (res) {
+      return res.data;
+    }
+  }
+
   return {
     errors,
     loading,
@@ -179,9 +235,12 @@ export const useProductStore = defineStore("products", () => {
     getProducts,
     getProduct,
     getProductRoutingBom,
+    getProductRoutingBomV2,
     getProductTechnicalDrawings,
     getProductPantoneReference,
     getProductAssemblyManual,
     getWorkCenters,
+    getBom,
+    getBoms,
   };
 });

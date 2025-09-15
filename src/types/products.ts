@@ -86,6 +86,10 @@ export interface ProductRoutingQueryParams {
   routing_link_code: string;
 }
 
+export interface ProductBomQueryParams {
+  no: string[];
+}
+
 export type ProductRoutingOperationLetter =
   | "A"
   | "B"
