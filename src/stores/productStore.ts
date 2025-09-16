@@ -81,7 +81,6 @@ export const useProductStore = defineStore("products", () => {
 
   /**
    * Gets the product routing BOM
-   * @deprecated This function is depricated. Please use `getProductRoutingBomV2` instead.
    * @param productSku
    * @param params
    * @returns
@@ -105,6 +104,12 @@ export const useProductStore = defineStore("products", () => {
     return res?.data;
   }
 
+  /**
+   * Gets the product routing exploded BOM
+   * @param productSku
+   * @param params
+   * @returns
+   */
   async function getProductRoutingBomV2(
     productSku: string,
     params?: Partial<ProductRoutingQueryParams>,

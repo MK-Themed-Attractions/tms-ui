@@ -156,7 +156,7 @@ const submit = handleSubmit(async (values) => {
 
 watchEffect(async () => {
     if (inventorySelected && inventorySelected.value.plan) {
-        productBoms.value = await productStore.getProductRoutingBomV2(inventorySelected.value.plan.sku, {
+        productBoms.value = await productStore.getProductRoutingBom(inventorySelected.value.plan.sku, {
             routing_link_code: props.selectedRoute
         })
         const consumptions = productBoms.value?.map(bom => {
