@@ -3,9 +3,11 @@ import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./authStore";
 import type {
+  CreateCommentPayload,
   CreateTicketPayload,
   GetTicketsQueryParams,
   Ticket,
+  TicketDetail,
   TicketStatus,
   UpdateTicketPayload,
 } from "@/types/ticket";
@@ -63,7 +65,7 @@ export const useTicketStore = defineStore("tickets", () => {
       bearerToken,
     );
 
-    const res = await get<{ data: Ticket }>(`/api/tickets/${ticketId}`);
+    const res = await get<{ data: TicketDetail }>(`/api/tickets/${ticketId}`);
 
     if (res) {
       return res.data;
@@ -160,6 +162,14 @@ export const useTicketStore = defineStore("tickets", () => {
 
     await destroy(`/api/ticket-type/${ticketTypeId}`);
   }
+  async function createComment(payload: CreateCommentPayload) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    await post(`/api/comment`, payload);
+  }
 
   return {
     getTickets,
@@ -177,6 +187,7 @@ export const useTicketStore = defineStore("tickets", () => {
     deleteTicket,
     createTicketType,
     updateTicketType,
-    deleteTicketType
+    deleteTicketType,
+    createComment,
   };
 });

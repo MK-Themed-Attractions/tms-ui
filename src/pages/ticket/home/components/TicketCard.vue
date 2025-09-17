@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import CardTitle from '@/components/ui/card/CardTitle.vue';
 import { formatReadableDate } from '@/lib/utils';
 import type { Ticket } from '@/types/ticket';
@@ -8,8 +8,13 @@ import TicketCardAction from './TicketCardAction.vue';
 import { toast } from 'vue-sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-vue-next';
+import { Copy, MessageCircle } from 'lucide-vue-next';
 import { Separator } from '@/components/ui/separator';
+import { differenceInDays, formatDistanceStrict, parseISO } from 'date-fns'
+import { Badge } from '@/components/ui/badge';
+import { computed, defineAsyncComponent, ref } from 'vue';
+import { Skeleton } from '@/components/ui/skeleton';
+const TicketCardCommentList = defineAsyncComponent(() => import('./TicketCardCommentList.vue'))
 
 const props = defineProps<{
     ticket: Ticket
@@ -23,6 +28,30 @@ async function copyToClipboard() {
         toast.error(`Failed to copy ticket number`)
     }
 }
+
+const ticketColor = computed(() => {
+    const createdAt = parseISO(props.ticket.created_at)
+    const daysOld = differenceInDays(new Date(), createdAt)
+
+    if (daysOld > 30) {
+        return 'bg-indigo-400/30 text-indigo-700 hover:bg-indigo-400/50'
+    }
+    else if (daysOld > 15) {
+        return 'bg-red-400/30 text-red-700 hover:bg-red-400/50'
+    }
+    else if (daysOld > 7) {
+        return 'bg-orange-400/30 text-orange-700 hover:bg-orange-400/50'
+    }
+    else if (daysOld > 5) {
+        return 'bg-yellow-400/30 text-yellow-700 hover:bg-yellow-400/50'
+    }
+    else {
+        return 'bg-green-400/30 text-green-700 hover:bg-green-400/50'
+    }
+
+})
+
+const showComments = ref(false)
 
 </script>
 <template>
@@ -53,12 +82,34 @@ async function copyToClipboard() {
             </CardHeader>
 
             <CardContent class="text-muted-foreground">
-                <p>{{ ticket.details }}</p>
+                <p class="bg-muted/50 rounded-md p-4 text-sm">{{ ticket.details }}</p>
                 <div class="mt-4 flex items-center justify-between gap-4">
                     <p class="text-xs">{{ formatReadableDate(ticket.created_at) }}</p>
-
+                    <Badge class="rounded" :class="ticketColor">{{ formatDistanceStrict(ticket.created_at, new Date(), {
+                        addSuffix: true,
+                    }) }}
+                    </Badge>
                 </div>
             </CardContent>
+            <CardFooter class="flex-col items-start gap-2 text-sm ">
+                <Button size="sm" :variant="showComments ? 'secondary' : 'ghost'" @click="showComments = !showComments">
+                    <MessageCircle />
+                    <span>Comments </span>
+                    <span>{{ ticket.comments_count }}</span>
+                </Button>
+
+                <template v-if="showComments">
+                    <Suspense>
+                        <TicketCardCommentList :ticketId="ticket.id" />
+                        <template #fallback>
+                            <div>
+                                <Skeleton class="h-20" />
+                                <Skeleton class="h-20" />
+                            </div>
+                        </template>
+                    </Suspense>
+                </template>
+            </CardFooter>
         </Card>
     </li>
 
