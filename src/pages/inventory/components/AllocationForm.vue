@@ -60,6 +60,7 @@ const tasksByRoute = computed(() => {
         return task.operation_code === props.selectedRoute
     })
 })
+
 const submit = handleSubmit(async (values) => {
     if (!tasksByRoute.value) {
         console.warn('no taskByRoute')
@@ -76,6 +77,21 @@ const submit = handleSubmit(async (values) => {
     }).flat()
 
     if (payload && payload.length) {
+        if (values.additionalConsumptions) {
+            const additionalBomPayload = tasksByRoute.value.map(task => {
+                return values.additionalConsumptions!.map(con => {
+                    return {
+                        ...con,
+                        plan_task_id: task.task_plan_id,
+                        task_id: task.id,
+                        plan_code: inventorySelected?.value.plan?.code
+                    }
+                })
+            }).flat()
+
+            payload.push(...additionalBomPayload)
+        }
+
         if (props.mode === 'add') {
             await inventoryStore.addInventoryConsumption({
                 consumptions: payload
@@ -107,49 +123,55 @@ const submit = handleSubmit(async (values) => {
             }
         }
 
+        if (fetchBom && inventorySelected && inventorySelected.value.batch && inventorySelected.value.plan) {
+            await fetchBom(inventorySelected.value.batch)
+            emits('submitted')
+        }
+
+
 
         /* Additional BOM logic */
-        if (values.additionalConsumptions) {
-            const additionalBomPayload = tasksByRoute.value.map(task => {
-                return values.additionalConsumptions!.map(con => {
-                    return {
-                        ...con,
-                        plan_task_id: task.task_plan_id,
-                        task_id: task.id,
-                        plan_code: inventorySelected?.value.plan?.code
-                    }
-                })
-            }).flat()
+        // if (values.additionalConsumptions) {
+        //     const additionalBomPayload = tasksByRoute.value.map(task => {
+        //         return values.additionalConsumptions!.map(con => {
+        //             return {
+        //                 ...con,
+        //                 plan_task_id: task.task_plan_id,
+        //                 task_id: task.id,
+        //                 plan_code: inventorySelected?.value.plan?.code
+        //             }
+        //         })
+        //     }).flat()
 
-            const promises = additionalBomPayload.reduce<{
-                create: z.infer<typeof bomSchema>[];
-                update: z.infer<typeof bomSchema>[];
-            }>((acc, cur) => {
-                if (!cur.id)
-                    acc.create.push(cur)
-                else
-                    acc.update.push(cur)
-                return acc;
-            }, {
-                create: [],
-                update: []
-            })
+        //     const promises = additionalBomPayload.reduce<{
+        //         create: z.infer<typeof bomSchema>[];
+        //         update: z.infer<typeof bomSchema>[];
+        //     }>((acc, cur) => {
+        //         if (!cur.id)
+        //             acc.create.push(cur)
+        //         else
+        //             acc.update.push(cur)
+        //         return acc;
+        //     }, {
+        //         create: [],
+        //         update: []
+        //     })
 
-            if (promises.create && promises.create.length)
-                await inventoryStore.addInventoryConsumption({
-                    consumptions: promises.create
-                })
+        //     if (promises.create && promises.create.length)
+        //         await inventoryStore.addInventoryConsumption({
+        //             consumptions: promises.create
+        //         })
 
-            if (promises.update && promises.update.length)
-                await inventoryStore.updateInventoryConsumption({
-                    consumptions: promises.update
-                })
+        //     if (promises.update && promises.update.length)
+        //         await inventoryStore.updateInventoryConsumption({
+        //             consumptions: promises.update
+        //         })
 
-            if (fetchBom && inventorySelected && inventorySelected.value.batch && inventorySelected.value.plan) {
-                await fetchBom(inventorySelected.value.batch)
-                emits('submitted')
-            }
-        }
+        //     if (fetchBom && inventorySelected && inventorySelected.value.batch && inventorySelected.value.plan) {
+        //         await fetchBom(inventorySelected.value.batch)
+        //         emits('submitted')
+        //     }
+        // }
     }
 
 })
@@ -188,6 +210,7 @@ watchEffect(async () => {
 
 
         const additionalConsumptions = JSON.parse(JSON.stringify(inventorySelected.value.batch?.allocated_boms?.filter(ab => ab.type === 'additional' && ab.task_id === task.id))) as InventoryAllocatedBom[]
+        console.log('additional cons', additionalConsumptions)
         if (additionalConsumptions && additionalConsumptions.length) {
             const bomNos = additionalConsumptions.map(ab => ab.no)
 
