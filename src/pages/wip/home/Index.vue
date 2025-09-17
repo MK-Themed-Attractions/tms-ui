@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Building,
   Ellipsis,
+  LoaderCircle,
+  RefreshCcw,
   TriangleAlert,
   Wrench,
 } from "lucide-vue-next";
@@ -126,10 +128,10 @@ function useWip() {
   }
 
   //fetch batch wips only when batch doesnt have tasks in it
-  async function handleGetBatchWip(batch: WipBatch) {
+  async function handleGetBatchWip(batch: WipBatch, force?: boolean) {
 
     //only fetch the data when theres no tasks on batch to avoid repeated fetch
-    if (batch.tasks) return;
+    if (batch.tasks && !force) return;
     await fetchBatchWip(batch)
   }
 
@@ -641,7 +643,13 @@ onBeforeMount(() => {
 
 </script>
 <template>
-  <div class="container space-y-6">
+  <div class="container space-y-6 relative">
+    <ButtonApp @click="handleGetWIpsWithFilter" :disabled="wipLoading || authLoading" size="icon"
+      v-if="selectedDepartment" class="rounded-full fixed left-1/2 -translate-x-1/2 top-20 z-[100]">
+      <LoaderCircle v-if="wipLoading || authLoading" class="animate-spin size-4" />
+      <RefreshCcw v-else />
+    </ButtonApp>
+
     <SectionHeader title="Work in progress" description="This section lets you assign workers to tasks, start, pause, and
         complete them, and view real-time task status." />
 
@@ -735,6 +743,8 @@ onBeforeMount(() => {
                             <DropdownMenuItem @click="handleConfirmPauseAll(batch)">Pause all</DropdownMenuItem>
                             <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
                           </template>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem @click="handleGetBatchWip(batch,true)"><RefreshCcw /> Reload</DropdownMenuItem>
                         </WipTaskDropdown>
                       </TableCell>
                     </template>
