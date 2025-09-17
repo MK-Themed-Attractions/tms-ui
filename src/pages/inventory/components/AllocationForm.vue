@@ -211,7 +211,6 @@ watchEffect(async () => {
 
 
         const additionalConsumptions = JSON.parse(JSON.stringify(inventorySelected.value.batch?.allocated_boms?.filter(ab => ab.type === 'additional' && ab.task_id === task.id))) as InventoryAllocatedBom[]
-        console.log('additional cons', additionalConsumptions)
         if (additionalConsumptions && additionalConsumptions.length) {
             const bomNos = additionalConsumptions.map(ab => ab.no)
 

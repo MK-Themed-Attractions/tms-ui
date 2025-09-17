@@ -88,7 +88,6 @@ function useDeactivate() {
 function usePaginate() {
   const { hasNextPage, hasPrevPage } = storeToRefs(workerStore);
   async function handleQueryChange(query: Partial<PaginationQuery>) {
-    console.log('hehe')
     if (onSuccess) {
       await onSuccess({
         per_page: query.perPage ? +query.perPage : 30,

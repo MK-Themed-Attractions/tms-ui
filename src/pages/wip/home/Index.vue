@@ -360,11 +360,9 @@ function useTaskOperations() {
       return acc;
     }, [])
 
-    console.log('taskIds', taskIds)
 
     //collect all worker ids on each task
     const workerIds = selectedBatch.value.tasks.reduce<string[]>((acc, task) => {
-      console.log('task', task)
       if (!task.task_workers || !task.task_workers.worker_ids) return acc;
 
       //worker ids
@@ -377,7 +375,6 @@ function useTaskOperations() {
       return acc;
     }, [])
 
-    console.log('workerIds', workerIds)
     //do not proceed when theres at least one workers on each task
     if (!workerIds.length) {
       toast.warning('Batch Info', {
