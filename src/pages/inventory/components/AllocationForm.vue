@@ -18,6 +18,7 @@ import { LoaderCircle, PackageOpen, XIcon } from 'lucide-vue-next';
 import { inventoryConsumptionType, type InventoryAllocatedBom, type InventoryPayload } from '@/types/inventory';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 const props = withDefaults(defineProps<{
     selectedRoute: string;
@@ -241,7 +242,7 @@ function useAdditionalBom() {
         if (!additionalBomSearch.value.trim()) return;
 
         const res = await productStore.getBom(additionalBomSearch.value)
-
+        additionalBomSearch.value = ''
         if (res && additionBomExists(res) || !res) return;
 
         addAdditionalBom({
@@ -252,6 +253,7 @@ function useAdditionalBom() {
             production_bom_no: res.production_bom_no,
         })
         additionalBoms.value.push(res)
+
     }
 
 
@@ -311,8 +313,11 @@ function useAdditionalBom() {
                 <CardDescription class="text-xs">Manually add additional Boms</CardDescription>
             </CardHeader>
             <CardContent>
-                <Input type="text" placeholder="BOM No" v-model="additionalBomSearch"
-                    @keydown.enter.prevent="handleBomSearch" />
+                <div class="space-y-1">
+                    <Label for="material-code">Search material code</Label>
+                    <Input id="material-code" type="text" placeholder="e.g. 01-100003" v-model="additionalBomSearch"
+                        @keydown.enter.prevent="handleBomSearch" />
+                </div>
 
                 <ul class="grid lg:grid-cols-2 gap-4 items-end">
                     <li v-for="(bom, index) in additionalBoms" :key="bom.no">
