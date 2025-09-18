@@ -11,6 +11,9 @@ import { Button } from '@/components/ui/button';
 const props = defineProps<{
     ticketId: string,
 }>()
+const emits = defineEmits<{
+    (e: 'submit'): void
+}>()
 
 const ticketStore = useTicketStore()
 const { loading: commentsLoading } = storeToRefs(ticketStore)
@@ -35,6 +38,7 @@ const handleComment = async () => {
     }
     await ticketStore.createComment(payload)
     commentInput.value = ''
+    emits('submit')
     await fetchComments()
 }
 
@@ -51,7 +55,6 @@ await fetchComments()
         <div class="space-y-2">
             <TicketCardCommentItem v-for="comment in comments" :key="comment.id" :comment="comment" />
         </div>
-
     </div>
 </template>
 

@@ -20,6 +20,7 @@ const props = defineProps<{
     ticket: Ticket
 }>()
 
+
 async function copyToClipboard() {
     try {
         await navigator.clipboard.writeText(props.ticket.ticket_number);
@@ -99,13 +100,10 @@ const showComments = ref(false)
                 </Button>
 
                 <template v-if="showComments">
-                    <Suspense>
-                        <TicketCardCommentList :ticketId="ticket.id" />
+                    <Suspense timeout="0">
+                        <TicketCardCommentList :ticketId="ticket.id" @submit="ticket.comments_count++" />
                         <template #fallback>
-                            <div>
-                                <Skeleton class="h-20" />
-                                <Skeleton class="h-20" />
-                            </div>
+                            <Skeleton class="h-[10rem] w-full"></Skeleton>
                         </template>
                     </Suspense>
                 </template>
