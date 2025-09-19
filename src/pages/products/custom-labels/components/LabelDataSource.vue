@@ -26,6 +26,12 @@ import LabelDataSourceCard from "./LabelDataSourceCard.vue";
 const customLabelStore = useCustomLabelStore();
 const { customLabel } = storeToRefs(customLabelStore);
 // Functions
+
+import { usePermission } from "@/layouts/main/usePermission";
+const { hasPermission } = usePermission();
+const allowSave = hasPermission("can-save-custom-label-data-source");
+const allowEdit= hasPermission("can-update-custom-label-data-source");
+const allowDelete= hasPermission("can-destroy-custom-label-data-source");
 </script>
 
 <template>
@@ -46,7 +52,7 @@ const { customLabel } = storeToRefs(customLabelStore);
         collapsible
         :default-value="'NewData'"
       >
-        <AccordionItem :value="'NewData'">
+        <AccordionItem :value="'NewData'"  v-if="allowSave">
           <AccordionTrigger> New Data</AccordionTrigger>
           <AccordionContent>
             <LabelDataSourceCard mode="create" @refresh="$emit('refresh')" />
@@ -54,13 +60,13 @@ const { customLabel } = storeToRefs(customLabelStore);
         </AccordionItem>
         <!-- Start of Existing Custom Data Source -->
         <AccordionItem
-          v-if="customLabel"
+          v-if="customLabel && allowEdit"
           v-for="(data, index) in customLabel.custom_data"
           :value="data.sku"
         >
           <AccordionTrigger>Product SKU: {{ data.sku }}</AccordionTrigger>
           <AccordionContent>
-            <LabelDataSourceCard
+            <LabelDataSourceCard :allowDelete="allowDelete"
               mode="edit"
               :sumIndex="0"
               @refresh="$emit('refresh')"

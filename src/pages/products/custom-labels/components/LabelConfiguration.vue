@@ -143,6 +143,10 @@ const normalizeKeyInput = (strInput: string): string => {
     .toUpperCase(); // all caps
   return strInput;
 };
+
+import { usePermission } from "@/layouts/main/usePermission";
+const { hasPermission } = usePermission();
+const allowEdit = hasPermission("can-update-custom-label");
 </script>
 
 <template>
@@ -151,14 +155,14 @@ const normalizeKeyInput = (strInput: string): string => {
       <CardTitle>Configuration</CardTitle>
       <CardDescription> Label Configuration </CardDescription>
     </CardHeader>
-    <CardContent class="space-y-2">
+    <CardContent class="space-y-2" v-if="allowEdit">
       <FormField #default="{ componentField }" name="title">
         <FormItem>
           <FormLabel class="relative after:text-rose-500 after:content-['*']"
             >Title</FormLabel
           >
           <FormControl>
-            <Input v-bind="componentField" />
+            <Input class="text-3xl" v-bind="componentField" />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -169,7 +173,7 @@ const normalizeKeyInput = (strInput: string): string => {
           <TableRow>
             <TableCell
               class="rounded-md bg-gray-500 text-lg font-semibold text-white"
-              :colspan="3"
+              :colspan="4"
             >
               Parameters
             </TableCell>
@@ -441,11 +445,16 @@ const normalizeKeyInput = (strInput: string): string => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      <CardFooter v-if="allowEdit">
+        <ButtonApp type="submit" @click="onSubmit" :loading="loading">
+          Submit
+        </ButtonApp>
+      </CardFooter>
     </CardContent>
-    <CardFooter>
-      <ButtonApp type="submit" @click="onSubmit" :loading="loading">
-        Submit
-      </ButtonApp>
-    </CardFooter>
+    <CardContent v-else>
+      <h1 class="text-2xl font-bold">
+        {{ customLabel?.title }}
+      </h1>
+    </CardContent>
   </Card>
 </template>

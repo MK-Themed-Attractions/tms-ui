@@ -19,6 +19,7 @@ const refresh = async () => {
     await customLabelStore.getCustomLabel(customLabel.value?.id);
   }
 };
+refresh();
 </script>
 
 <template>
