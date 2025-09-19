@@ -22,7 +22,7 @@ const emits = defineEmits<{
 }>();
 
 const perPage = useRouteQuery(props.perPageName, props.defaultPerPage.toString());
-const page = useRouteQuery(props.pageName, "1", { transform: Number });
+const page = useRouteQuery(props.pageName, 1, { transform: Number });
 
 const flag = ref(false)
 /* watch for route query 

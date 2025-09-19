@@ -38,6 +38,7 @@ const params = computed<Partial<WorkerQueryParams>>(() => {
         ],
         includes: 'department',
         per_page: workerPerPage,
+        page: 1
     }
 })
 
@@ -71,6 +72,7 @@ function useSearch() {
     async function searchWorkers() {
         await workerStore.getWorkers({
             ...params.value,
+            page: 1,
             q: search.value,
         })
     }

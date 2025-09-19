@@ -21,6 +21,9 @@ const route = useRoute();
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const { isAdmin } = usePermission()
+const page = useRouteQuery('page', 1, {
+  transform: Number
+})
 
 const filters = ref<FilterQueryParams[]>([
   {
@@ -31,7 +34,12 @@ const filters = ref<FilterQueryParams[]>([
     column: "is_active",
     values: [],
   },
+  {
+    column: "rfid_card",
+    values: []
+  }
 ])
+
 
 function useWorkers() {
   const workerStore = useWorkerStore();
@@ -82,7 +90,10 @@ function useSearch() {
   const q = useRouteQuery("q", "");
 
   async function handleSearch(search: string) {
-    await fetchWorkers()
+    page.value = 1
+    await fetchWorkers({
+      page: page.value
+    })
   }
   return {
     q,

@@ -48,10 +48,10 @@ const { departments } = useWorkerDepartment();
 const onSuccess = inject(workerOnSuccessKey, null);
 const formSchema = toTypedSchema(
   z.object({
-    worker_number: z.string().max(255).nonempty("Input must not be empty"),
+    worker_number: z.coerce.string().max(255).nonempty("Input must not be empty"),
     given_name: z.string().max(255).nonempty("Input must not be empty"),
     last_name: z.string().max(255).nonempty("Input must not be empty"),
-    rfid_card: z.string().max(50).nonempty("Input must not be empty"),
+    rfid_card: z.coerce.string().max(50).nonempty("Input must not be empty"),
     department_id: z.string().max(255),
   }),
 );
