@@ -5,7 +5,11 @@ import { Building, LoaderCircle } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
 import type { WorkerDepartment } from '@/types/workers';
+import { cn } from '@/lib/utils';
 
+defineOptions({
+    inheritAttrs: false
+})
 const workerDepartmentStore = useWorkerDepartmentStore()
 const emits = defineEmits<{
     (e: "change", department: WorkerDepartment): void;
@@ -48,7 +52,7 @@ if (!departments.value) {
 </script>
 
 <template>
-    <div class="rounded-md border p-4 shadow-sm">
+    <div :class="cn('rounded-md border p-4 shadow-sm', $attrs['class'] as string)">
         <div class="flex flex-wrap gap-4">
             <Select v-model="selectedDepartmentId">
                 <SelectTrigger class="flex-1 basis-[20rem] gap-2" :disabled="loading">

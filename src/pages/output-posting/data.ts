@@ -28,5 +28,9 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
   {
     key: 'is_approved',
     title: 'BC Status'
+  },
+  {
+    key:'updated_at',
+    title: 'Last modified'
   }
 ];

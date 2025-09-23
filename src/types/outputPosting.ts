@@ -1,5 +1,7 @@
+import type { DateValues } from "date-fns";
 import type { QueryParams, TimeStamp } from "./general";
 import type { ProductRoutingWorkCenterType } from "./products";
+import type { DateValue } from "reka-ui";
 
 export interface OutputPosting extends TimeStamp {
   id: string;
@@ -19,6 +21,9 @@ export interface OutputPostingQueryParams
   extends Omit<QueryParams, "per_page"> {
   pages: string | number;
   operation_code: string[];
+  startDate: DateValue;
+  endDate: DateValue;
+  is_approved: boolean;
 }
 
 /**

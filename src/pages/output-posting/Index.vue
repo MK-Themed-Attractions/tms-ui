@@ -16,11 +16,14 @@ import { Send } from 'lucide-vue-next';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatReadableDate } from '@/lib/utils';
 import Toolbar from '../qc/home/components/Toolbar.vue';
 import type { WorkerDepartment } from '@/types/workers';
 import { useRouteParams, useRouteQuery } from '@vueuse/router';
-
+import WipDateFilter from '../wip/home/components/WipDateFilter.vue';
+import type { SelectedDateRange } from '../wip/data';
+import { Label } from '@/components/ui/label';
+import OutputPostingFilter from './components/OutputPostingFilter.vue';
 
 const planStore = usePlanStore()
 const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
@@ -31,6 +34,8 @@ const viewSelected = ref(false)
 const selectedDepartment = ref<WorkerDepartment>()
 const page = useRouteQuery('page', '1')
 const perPage = useRouteQuery('pages', '30')
+const selectedDateRange = ref<SelectedDateRange>()
+const selectedFilter = ref('all')
 
 /* @ts-ignore */
 const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useDataTableChecks<OutputPosting>(outputPostings)
@@ -39,7 +44,19 @@ function usePlan() {
     const { hasNextPage, hasPrevPage, items: outputPostings, paginate } = useSimplePaginate<OutputPosting>()
 
     async function getOutputPostings(params?: Partial<OutputPostingQueryParams>) {
-        const data = await planStore.getOutputPosting(params)
+        const queryParams: Partial<OutputPostingQueryParams> = {
+            page: page.value,
+            pages: perPage.value,
+            operation_code: selectedDepartment.value?.work_centers || [],
+            startDate: selectedDateRange.value?.start,
+            endDate: selectedDateRange.value?.end,
+            ...params,
+        }
+        
+        if (selectedFilter.value !== 'all') {
+            queryParams.is_approved = selectedFilter.value === 'true'
+        }
+        const data = await planStore.getOutputPosting(queryParams)
 
 
         if (data) {
@@ -97,34 +114,29 @@ function useConfirmationDialog() {
     }
 }
 
-const route = useRoute()
-await getOutputPostings({
-    page: page.value,
-    pages: perPage.value
-})
 
 async function handleDepartmentChange(department: WorkerDepartment) {
     selectedDepartment.value = department
     await getOutputPostings({
         page: 1,
         pages: 30,
-        operation_code: department.work_centers
+        operation_code: department.work_centers,
+        startDate: selectedDateRange.value?.start,
+        endDate: selectedDateRange.value?.end
     })
 }
 
 watch(page, async () => {
-    await getOutputPostings({
-        page: page.value,
-        pages: perPage.value,
-        operation_code: selectedDepartment.value?.work_centers
-    })
+    await getOutputPostings()
 })
 watch(perPage, async () => {
-    await getOutputPostings({
-        page: page.value,
-        pages: perPage.value,
-        operation_code: selectedDepartment.value?.work_centers
-    })
+    await getOutputPostings()
+})
+watch(selectedDateRange, async () => {
+    await getOutputPostings()
+})
+watch(selectedFilter, async () => {
+    await getOutputPostings()
 })
 
 </script>
@@ -141,7 +153,13 @@ watch(perPage, async () => {
         </header>
 
         <main class="border rounded-md shadow-sm">
-            <Toolbar class="border-none" @change="handleDepartmentChange" />
+            <div class="flex items-center flex-wrap gap-4 p-4">
+                <Toolbar class="border-none shadow-none p-0 grow" @change="handleDepartmentChange" />
+                <div class="min-w-[12rem]">
+                    <OutputPostingFilter v-model="selectedFilter" />
+                </div>
+                <WipDateFilter v-model="selectedDateRange" />
+            </div>
             <DataTable v-if="outputPostings" :items="viewSelected ? checkedItems : outputPostings"
                 :columns="outputPostingDataTableColumns" :loading="planLoading">
                 <template #header.check="{ item }">
@@ -178,6 +196,12 @@ watch(perPage, async () => {
                         <span
                             :class="cn('border rounded-lg py-1 px-2 font-medium text-xs', item.is_approved ? 'bg-emerald-400/30 text-emerald-500 border-emerald-500' : 'bg-amber-400/30 text-amber-500 border-amber-500')">{{
                                 item.is_approved ? 'Approved' : 'Pending' }}</span>
+                    </TableCell>
+                </template>
+
+                <template #item.updated_at="{ item }">
+                    <TableCell>
+                        <span class="text-muted-foreground text-xs">{{ formatReadableDate(item.updated_at) }}</span>
                     </TableCell>
                 </template>
 
