@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ButtonApp from "@/components/app/button/ButtonApp.vue";
 import Button from "@/components/ui/button/Button.vue";
-import { CardDescription } from "@/components/ui/card";
 import {
   Dialog,
+  DialogDescription,
   DialogHeader,
   DialogScrollContent,
   DialogTitle,
@@ -52,7 +52,7 @@ const { print } = usePrint(printable, () => {
     >
       <DialogHeader>
         <DialogTitle>{{ props.title }}</DialogTitle>
-        <CardDescription>{{ props.description }}</CardDescription>
+        <DialogDescription>{{ props.description }}</DialogDescription>
       </DialogHeader>
 
       <div ref="printable" class="">

@@ -11,6 +11,7 @@ import {
   Building,
   Ellipsis,
   LoaderCircle,
+  PrinterIcon,
   RefreshCcw,
   TriangleAlert,
   Wrench,
@@ -45,12 +46,17 @@ import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
 import WipDateFilter from "./components/WipDateFilter.vue";
 import IncidentReportDialog from "./components/IncidentReportDialog.vue";
+import { usePermission } from "@/layouts/main/usePermission";
+import ProductionTag from "@/pages/prints/ProductionTag.vue";
+import Printer from "@/pages/prints/Printer.vue";
+import type { TypeProductionTag } from "@/pages/prints/types";
 
 
 const authStore = useAuthStore()
 const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
+const { hasPermission } = usePermission()
 
 const { fetchWipPlans,
   wipLoading,
@@ -86,6 +92,7 @@ const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, selec
 const { handleShowIncidentReportDialog, showIncidentReportDialog, handleReportIncidentSubmit, selectedTaskReason } = useIncidentReport()
 
 function useWip() {
+
   const { loading: wipLoading } = storeToRefs(wipStore);
   const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
   //task ids on common ms
@@ -173,6 +180,7 @@ function useWip() {
    * @param tasks 
    */
   function handleMultipleTaskAssign(batch: WipBatch) {
+
     const tasks = batch.tasks?.filter(task => canAssign(task.status))
     const taskIds = toTaskIds(tasks ? tasks : [])
 
@@ -216,8 +224,8 @@ function useWip() {
     handleShowMultipleTaskAssignDialog
   };
 }
-
 function useWorker() {
+
   const openAssignWorkerDialog = ref(false)
   const selectedDepartment = ref<WorkerDepartment>()
   const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
@@ -638,6 +646,9 @@ onBeforeMount(() => {
   wipTasksGrouped.value = []
 })
 
+const PRINT_PROD_TAG_KEY = import.meta.env.VITE_PRINT_PROD_TAG_KEY;
+
+
 </script>
 <template>
   <div class="container space-y-6 relative">
@@ -741,7 +752,31 @@ onBeforeMount(() => {
                             <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
                           </template>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem @click="handleGetBatchWip(batch,true)"><RefreshCcw /> Reload</DropdownMenuItem>
+                          <Printer v-if="hasPermission(PRINT_PROD_TAG_KEY)">
+                            <template #activator>
+                              <DropdownMenuItem @select="(e: { preventDefault: () => any; }) => e.preventDefault()">
+                                <PrinterIcon /> <span>Print Production Tag</span>
+                              </DropdownMenuItem>
+                            </template>
+                            <template :key="value.task_id" v-for="value in (batch.tasks ?? []).map(
+                              (item, item_index) => {
+                                return {
+                                  plan_code: plan.code,
+                                  product_sku: product.sku,
+                                  product_title: product.title,
+                                  work_centers: workCenters,
+                                  task_id: item.id,
+                                  data_index: item_index,
+                                  data_count: batch.tasks?.length,
+                                };
+                              },
+                            )">
+                              <ProductionTag v-bind="{ ...(value as TypeProductionTag) }" />
+                            </template>
+                          </Printer>
+                          <DropdownMenuItem @click="handleGetBatchWip(batch, true)">
+                            <RefreshCcw /> Reload
+                          </DropdownMenuItem>
                         </WipTaskDropdown>
                       </TableCell>
                     </template>
@@ -771,7 +806,6 @@ onBeforeMount(() => {
                           <DropdownMenuItem v-if="canFinish(task.status)" @click.stop="handleFinishTask(task, batch)">
                             Finish
                           </DropdownMenuItem>
-
                         </template>
 
                         <template v-if="canReportIncident(task.status)">
@@ -783,6 +817,7 @@ onBeforeMount(() => {
                       </WipTaskDropdown>
 
                     </template>
+
 
                   </WipTaskDataTable>
                 </template>
