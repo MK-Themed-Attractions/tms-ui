@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 // Components
 import ProductCard from "../components/ProductCard.vue";
 import ButtonApp from "@/components/app/button/ButtonApp.vue";
+import { PaginationApp, type PaginationQuery } from "@/components/app/pagination";
 
 import PrintComponentIndex from "../custom-labels/print-components/Index.vue";
 
@@ -53,7 +54,6 @@ function onQuantityInputChange(sku: string, quantity: number) {
 import { useCustomLabelStore } from "@/stores/customLabelStore";
 import { storeToRefs } from "pinia";
 import type { CustomLabel, CustomLabelQueryParams } from "@/types/customLabel";
-import type { PaginationQuery } from "@/components/app/pagination";
 import { useRoute } from "vue-router";
 const customLabelStore = useCustomLabelStore();
 const route = useRoute();
