@@ -139,7 +139,7 @@ const showDialog = (item: CustomLabel) => {
     <!-- Start of Dialog -->
     <Dialog v-model:open="showPrintDialog">
       <DialogScrollContent
-        class="mx-auto flex w-[80vw] max-w-[80vw] flex-col rounded-none p-0"
+        class="mx-auto flex w-[80vw] max-w-[80vw] flex-col rounded-none p-0 gap-0"
       >
         <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4">
           <DialogTitle>Custom Label Configuration</DialogTitle>

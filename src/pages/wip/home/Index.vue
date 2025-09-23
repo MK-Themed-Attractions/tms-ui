@@ -700,6 +700,12 @@ onBeforeMount(() => {
                     {{ product.sku }}
                   </RouterLink>
                 </TaskGroupLabel>
+                <TaskGroupLabel label="product title">
+                  <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }" target="_blank"
+                    class="hover:underline">
+                    {{ product.title }}
+                  </RouterLink>
+                </TaskGroupLabel>
                 <div class="ml-auto flex flex-col justify-center ">
                   <Badge class="ml-auto capitalize gap-1 bg-white" variant="outline">
                     <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />

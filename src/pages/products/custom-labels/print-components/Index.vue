@@ -1,10 +1,11 @@
 <template>
-  <Card>
+  <Card class="border-none">
     <CardHeader>
-      <CardTitle class="text-md">Parameters</CardTitle>
-      <CardDescription> </CardDescription>
+      <CardTitle class="text-2xl">{{ customLabel.title }}</CardTitle>
+      
     </CardHeader>
     <CardContent class="text-sm">
+      <CardTitle class="text-md">Parameters</CardTitle>
       <div
         class="flex flex-col gap-1 p-2"
         v-for="(parameter, paramIndex) in customLabel.parameters"
@@ -14,7 +15,6 @@
         <small>{{ parameter.desc }}</small>
       </div>
       <Separator />
-      <!-- <pre v-for="product in products">{{ product.product_parts }}</pre> -->
       <ButtonApp
         class="my-2 bg-green-500"
         :prepend-icon="Printer"
