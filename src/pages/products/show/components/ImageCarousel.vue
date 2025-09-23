@@ -21,7 +21,7 @@ const props = defineProps<{
       <CarouselItem v-for="image in images" :key="image.filename">
         <a :href="getS3Link(image.filename, 'full')" target="_blank"
           class="flex aspect-square items-center justify-center">
-          <ImageApp :image="getS3Link(image.filename, 'medium')" class=" w-full"> </ImageApp>
+          <ImageApp :image="getS3Link(image.filename, 'thumbnail')" class=" w-full"> </ImageApp>
         </a>
         <p class="text-sm flex gap-2 items-center justify-center p-2"><Info class="size-4"/> Click on the image to view full size</p>
       </CarouselItem>

@@ -56,6 +56,22 @@ export const productRoutes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: "label-printer",
+        redirect: { name: "labelPrinter" },
+        children: [
+          {
+            path: "",
+            name: "labelPrinter",
+            component: () => import("@/pages/products/label-printer/index.vue"),
+          },
+          {
+            path: "configuration",
+            name: "labelPrinterConfiguration",
+            component: () => import("@/pages/products/label-printer/config.vue")
+          },
+        ],
+      },
     ],
   },
 ];
