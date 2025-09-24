@@ -16,7 +16,7 @@ import { SearchIcon, Send } from 'lucide-vue-next';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-import { cn, formatReadableDate } from '@/lib/utils';
+import { cn, formatReadableDate, getS3Link } from '@/lib/utils';
 import Toolbar from '../qc/home/components/Toolbar.vue';
 import type { WorkerDepartment } from '@/types/workers';
 import { useRouteParams, useRouteQuery } from '@vueuse/router';
@@ -25,6 +25,7 @@ import type { SelectedDateRange } from '../wip/data';
 import { Label } from '@/components/ui/label';
 import OutputPostingFilter from './components/OutputPostingFilter.vue';
 import { Input } from '@/components/ui/input';
+import { ImageApp } from '@/components/app/image';
 
 const planStore = usePlanStore()
 const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
@@ -178,6 +179,13 @@ watch(selectedFilter, async () => {
                 <template #item.check="{ item }">
                     <TableCell>
                         <Checkbox @click="toggleCheck(item)" :checked="isChecked(item)" />
+                    </TableCell>
+                </template>
+
+                <template #item.image="{ item }">
+                    <TableCell>
+                        <ImageApp :image="getS3Link(item.plan.product_data?.image?.filename || '', 'small')"
+                            class="max-w-10" />
                     </TableCell>
                 </template>
 
