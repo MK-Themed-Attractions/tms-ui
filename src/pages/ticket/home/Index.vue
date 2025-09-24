@@ -113,12 +113,17 @@ async function handleTicketTypeSelect(ticketTypes: TicketType[]) {
     await fetchTickets()
 }
 
-async function handleFilterClear() {
+async function handleClearTicketTypeFilter() {
     ticketTypesFilter.value = []
-    ticketStatusFilter.value = []
-
     await fetchTickets()
 }
+
+async function handleClearTicketStatusFilter() {
+    ticketStatusFilter.value = []
+    await fetchTickets()
+}
+
+
 
 const ticketStatuses: { id: string, name: TicketStatus }[] =
     [{
@@ -161,9 +166,9 @@ async function handleTicketStatusSelect(ticketStatuses: { id: string, name: Tick
 
         <section class="flex flex-wrap gap-4">
             <FilterApp :items="ticketTypes" text="Ticket Type" @select="handleTicketTypeSelect"
-                @clear-select="handleFilterClear" v-if="isAdmin(user.id)" />
+                @clear-select="handleClearTicketTypeFilter" v-if="isAdmin(user.id)" />
             <FilterApp :items="ticketStatuses" text="Status" @select="handleTicketStatusSelect"
-                @clear-select="handleFilterClear" />
+                @clear-select="handleClearTicketStatusFilter" />
         </section>
 
         <section>

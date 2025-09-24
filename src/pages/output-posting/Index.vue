@@ -12,7 +12,7 @@ import { ButtonApp } from '@/components/app/button';
 import { PaginationApp, PaginationApp2, type PaginationQuery } from '@/components/app/pagination';
 import { useRoute } from 'vue-router';
 import { useSimplePaginate } from '@/composables/usePaginate';
-import { Send } from 'lucide-vue-next';
+import { SearchIcon, Send } from 'lucide-vue-next';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
@@ -24,6 +24,7 @@ import WipDateFilter from '../wip/home/components/WipDateFilter.vue';
 import type { SelectedDateRange } from '../wip/data';
 import { Label } from '@/components/ui/label';
 import OutputPostingFilter from './components/OutputPostingFilter.vue';
+import { Input } from '@/components/ui/input';
 
 const planStore = usePlanStore()
 const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
@@ -36,6 +37,7 @@ const page = useRouteQuery('page', '1')
 const perPage = useRouteQuery('pages', '30')
 const selectedDateRange = ref<SelectedDateRange>()
 const selectedFilter = ref('all')
+const search = ref('')
 
 /* @ts-ignore */
 const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useDataTableChecks<OutputPosting>(outputPostings)
@@ -50,9 +52,10 @@ function usePlan() {
             operation_code: selectedDepartment.value?.work_centers || [],
             startDate: selectedDateRange.value?.start,
             endDate: selectedDateRange.value?.end,
+            q: search.value,
             ...params,
         }
-        
+
         if (selectedFilter.value !== 'all') {
             queryParams.is_approved = selectedFilter.value === 'true'
         }
@@ -155,6 +158,11 @@ watch(selectedFilter, async () => {
         <main class="border rounded-md shadow-sm">
             <div class="flex items-center flex-wrap gap-4 p-4">
                 <Toolbar class="border-none shadow-none p-0 grow" @change="handleDepartmentChange" />
+                <div class="relative">
+                    <SearchIcon class="text-muted-foreground size-4 absolute left-2 top-1/2 -translate-y-1/2" />
+                    <Input class="pl-8" placeholder="Search" v-model="search"
+                        @keydown.enter.prevent="getOutputPostings" />
+                </div>
                 <div class="min-w-[12rem]">
                     <OutputPostingFilter v-model="selectedFilter" />
                 </div>

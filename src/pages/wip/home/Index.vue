@@ -57,6 +57,7 @@ const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
 const { hasPermission } = usePermission()
+const printProdTagKey = import.meta.env.VITE_PRINT_PROD_TAG_KEY;
 
 const { fetchWipPlans,
   wipLoading,
@@ -646,7 +647,7 @@ onBeforeMount(() => {
   wipTasksGrouped.value = []
 })
 
-const PRINT_PROD_TAG_KEY = import.meta.env.VITE_PRINT_PROD_TAG_KEY;
+
 
 
 </script>
@@ -758,7 +759,7 @@ const PRINT_PROD_TAG_KEY = import.meta.env.VITE_PRINT_PROD_TAG_KEY;
                             <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
                           </template>
                           <DropdownMenuSeparator />
-                          <Printer v-if="hasPermission(PRINT_PROD_TAG_KEY)">
+                          <Printer v-if="hasPermission(printProdTagKey)">
                             <template #activator>
                               <DropdownMenuItem @select="(e: { preventDefault: () => any; }) => e.preventDefault()">
                                 <PrinterIcon /> <span>Print Production Tag</span>

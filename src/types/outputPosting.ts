@@ -2,6 +2,7 @@ import type { DateValues } from "date-fns";
 import type { QueryParams, TimeStamp } from "./general";
 import type { ProductRoutingWorkCenterType } from "./products";
 import type { DateValue } from "reka-ui";
+import type { Plan } from "./planning";
 
 export interface OutputPosting extends TimeStamp {
   id: string;
@@ -15,6 +16,7 @@ export interface OutputPosting extends TimeStamp {
   runtime: number;
   sku: string;
   is_finished: false;
+  plan: Plan;
 }
 
 export interface OutputPostingQueryParams
