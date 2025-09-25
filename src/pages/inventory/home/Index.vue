@@ -20,7 +20,6 @@ import TableCell from "@/components/ui/table/TableCell.vue";
 import {
   formatReadableDate,
   getIconByPlanStatus,
-  getS3Link,
 } from "@/lib/utils";
 import { searchFilterData, type SelectedDateRange } from "@/pages/wip/data";
 import Toolbar from "@/pages/wip/home/components/Toolbar.vue";
@@ -42,7 +41,6 @@ import {
   Ellipsis,
   Eye,
   Layers,
-  Merge,
   Pencil,
   Wrench,
 } from "lucide-vue-next";
@@ -175,7 +173,7 @@ function useWip() {
     const data = await wipStore.getWipPlansByWorkCenters({
       page: page.value,
       work_centers: department.work_centers,
-      filter: statusFilter.value,
+      // filter: statusFilter.value,
       startDate: selectedDateRange.value?.start,
       endDate: selectedDateRange.value?.end,
     });
@@ -189,7 +187,7 @@ function useWip() {
 
     const params: Partial<WipTaskQueryParams> = {
       operation_code: selectedDepartment.value.work_centers,
-      filter: statusFilter.value as "assigned",
+      // filter: statusFilter.value as "assigned",
     };
 
     const res = await wipStore.getTasksByBatchId(batch.batch_id, params);
