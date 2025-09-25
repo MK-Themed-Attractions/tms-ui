@@ -45,7 +45,8 @@ const bomSchema = z.object({
     plan_task_id: z.string().optional(),
     task_id: z.string().optional(),
     id: z.string().optional(),
-    type: z.enum(inventoryConsumptionType).default('original')
+    type: z.enum(inventoryConsumptionType).default('original'),
+    work_center: z.string().optional(),
 })
 const formSchema = toTypedSchema(z.object({
     consumptions: z.array(bomSchema),
@@ -73,6 +74,7 @@ const submit = handleSubmit(async (values) => {
                 ...con,
                 plan_task_id: task.task_plan_id,
                 task_id: task.id,
+                work_center: inventorySelected?.value.route
             }
         })
     }).flat()
@@ -85,7 +87,8 @@ const submit = handleSubmit(async (values) => {
                         ...con,
                         plan_task_id: task.task_plan_id,
                         task_id: task.id,
-                        plan_code: inventorySelected?.value.plan?.code
+                        plan_code: inventorySelected?.value.plan?.code,
+                        work_center: inventorySelected?.value.route
                     }
                 })
             }).flat()
