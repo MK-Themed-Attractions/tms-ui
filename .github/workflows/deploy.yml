@@ -95,4 +95,4 @@ jobs:
           aws s3 sync dist/ s3://tms-vue-app --delete
 
       - name: Invalidate CloudFront index
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths /*
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
