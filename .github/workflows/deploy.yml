@@ -28,7 +28,61 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build   # change if your output dir differs (e.g. dist)
+        env:
+          VITE_PRODUCT:  ${{ vars.VITE_PRODUCT }}
+          VITE_PLANNING: ${{ vars.VITE_PLANNING }}
+          VITE_WORKERS: ${{ vars.VITE_WORKERS }}
+          VITE_USERS: ${{ vars.VITE_USERS }}
+          VITE_INVENTORY: ${{ vars.VITE_INVENTORY }}
+          VITE_TICKET: ${{ vars.VITE_TICKET }}
+          VITE_COMMON: ${{ vars.VITE_COMMON }}
+          VITE_QC: ${{ vars.VITE_QC }}
+          VITE_CASTING: ${{ vars.VITE_CASTING }}
+          VITE_PAINTING: ${{ vars.VITE_PAINTING }}
+          VITE_NOTIFICATIONS: ${{ vars.VITE_NOTIFICATIONS }}
+          VITE_PRODUCT_BEARER_TOKEN_KEY: ${{ vars.VITE_PRODUCT_BEARER_TOKEN_KEY }}
+          VITE_WORKERS_BEARER_TOKEN_KEY: ${{ vars.VITE_WORKERS_BEARER_TOKEN_KEY }}
+          VITE_PLANNING_BEARER_TOKEN_KEY: ${{ vars.VITE_PLANNING_BEARER_TOKEN_KEY }}
+          VITE_QC_BEARER_TOKEN_KEY: ${{ vars.VITE_QC_BEARER_TOKEN_KEY }}
+          VITE_INVENTORY_BEARER_TOKEN_KEY: ${{ vars.VITE_INVENTORY_BEARER_TOKEN_KEY }}
+          VITE_NOTIFICATIONS_BEARER_TOKEN_KEY: ${{ vars.VITE_NOTIFICATIONS_BEARER_TOKEN_KEY }}
+          VITE_COMMON_BEARER_TOKEN_KEY: ${{ vars.VITE_COMMON_BEARER_TOKEN_KEY }}
+          VITE_CASTING_BEARER_TOKEN_KEY: ${{ vars.VITE_CASTING_BEARER_TOKEN_KEY }}
+          VITE_PAINTING_BEARER_TOKEN_KEY: ${{ vars.VITE_PAINTING_BEARER_TOKEN_KEY }}
+          VITE_S3_ENDPOINT: ${{ vars.VITE_S3_ENDPOINT }}
+          VITE_ABLY_PUBLIC_KEY: ${{ vars.VITE_ABLY_PUBLIC_KEY }}
+          VITE_DEV_TEAM_EMAIL: ${{ vars.VITE_DEV_TEAM_EMAIL }}
+          VITE_PRODUCTS_KEY: ${{ vars.VITE_PRODUCTS_KEY }}
+          VITE_TASK_HISTORY_KEY: ${{ vars.VITE_TASK_HISTORY_KEY }}
+          VITE_WIP_KEY: ${{ vars.VITE_WIP_KEY }}
+          VITE_QC_KEY: ${{ vars.VITE_QC_KEY }}
+          VITE_QC_KPI_KEY: ${{ vars.VITE_QC_KPI_KEY }}
+          VITE_WORKERS_KEY: ${{ vars.VITE_WORKERS_KEY }}
+          VITE_WORKER_DEPARTMENTS_KEY: ${{ vars.VITE_WORKER_DEPARTMENTS_KEY }}
+          VITE_PLANNING_CALENDAR_KEY: ${{ vars.VITE_PLANNING_CALENDAR_KEY }}
+          VITE_PLANNING_KEY: ${{ vars.VITE_PLANNING_KEY }}
+          VITE_USERS_KEY: ${{ vars.VITE_USERS_KEY }}
+          VITE_USERS_PERMISSION_KEY: ${{ vars.VITE_USERS_PERMISSION_KEY }}
+          VITE_OUTPUT_POSTING_KEY: ${{ vars.VITE_OUTPUT_POSTING_KEY }}
+          VITE_INVENTORY_KEY: ${{ vars.VITE_INVENTORY_KEY }}
+          VITE_TICKET_KEY: ${{ vars.VITE_TICKET_KEY }}
+          VITE_TICKET_CREATE_KEY: ${{ vars.VITE_TICKET_CREATE_KEY }}
+          VITE_TICKET_SHOW_KEY: ${{ vars.VITE_TICKET_SHOW_KEY }}
+          VITE_TICKET_UPDATE_KEY: ${{ vars.VITE_TICKET_UPDATE_KEY }}
+          VITE_TICKET_CHANGE_STATUS_KEY: ${{ vars.VITE_TICKET_CHANGE_STATUS_KEY }}
+          VITE_TICKET_TYPE_SHOW_KEY: ${{ vars.VITE_TICKET_TYPE_SHOW_KEY }}
+          VITE_TICKET_TYPE_CREATE_KEY: ${{ vars.VITE_TICKET_TYPE_CREATE_KEY }}
+          VITE_TICKET_TYPE_UPDATE_KEY: ${{ vars.VITE_TICKET_TYPE_UPDATE_KEY }}
+          VITE_TICKET_TYPE_DELETE_KEY: ${{ vars.VITE_TICKET_TYPE_DELETE_KEY }}
+          VITE_PROD_TAG_FIXED_WORK_CENTER: ${{ vars.VITE_PROD_TAG_FIXED_WORK_CENTER }}
+          VITE_PRINT_PROD_TAG_KEY: ${{ vars.VITE_PRINT_PROD_TAG_KEY }}
+          VITE_TICKET_ENC_ACCESS_KEY: ${{ vars.VITE_TICKET_ENC_ACCESS_KEY }}
+          VITE_TICKET_ENC_ID: ${{ vars.VITE_TICKET_ENC_ID }}
+          VITE_TICKET_TAG_ACCESS_KEY: ${{ vars.VITE_TICKET_TAG_ACCESS_KEY }}
+          VITE_TICKET_TAG_ID: ${{ vars.VITE_TICKET_TAG_ID }}
+          VITE_SUPERADMIN_IDS: ${{ vars.VITE_SUPERADMIN_IDS }}
+
+        run: npm run build
 
       - uses: aws-actions/configure-aws-credentials@v3
         with:
