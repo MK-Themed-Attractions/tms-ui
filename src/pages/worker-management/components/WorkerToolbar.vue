@@ -38,7 +38,7 @@ const props = withDefaults(
   },
 );
 
-const search = ref(props.searchDefaultValue);
+const search = defineModel("search", { default: "" });
 const workerDepartmentStore = useWorkerDepartmentStore();
 const { departments } = storeToRefs(workerDepartmentStore);
 const batchDeactivateDialog = ref(false);
@@ -51,13 +51,8 @@ const {
   handleClearStatusFilter,
 } = useFilter();
 
-function handleShowDeactivateDialog() {
-  search.value = "";
-  batchDeactivateDialog.value = true;
-}
-
-function useFilter() {
-  const filters = ref<FilterQueryParams[]>([
+const filters = defineModel<FilterQueryParams[]>('filters', {
+  default: [
     {
       column: "department_id",
       values: [],
@@ -66,7 +61,16 @@ function useFilter() {
       column: "is_active",
       values: [],
     },
-  ]);
+  ]
+});
+
+function handleShowDeactivateDialog() {
+  search.value = "";
+  batchDeactivateDialog.value = true;
+}
+
+function useFilter() {
+
 
   /* DATA */
   const workerStatuses: FilterAppGenericObject[] = [
@@ -116,7 +120,6 @@ function useFilter() {
   }
 
   return {
-    filters,
     handleWorkerDepartmentFilter,
     handleWorkerStatusFilter,
     handleClearDepartmentFilter,
@@ -125,15 +128,7 @@ function useFilter() {
   };
 }
 
-/**
- * emit a search event when search is empty
- * to refetch the list without search parameter
- */
-watch(search, (newValue) => {
-  if (!newValue) {
-    emits("search", newValue);
-  }
-});
+
 </script>
 
 <template>

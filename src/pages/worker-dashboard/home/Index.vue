@@ -401,6 +401,10 @@ onUnmounted(() => {
                             <span class="text-xs text-muted-foreground">Status</span>
                             <p class="font-medium">{{ plan.status_code }}</p>
                         </div>
+                      <div>
+                        <span class="text-xs text-muted-foreground">Product Name</span>
+                        <p class="font-medium">{{ plan.batch_data[0]?.tasks[0]?.product_data?.title }}</p>
+                      </div>
                     </div>
                 </div>
 
@@ -418,7 +422,7 @@ onUnmounted(() => {
                         <div>
                             <Drawer>
                                 <DrawerTrigger as-child>
-                                    <ButtonApp size="icon" class="size-8">
+                                    <ButtonApp size="icon" class="size-10">
                                         <Eye />
                                     </ButtonApp>
                                 </DrawerTrigger>
@@ -476,26 +480,26 @@ onUnmounted(() => {
                                                 </TableCell>
                                             </template>
                                             <template #item.actions="{ item }">
-                                                <TableCell class="flex items-center gap-2">
+                                                <TableCell class="flex items-center gap-4">
                                                     <template v-if="item.is_startable">
-                                                        <ButtonApp size="icon" class="size-6"
+                                                        <ButtonApp size="icon" class="size-10"
                                                             :disabled="!canStart(item.status)"
                                                             @click="handleTaskOperation('start', item)">
                                                             <Play />
                                                         </ButtonApp>
-                                                        <ButtonApp size="icon" class="size-6"
+                                                        <ButtonApp size="icon" class="size-10"
                                                             :disabled="!canPause(item.status)"
                                                             @click="handleTaskOperation('pause', item)">
                                                             <Pause />
                                                         </ButtonApp>
-                                                        <ButtonApp size="icon" class="size-6"
+                                                        <ButtonApp size="icon" class="size-10"
                                                             :disabled="!canFinish(item.status)"
                                                             @click="handleTaskOperation('done', item)">
                                                             <Flag />
                                                         </ButtonApp>
                                                     </template>
 
-                                                    <ButtonApp size="icon" class="size-6 ml-2"
+                                                    <ButtonApp size="icon" class="size-10 ml-2"
                                                         @click="handleTaskOperation('print', item)">
                                                         <Printer />
                                                     </ButtonApp>
@@ -510,18 +514,18 @@ onUnmounted(() => {
                         </div>
                         <div class="inline-flex justify-between">
                             <div>
-                                <div class="inline-flex gap-2 items-center">
-                                    <ButtonApp size="icon" @click="handleBatchOperation('start', batch.tasks)"
-                                        class="size-8 border" variant="secondary">
+                                <div class="inline-flex gap-4 items-center">
+                                    <ButtonApp size="icon"  @click="handleBatchOperation('start', batch.tasks)"
+                                        class="size-10 border" variant="secondary">
                                         <Play />
                                     </ButtonApp>
                                     <ButtonApp size="icon" @click="handleBatchOperation('pause', batch.tasks)"
-                                        class="size-8 border" variant="secondary">
+                                        class="size-10 border" variant="secondary">
                                         <Pause />
                                     </ButtonApp>
 
                                     <ButtonApp size="icon" @click="handleBatchOperation('done', batch.tasks)"
-                                        class="size-8 border" variant="secondary">
+                                        class="size-10 border" variant="secondary">
                                         <Flag />
                                     </ButtonApp>
                                 </div>

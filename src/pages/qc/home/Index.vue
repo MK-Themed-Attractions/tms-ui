@@ -2,23 +2,21 @@
 import { useWipStore } from '@/stores/wipStore';
 import Toolbar from './components/Toolbar.vue';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onBeforeUnmount, ref, watch, watchEffect } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 import type { WipBatch, WipPlanQueryParams, WipTask, WipTaskGrouped, WipTaskQueryParams } from '@/types/wip';
-import CardInfo from '@/pages/wip/home/components/CardInfo.vue';
-import { formatReadableDate, getIconByPlanStatus, getS3Link } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
+import { formatReadableDate, getIconByPlanStatus } from '@/lib/utils';
 import WipBatchAccordion from '@/pages/wip/home/components/WipBatchAccordion.vue';
 import QCTasksDataTable from './components/QCTasksDataTable.vue';
 import { searchFilterData, type QCTaskVerdict } from './data';
 
 import { TableCell } from '@/components/ui/table';
-import { AlertCircle, Building, ClipboardCheck, Ellipsis } from 'lucide-vue-next';
+import { AlertCircle, Building, ClipboardCheck, Ellipsis, LoaderCircle, RefreshCcw } from 'lucide-vue-next';
 import QCTaskDropdownMenu from './components/QCTaskDropdownMenu.vue';
 import QcTaskDialog from './components/QcTaskDialog.vue';
 import { useQcStore } from '@/stores/qcStore';
 import { useWorkerDepartmentStore } from '@/stores/workerDepartmentStore';
 import { useTaskControls } from '@/composables/useTaskControls';
-import { InputFilter, type InputFilterDropdownData, type InputFilterSearchData } from '@/components/app/input-filter';
+import { InputFilter, type InputFilterDropdownData } from '@/components/app/input-filter';
 import { InfiniteScroll, InfiniteScrollTrigger } from '@/components/app/infinite-scroll';
 import type { WorkerDepartment } from '@/types/workers';
 import { useAuthStore } from '@/stores/authStore';
@@ -26,10 +24,11 @@ import { TaskGroup, TaskGroupImage, TaskGroupLabel } from '@/components/app/task
 import { RouterLink } from 'vue-router';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DataTableLoader } from '@/components/app/data-table';
-import { batchWipSuccessKey } from '@/lib/injectionKeys';
 import WipSkeleton from '@/pages/wip/home/components/WipSkeleton.vue';
 import WipDateFilter from '@/pages/wip/home/components/WipDateFilter.vue';
 import type { SelectedDateRange } from '@/pages/wip/data';
+import { ButtonApp } from '@/components/app/button';
+import { Button } from '@/components/ui/button';
 
 const authStore = useAuthStore()
 const { loading: authLoading } = storeToRefs(authStore)
@@ -139,11 +138,11 @@ function useWip() {
     }
 
     //fetch batch wips only when batch doesnt have tasks in it
-    async function handleGetBatchWip(batch: WipBatch) {
+    async function handleGetBatchWip(batch: WipBatch, force?: boolean) {
 
         selectedBatch.value = batch;
         //only fetch the data when theres no tasks on batch to avoid repeated fetch
-        if (batch.tasks) return;
+        if (batch.tasks && !force) return;
         await fetchBatchWip(batch)
     }
 
@@ -235,7 +234,13 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
-    <div class="space-y-6 container">
+    <div class="space-y-6 container relative">
+        <ButtonApp :disabled="wipLoading || authLoading" size="icon" v-if="selectedDepartment"
+            @click="() => handleDepartmentChange(selectedDepartment!)"
+            class="rounded-full fixed left-1/2 -translate-x-1/2 top-20 z-[100]">
+            <LoaderCircle v-if="wipLoading || authLoading" class="animate-spin size-4" />
+            <RefreshCcw v-else />
+        </ButtonApp>
         <div>
             <h1 class="text-lg font-semibold md:text-2xl">Quality Control</h1>
             <p class="text-muted-foreground text-sm">
@@ -290,6 +295,12 @@ onBeforeUnmount(() => {
                                     {{ product.sku }}
                                 </RouterLink>
                             </TaskGroupLabel>
+                            <TaskGroupLabel label="product Title">
+                                <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }"
+                                    target="_blank" class="hover:underline">
+                                    {{ product.title }}
+                                </RouterLink>
+                            </TaskGroupLabel>
                             <div class="ml-auto flex flex-col justify-center gap-2">
                                 <Badge class="ml-auto capitalize gap-1">
                                     <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
@@ -305,6 +316,11 @@ onBeforeUnmount(() => {
                             <template #default="{ batch }">
                                 <QCTasksDataTable v-if="batch.tasks && batch.tasks.length" :tasks="batch.tasks"
                                     :loading="wipLoading" @navigate-to="(task) => handlePass(task, batch)">
+                                    <template #header.actions>
+                                        <Button variant="ghost" size="icon" @click="handleGetBatchWip(batch, true)">
+                                            <RefreshCcw />
+                                        </Button>
+                                    </template>
                                     <template #item.actions="{ item }">
                                         <TableCell>
                                             <QCTaskDropdownMenu @pass="handlePass(item, batch)"

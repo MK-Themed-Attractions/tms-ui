@@ -9,9 +9,13 @@ export type InventoryPayload = {
     plan_code?: string;
     task_id?: string;
     id?: string;
+    type: InventoryConsumptionType;
   }[];
 };
 
+export const inventoryConsumptionType = ["original", "additional"] as const;
+export type InventoryConsumptionType =
+  (typeof inventoryConsumptionType)[number];
 export type InventoryQueryParams = {
   plan_task_ids: string[];
 };
@@ -22,4 +26,5 @@ export type InventoryAllocatedBom = ProductRoutingBOM & {
   plan_code: string;
   task_id: string;
   quantity: number;
+  type: InventoryConsumptionType
 };

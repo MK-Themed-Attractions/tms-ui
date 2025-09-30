@@ -30,7 +30,7 @@ const ticketTypes = ref<TicketType[]>([])
 const ticketTypesFilter = ref<string[]>([])
 const ticketStatusFilter = ref<TicketStatus[]>([])
 const search = ref('')
-const { hasPermission } = usePermission()
+const { hasPermission, isAdmin } = usePermission()
 const canCreateTicket = hasPermission(import.meta.env.VITE_TICKET_CREATE_KEY)
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
@@ -39,12 +39,21 @@ const params = computed<Partial<GetTicketsQueryParams>>(() => {
 
     const params: Partial<GetTicketsQueryParams> = {
         includes: 'ticket_type', page: page.value, type: ticketTypesFilter.value, status: ticketStatusFilter.value,
-        filters: search.value
+        filters: search.value,
     }
 
-    const adminKeys = <string[]>JSON.parse(import.meta.env.VITE_SUPERADMIN_IDS);
-    if (!adminKeys.includes(user.value.id)) {
-        params.user_ids = [user.value.id]
+    if (!isAdmin(user.value.id)) {
+        params.type = []
+        params.user_ids = []
+        if (hasPermission(import.meta.env.VITE_TICKET_ENC_ACCESS_KEY)) {
+            params.type?.push(import.meta.env.VITE_TICKET_ENC_ID)
+        }
+        if (hasPermission(import.meta.env.VITE_TICKET_TAG_ACCESS_KEY)) {
+            params.type?.push(import.meta.env.VITE_TICKET_TAG_ID)
+        }
+
+        if (!hasPermission(import.meta.env.VITE_TICKET_ENC_ACCESS_KEY) && !hasPermission(import.meta.env.VITE_TICKET_TAG_ACCESS_KEY))
+            params.user_ids?.push(user.value.id)
     }
 
 
@@ -104,12 +113,17 @@ async function handleTicketTypeSelect(ticketTypes: TicketType[]) {
     await fetchTickets()
 }
 
-async function handleFilterClear() {
+async function handleClearTicketTypeFilter() {
     ticketTypesFilter.value = []
-    ticketStatusFilter.value = []
-
     await fetchTickets()
 }
+
+async function handleClearTicketStatusFilter() {
+    ticketStatusFilter.value = []
+    await fetchTickets()
+}
+
+
 
 const ticketStatuses: { id: string, name: TicketStatus }[] =
     [{
@@ -152,9 +166,9 @@ async function handleTicketStatusSelect(ticketStatuses: { id: string, name: Tick
 
         <section class="flex flex-wrap gap-4">
             <FilterApp :items="ticketTypes" text="Ticket Type" @select="handleTicketTypeSelect"
-                @clear-select="handleFilterClear" />
+                @clear-select="handleClearTicketTypeFilter" v-if="isAdmin(user.id)" />
             <FilterApp :items="ticketStatuses" text="Status" @select="handleTicketStatusSelect"
-                @clear-select="handleFilterClear" />
+                @clear-select="handleClearTicketStatusFilter" />
         </section>
 
         <section>

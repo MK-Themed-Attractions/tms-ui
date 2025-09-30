@@ -3,20 +3,29 @@ import { DataTable } from '@/components/app/data-table';
 import { SectionHeader } from '@/components/app/section-header';
 import { usePlanStore } from '@/stores/planStore';
 import type { OutputPosting, OutputPostingQueryParams } from '@/types/outputPosting';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { outputPostingDataTableColumns } from './data';
 import { TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDataTableChecks } from '@/composables/useDataTableChecks';
 import { ButtonApp } from '@/components/app/button';
-import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
+import { PaginationApp, PaginationApp2, type PaginationQuery } from '@/components/app/pagination';
 import { useRoute } from 'vue-router';
 import { useSimplePaginate } from '@/composables/usePaginate';
-import { Send } from 'lucide-vue-next';
+import { SearchIcon, Send } from 'lucide-vue-next';
 import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-
+import { cn, formatReadableDate, getS3Link } from '@/lib/utils';
+import Toolbar from '../qc/home/components/Toolbar.vue';
+import type { WorkerDepartment } from '@/types/workers';
+import { useRouteParams, useRouteQuery } from '@vueuse/router';
+import WipDateFilter from '../wip/home/components/WipDateFilter.vue';
+import type { SelectedDateRange } from '../wip/data';
+import { Label } from '@/components/ui/label';
+import OutputPostingFilter from './components/OutputPostingFilter.vue';
+import { Input } from '@/components/ui/input';
+import { ImageApp } from '@/components/app/image';
 
 const planStore = usePlanStore()
 const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
@@ -24,6 +33,12 @@ const { loading: planLoading, errors: planErrors } = storeToRefs(planStore)
 const { getOutputPostings, outputPostings, hasNextPage, hasPrevPage, handlePostToBc } = usePlan()
 const { handleShowConfirmationDialog, showConfirmationDialog } = useConfirmationDialog()
 const viewSelected = ref(false)
+const selectedDepartment = ref<WorkerDepartment>()
+const page = useRouteQuery('page', '1')
+const perPage = useRouteQuery('pages', '30')
+const selectedDateRange = ref<SelectedDateRange>()
+const selectedFilter = ref('all')
+const search = ref('')
 
 /* @ts-ignore */
 const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useDataTableChecks<OutputPosting>(outputPostings)
@@ -31,15 +46,21 @@ const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useD
 function usePlan() {
     const { hasNextPage, hasPrevPage, items: outputPostings, paginate } = useSimplePaginate<OutputPosting>()
 
-    async function getOutputPostings(params?: Partial<OutputPostingQueryParams | PaginationQuery>) {
-        const paginationQueryParams = params as PaginationQuery
-        const outputPostingQueryParams = params as OutputPostingQueryParams
-        const finalParams: Partial<OutputPostingQueryParams> = {
-            page: params?.page ?? 1,
-            pages: paginationQueryParams.perPage || outputPostingQueryParams.pages || 30
+    async function getOutputPostings(params?: Partial<OutputPostingQueryParams>) {
+        const queryParams: Partial<OutputPostingQueryParams> = {
+            page: page.value,
+            pages: perPage.value,
+            operation_code: selectedDepartment.value?.work_centers || [],
+            startDate: selectedDateRange.value?.start,
+            endDate: selectedDateRange.value?.end,
+            q: search.value,
+            ...params,
         }
 
-        const data = await planStore.getOutputPosting(finalParams)
+        if (selectedFilter.value !== 'all') {
+            queryParams.is_approved = selectedFilter.value === 'true'
+        }
+        const data = await planStore.getOutputPosting(queryParams)
 
 
         if (data) {
@@ -60,8 +81,9 @@ function usePlan() {
 
         if (!planErrors.value) {
             await getOutputPostings({
-                page: route.query.page?.toString() || 1,
-                pages: route.query.pages?.toString() || 30
+                page: page.value,
+                pages: perPage.value,
+                operation_code: selectedDepartment.value?.work_centers || []
             })
 
             toast.info('Output Posting Info', {
@@ -96,11 +118,31 @@ function useConfirmationDialog() {
     }
 }
 
-const route = useRoute()
-await getOutputPostings({
-    page: route.query.page?.toString() || 1,
-    pages: route.query.pages?.toString() || 30
+
+async function handleDepartmentChange(department: WorkerDepartment) {
+    selectedDepartment.value = department
+    await getOutputPostings({
+        page: 1,
+        pages: 30,
+        operation_code: department.work_centers,
+        startDate: selectedDateRange.value?.start,
+        endDate: selectedDateRange.value?.end
+    })
+}
+
+watch(page, async () => {
+    await getOutputPostings()
 })
+watch(perPage, async () => {
+    await getOutputPostings()
+})
+watch(selectedDateRange, async () => {
+    await getOutputPostings()
+})
+watch(selectedFilter, async () => {
+    await getOutputPostings()
+})
+
 </script>
 
 <template>
@@ -115,6 +157,18 @@ await getOutputPostings({
         </header>
 
         <main class="border rounded-md shadow-sm">
+            <div class="flex items-center flex-wrap gap-4 p-4">
+                <Toolbar class="border-none shadow-none p-0 grow" @change="handleDepartmentChange" />
+                <div class="relative">
+                    <SearchIcon class="text-muted-foreground size-4 absolute left-2 top-1/2 -translate-y-1/2" />
+                    <Input class="pl-8" placeholder="Search" v-model="search"
+                        @keydown.enter.prevent="getOutputPostings" />
+                </div>
+                <div class="min-w-[12rem]">
+                    <OutputPostingFilter v-model="selectedFilter" />
+                </div>
+                <WipDateFilter v-model="selectedDateRange" />
+            </div>
             <DataTable v-if="outputPostings" :items="viewSelected ? checkedItems : outputPostings"
                 :columns="outputPostingDataTableColumns" :loading="planLoading">
                 <template #header.check="{ item }">
@@ -128,6 +182,13 @@ await getOutputPostings({
                     </TableCell>
                 </template>
 
+                <template #item.image="{ item }">
+                    <TableCell>
+                        <ImageApp :image="getS3Link(item.plan.product_data?.image?.filename || '', 'small')"
+                            class="max-w-10" />
+                    </TableCell>
+                </template>
+
                 <template #item.plan_code="{ item }">
                     <TableCell>
                         <span class="font-medium"> {{ item.plan_code }}</span>
@@ -135,9 +196,28 @@ await getOutputPostings({
                 </template>
                 <template #item.plan_task_id="{ item }">
                     <TableCell class="flex flex-wrap gap-2">
-                        <span class="uppercase rounded-md border px-2 text-xs" v-for="task in item.plan_task_id"
-                            :key="task"> {{
-                                task }}</span>
+                        <span class="uppercase rounded-md border px-2 text-xs"
+                            v-for="(task, index) in item.plan_task_id" :key="`${item.id}-${index}`"> {{ task
+                            }}</span>
+                    </TableCell>
+                </template>
+                <template #item.task_count="{ item }">
+                    <TableCell>
+                        <span class="uppercase rounded-md border px-2 text-xs"> {{ item.plan_task_id.length }}</span>
+                    </TableCell>
+                </template>
+
+                <template #item.is_approved="{ item }">
+                    <TableCell>
+                        <span
+                            :class="cn('border rounded-lg py-1 px-2 font-medium text-xs', item.is_approved ? 'bg-emerald-400/30 text-emerald-500 border-emerald-500' : 'bg-amber-400/30 text-amber-500 border-amber-500')">{{
+                                item.is_approved ? 'Approved' : 'Pending' }}</span>
+                    </TableCell>
+                </template>
+
+                <template #item.updated_at="{ item }">
+                    <TableCell>
+                        <span class="text-muted-foreground text-xs">{{ formatReadableDate(item.updated_at) }}</span>
                     </TableCell>
                 </template>
 
@@ -145,8 +225,8 @@ await getOutputPostings({
                     <div class="flex justify-between">
                         <ButtonApp variant="secondary" size="sm" @click="viewSelected = !viewSelected">View selected
                         </ButtonApp>
-                        <PaginationApp per-page-name="pages" @change:query="getOutputPostings"
-                            :disable-prev="!hasPrevPage" :disable-next="!hasNextPage" />
+                        <PaginationApp2 v-model:page="page" v-model:pages="perPage" :disable-prev="!hasPrevPage"
+                            :disable-next="!hasNextPage" />
                     </div>
                 </template>
             </DataTable>

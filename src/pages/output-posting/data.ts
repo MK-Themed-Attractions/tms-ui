@@ -6,12 +6,20 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     title: "",
   },
   {
+    key: 'image',
+    title: ''
+  },
+  {
     key: "plan_code",
     title: "Plan code",
   },
   {
     key: "sku",
     title: "Product SKU",
+  },
+  {
+    key: 'plan.product_data.title',
+    title: 'Title'
   },
   {
     key: "operation_code",
@@ -21,4 +29,16 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     key: "plan_task_id",
     title: "Task UUIDs",
   },
+  {
+    key: "task_count",
+    title: "Task Count",
+  },
+  {
+    key: 'is_approved',
+    title: 'BC Status'
+  },
+  {
+    key:'updated_at',
+    title: 'Last modified'
+  }
 ];

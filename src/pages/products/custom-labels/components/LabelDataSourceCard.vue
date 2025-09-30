@@ -108,7 +108,7 @@
         :loading="loading"
         type="submit"
         @click="deleteCustomLabelData"
-        v-if="mode == 'edit'"
+        v-if="mode == 'edit' && allowDelete"
       >
         Delete
       </ButtonApp>
@@ -164,10 +164,17 @@ const { customLabel, loading } = storeToRefs(customLabelStore);
 import { LabelParameterValueList } from "@/types/customLabel";
 
 // Props
-const props = defineProps<{
-  mode: "create" | "edit";
-  sumIndex?: number;
-}>();
+const props = defineProps({
+  mode: {
+    type: String as () => "create" | "edit",
+    required: true,
+  },
+  allowDelete: {
+    type: Boolean,
+    default: false,
+  },
+  sumIndex: Number,
+});
 const emits = defineEmits<{
   (e: "refresh"): void;
 }>();

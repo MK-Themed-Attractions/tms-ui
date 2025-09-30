@@ -11,11 +11,13 @@ import { computed } from "vue";
 import { BarChart } from "@/components/ui/chart-bar";
 import { Card } from "@/components/ui/card";
 import { HardHat, ThumbsDown, Wrench, Zap } from "lucide-vue-next";
+import { usePermission } from "@/layouts/main/usePermission";
 
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const workerStore = useWorkerStore()
 const { workers } = storeToRefs(workerStore)
+const { isAdmin } = usePermission()
 
 const { fetchWorkers, topWorkersByPoints, topWorkersByRunTime } = useWorker()
 function useWorker() {
@@ -55,7 +57,7 @@ function useWorker() {
   }
 }
 
-if (!workers.value && user.value) {
+if (!workers.value && user.value && isAdmin(user.value.id)) {
   await fetchWorkers()
 }
 </script>
@@ -129,7 +131,7 @@ if (!workers.value && user.value) {
       </Card>
     </div>
 
-    <div class="grid xl:grid-cols-2 gap-6 items-start">
+    <div class="grid xl:grid-cols-2 gap-6 items-start" v-if="workers && workers.length">
       <TopWorkersChart v-if="topWorkersByPoints" :items="topWorkersByPoints" :display-count="5" category="points"
         name="value" class="basis-[40rem]" title="Top performing employees" />
       <TopWorkersChart v-if="topWorkersByRunTime" :items="topWorkersByRunTime" :display-count="5" category="runtime"

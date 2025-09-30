@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import { ButtonApp } from "@/components/app/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import DropdownMenuLabel from "@/components/ui/dropdown-menu/DropdownMenuLabel.vue";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,22 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { useWorkerDepartmentStore } from "@/stores/workerDepartmentStore";
 import {
   Building,
-  ChevronDown,
-  CircleHelp,
-  Clock,
   LoaderCircle,
-  RefreshCcw,
-  Search,
-  XCircle,
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import type { WorkerDepartment } from "@/types/workers";
-import { Button } from "@/components/ui/button";
-import { ref, watch, watchEffect } from "vue";
+import { ref, watch } from "vue";
 
 const props = defineProps<{
   loading?: boolean;

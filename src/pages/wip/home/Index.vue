@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Building,
   Ellipsis,
+  LoaderCircle,
+  PrinterIcon,
+  RefreshCcw,
   TriangleAlert,
   Wrench,
 } from "lucide-vue-next";
@@ -43,12 +46,18 @@ import WipSkeleton from "./components/WipSkeleton.vue";
 import { DataTableLoader } from "@/components/app/data-table";
 import WipDateFilter from "./components/WipDateFilter.vue";
 import IncidentReportDialog from "./components/IncidentReportDialog.vue";
+import { usePermission } from "@/layouts/main/usePermission";
+import ProductionTag from "@/pages/prints/ProductionTag.vue";
+import Printer from "@/pages/prints/Printer.vue";
+import type { TypeProductionTag } from "@/pages/prints/types";
 
 
 const authStore = useAuthStore()
 const { loading: authLoading } = storeToRefs(authStore)
 const wipStore = useWipStore();
 const workerDepartmentStore = useWorkerDepartmentStore()
+const { hasPermission } = usePermission()
+const printProdTagKey = import.meta.env.VITE_PRINT_PROD_TAG_KEY;
 
 const { fetchWipPlans,
   wipLoading,
@@ -84,6 +93,7 @@ const { selectedTaskStatusFilter, handleGetWIpsWithFilter, filter, search, selec
 const { handleShowIncidentReportDialog, showIncidentReportDialog, handleReportIncidentSubmit, selectedTaskReason } = useIncidentReport()
 
 function useWip() {
+
   const { loading: wipLoading } = storeToRefs(wipStore);
   const assigningBatch = ref<{ batch: WipBatch, taskIds: string[] }>()
   //task ids on common ms
@@ -126,10 +136,10 @@ function useWip() {
   }
 
   //fetch batch wips only when batch doesnt have tasks in it
-  async function handleGetBatchWip(batch: WipBatch) {
+  async function handleGetBatchWip(batch: WipBatch, force?: boolean) {
 
     //only fetch the data when theres no tasks on batch to avoid repeated fetch
-    if (batch.tasks) return;
+    if (batch.tasks && !force) return;
     await fetchBatchWip(batch)
   }
 
@@ -171,6 +181,7 @@ function useWip() {
    * @param tasks 
    */
   function handleMultipleTaskAssign(batch: WipBatch) {
+
     const tasks = batch.tasks?.filter(task => canAssign(task.status))
     const taskIds = toTaskIds(tasks ? tasks : [])
 
@@ -214,8 +225,8 @@ function useWip() {
     handleShowMultipleTaskAssignDialog
   };
 }
-
 function useWorker() {
+
   const openAssignWorkerDialog = ref(false)
   const selectedDepartment = ref<WorkerDepartment>()
   const workCenters = computed(() => workerDepartmentStore.getWorkCentersByDeptId(selectedDepartment.value?.id || ''))
@@ -358,11 +369,9 @@ function useTaskOperations() {
       return acc;
     }, [])
 
-    console.log('taskIds', taskIds)
 
     //collect all worker ids on each task
     const workerIds = selectedBatch.value.tasks.reduce<string[]>((acc, task) => {
-      console.log('task', task)
       if (!task.task_workers || !task.task_workers.worker_ids) return acc;
 
       //worker ids
@@ -375,7 +384,6 @@ function useTaskOperations() {
       return acc;
     }, [])
 
-    console.log('workerIds', workerIds)
     //do not proceed when theres at least one workers on each task
     if (!workerIds.length) {
       toast.warning('Batch Info', {
@@ -560,6 +568,7 @@ function useIncidentReport() {
 
     const payload: CreateReportIncidentPayload = {
       task_plan_id: selectedTask.value.task_plan_id,
+      task_id: selectedTask.value.id,
       reason
     }
 
@@ -638,9 +647,18 @@ onBeforeMount(() => {
   wipTasksGrouped.value = []
 })
 
+
+
+
 </script>
 <template>
-  <div class="container space-y-6">
+  <div class="container space-y-6 relative">
+    <ButtonApp @click="handleGetWIpsWithFilter" :disabled="wipLoading || authLoading" size="icon"
+      v-if="selectedDepartment" class="rounded-full fixed left-1/2 -translate-x-1/2 top-20 z-[100]">
+      <LoaderCircle v-if="wipLoading || authLoading" class="animate-spin size-4" />
+      <RefreshCcw v-else />
+    </ButtonApp>
+
     <SectionHeader title="Work in progress" description="This section lets you assign workers to tasks, start, pause, and
         complete them, and view real-time task status." />
 
@@ -694,6 +712,12 @@ onBeforeMount(() => {
                     {{ product.sku }}
                   </RouterLink>
                 </TaskGroupLabel>
+                <TaskGroupLabel label="product title">
+                  <RouterLink :to="{ name: 'productShow', params: { productId: product.sku } }" target="_blank"
+                    class="hover:underline">
+                    {{ product.title }}
+                  </RouterLink>
+                </TaskGroupLabel>
                 <div class="ml-auto flex flex-col justify-center ">
                   <Badge class="ml-auto capitalize gap-1 bg-white" variant="outline">
                     <component :is="getIconByPlanStatus(plan.status_code)" class="size-4" />
@@ -734,6 +758,32 @@ onBeforeMount(() => {
                             <DropdownMenuItem @click="handleConfirmPauseAll(batch)">Pause all</DropdownMenuItem>
                             <DropdownMenuItem @click="handleConfirmFinishAll(batch)">Finish all</DropdownMenuItem>
                           </template>
+                          <DropdownMenuSeparator />
+                          <Printer v-if="hasPermission(printProdTagKey)">
+                            <template #activator>
+                              <DropdownMenuItem @select="(e: { preventDefault: () => any; }) => e.preventDefault()">
+                                <PrinterIcon /> <span>Print Production Tag</span>
+                              </DropdownMenuItem>
+                            </template>
+                            <template :key="value.task_id" v-for="value in (batch.tasks ?? []).map(
+                              (item, item_index) => {
+                                return {
+                                  plan_code: plan.code,
+                                  product_sku: product.sku,
+                                  product_title: product.title,
+                                  work_centers: workCenters,
+                                  task_id: item.id,
+                                  data_index: item_index,
+                                  data_count: batch.tasks?.length,
+                                };
+                              },
+                            )">
+                              <ProductionTag v-bind="{ ...(value as TypeProductionTag) }" />
+                            </template>
+                          </Printer>
+                          <DropdownMenuItem @click="handleGetBatchWip(batch, true)">
+                            <RefreshCcw /> Reload
+                          </DropdownMenuItem>
                         </WipTaskDropdown>
                       </TableCell>
                     </template>
@@ -763,7 +813,6 @@ onBeforeMount(() => {
                           <DropdownMenuItem v-if="canFinish(task.status)" @click.stop="handleFinishTask(task, batch)">
                             Finish
                           </DropdownMenuItem>
-
                         </template>
 
                         <template v-if="canReportIncident(task.status)">
@@ -775,6 +824,7 @@ onBeforeMount(() => {
                       </WipTaskDropdown>
 
                     </template>
+
 
                   </WipTaskDataTable>
                 </template>

@@ -19,6 +19,7 @@ import {
   Wrench,
   Tags,
   Ticket,
+  Printer
 } from "lucide-vue-next";
 import type { NavItem } from "./components/SideNavigation.vue";
 
@@ -39,6 +40,12 @@ export const navItemData: NavItem[] = [
         name: "Custom Label",
         icon: Tags,
         to: { name: "customLabel" },
+        permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
+      },
+       {
+        name: "Label Printer",
+        icon: Printer,
+        to: { name: "labelPrinter" },
         permissionKey: import.meta.env.VITE_PRODUCTS_KEY,
       },
     ],

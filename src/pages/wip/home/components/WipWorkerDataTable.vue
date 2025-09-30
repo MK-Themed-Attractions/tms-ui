@@ -3,7 +3,7 @@ import { DataTable } from '@/components/app/data-table';
 import { useWorkerStore } from '@/stores/workerStore';
 import { storeToRefs } from 'pinia';
 import { selectedDepartmentKey, wipWorkerDataTableColumns, workCentersKey, workerPerPage } from '../../data';
-import { PaginationApp, type PaginationQuery } from '@/components/app/pagination';
+import { PaginationApp, PaginationApp2, type PaginationQuery } from '@/components/app/pagination';
 import { TableCell, TableHead } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDataTableChecks } from '@/composables/useDataTableChecks';
@@ -20,6 +20,7 @@ const workerStore = useWorkerStore()
 const { workers } = storeToRefs(workerStore)
 const { hasNextPage, hasPrevPage, loading } = storeToRefs(workerStore)
 const selectedDepartment = inject(selectedDepartmentKey);
+const page = ref('1')
 
 // const workers = workerStore.assignableWorkers(workCenters!.value || [])
 
@@ -61,8 +62,8 @@ const filteredWorkers = computed(() => {
 })
 
 
-async function handleQueryChange(query: Partial<PaginationQuery>) {
-    await workerStore.getWorkers({ ...params.value, page: query.page, per_page: query.perPage ? +query.perPage : workerPerPage, })
+async function handleQueryChange() {
+    await workerStore.getWorkers({ ...params.value, page: page.value, per_page: workerPerPage, })
 }
 
 function useSearch() {
@@ -71,6 +72,7 @@ function useSearch() {
     async function searchWorkers() {
         await workerStore.getWorkers({
             ...params.value,
+            page: 1,
             q: search.value,
         })
     }
@@ -94,6 +96,11 @@ function useSearch() {
 
 /* INITIALIZE WORKERS */
 await workerStore.getWorkers(params.value)
+
+watchEffect(async () => {
+    if (page.value)
+        await handleQueryChange()
+})
 
 </script>
 
@@ -122,10 +129,12 @@ await workerStore.getWorkers(params.value)
                         @click="showSelectedOnly = !showSelectedOnly">
                         {{ showSelectedOnly ? 'Show All' : 'Show selected' }}
                     </ButtonApp>
-                    <PaginationApp page-name="worker-page" per-page-name="worker-per-page" v-if="!showSelectedOnly"
+                    <PaginationApp2 v-model:page="page" :disable-next="!hasNextPage" :disable-prev="!hasPrevPage"
+                        :loading="loading" />
+                    <!-- <PaginationApp page-name="worker-page" per-page-name="worker-per-page" v-if="!showSelectedOnly"
                         :default-per-page="workerPerPage" class="col-span-full" :disable-prev="!hasPrevPage"
                         :loading="loading" :disable-next="!hasNextPage" @change:query="handleQueryChange">
-                    </PaginationApp>
+                    </PaginationApp> -->
                 </div>
             </template>
         </DataTable>

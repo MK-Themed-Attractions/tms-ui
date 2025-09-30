@@ -11,7 +11,26 @@ export type Ticket = TimeStamp & {
   ticket_type_id: string;
   ticket_type?: TicketType;
   user_id: string;
+  ticket_number: string;
+  comments_count: number;
 };
+
+export type TicketDetail = Ticket & {
+  comments: TicketComment[];
+};
+export type TicketComment = TimeStamp & {
+  comment: string;
+  name: string;
+  ticket_id: string;
+  id: string;
+};
+
+export type CreateCommentPayload = {
+  comment: string;
+  name: string;
+  ticket_id: string;
+};
+
 export type TicketStatus = "pending" | "rejected" | "approved";
 
 export const ticketSchema = z.object({
