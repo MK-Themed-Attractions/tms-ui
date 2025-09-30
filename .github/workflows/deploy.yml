@@ -1,0 +1,52 @@
+name: Build & Deploy to S3 + CloudFront
+
+on:
+  push:
+    branches: [prod]
+  pull_request_target:
+    branches: [prod]
+    types: [closed]
+
+jobs:
+  build-and-deploy:
+    if: >
+      (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/prod' && !contains(github.event.head_commit.message, 'Merge pull request'))
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build   # change if your output dir differs (e.g. dist)
+
+      # Option B (simpler): Use static creds stored in GitHub Secrets
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Sync files to S3
+        run: |
+          # change build/ below to your output folder (build or dist)
+          aws s3 sync build/ s3://your-bucket-name --delete --acl public-read
+
+          # Make index.html short-lived to avoid stale HTML in CDN
+          aws s3 cp build/index.html s3://your-bucket-name/index.html --acl public-read --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html; charset=utf-8"
+
+      - name: Create CloudFront invalidation
+        run: |
+          # replace with your CloudFront distribution ID
+          DISTRIBUTION_ID=EO44V0V4IOIB1
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
