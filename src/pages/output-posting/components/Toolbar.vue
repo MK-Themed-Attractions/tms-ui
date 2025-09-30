@@ -13,6 +13,7 @@ defineOptions({
 const workerDepartmentStore = useWorkerDepartmentStore()
 const emits = defineEmits<{
     (e: "change", department: WorkerDepartment): void;
+    (e: "reset"): void;
 }>();
 const props = defineProps<{
     loading?: boolean
@@ -33,6 +34,11 @@ function useDepartment() {
 
     watch(selectedDepartmentId, (newValue) => {
         if (!departments.value) return;
+
+        if (newValue === 'all') {
+          emits("reset");
+          return;
+        }
 
         const department = departments.value.find(d => d.id === newValue)
 
@@ -63,6 +69,7 @@ if (!departments.value) {
                 <SelectContent>
                     <SelectGroup>
                         <SelectLabel>Departments</SelectLabel>
+                        <SelectItem value="all">All</SelectItem>
                         <SelectItem v-for="department in departments" :key="department.id" :value="department.id">{{
                             department.name
                         }}</SelectItem>
