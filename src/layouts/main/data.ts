@@ -158,4 +158,9 @@ export const navItemData: NavItem[] = [
       },
     ],
   },
+  {
+    name: "Playground",
+    icon: Boxes,
+    to: { name: "playground" },
+  },
 ];
