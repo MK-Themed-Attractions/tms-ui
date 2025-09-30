@@ -130,6 +130,14 @@ async function handleDepartmentChange(department: WorkerDepartment) {
     })
 }
 
+async function handleReset() {
+    await getOutputPostings({
+        operation_code: [],
+        startDate: selectedDateRange.value?.start,
+        endDate: selectedDateRange.value?.end
+    })
+}
+
 watch(page, async () => {
     await getOutputPostings()
 })
@@ -158,7 +166,11 @@ watch(selectedFilter, async () => {
 
         <main class="border rounded-md shadow-sm">
             <div class="flex items-center flex-wrap gap-4 p-4">
-                <Toolbar class="border-none shadow-none p-0 grow" @change="handleDepartmentChange" />
+                <Toolbar
+                  class="border-none shadow-none p-0 grow"
+                  @change="handleDepartmentChange"
+                  @reset="handleReset"
+                />
                 <div class="relative">
                     <SearchIcon class="text-muted-foreground size-4 absolute left-2 top-1/2 -translate-y-1/2" />
                     <Input class="pl-8" placeholder="Search" v-model="search"
