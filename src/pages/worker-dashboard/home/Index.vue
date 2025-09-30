@@ -401,6 +401,10 @@ onUnmounted(() => {
                             <span class="text-xs text-muted-foreground">Status</span>
                             <p class="font-medium">{{ plan.status_code }}</p>
                         </div>
+                      <div>
+                        <span class="text-xs text-muted-foreground">Product Name</span>
+                        <p class="font-medium">{{ plan.batch_data[0]?.tasks[0]?.product_data?.title }}</p>
+                      </div>
                     </div>
                 </div>
 
