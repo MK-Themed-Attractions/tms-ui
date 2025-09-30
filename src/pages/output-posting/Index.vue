@@ -17,7 +17,7 @@ import { ConfirmationDialog } from '@/components/app/confirmation-dialog';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import { cn, formatReadableDate, getS3Link } from '@/lib/utils';
-import Toolbar from '../qc/home/components/Toolbar.vue';
+import Toolbar from './components/Toolbar.vue';
 import type { WorkerDepartment } from '@/types/workers';
 import { useRouteParams, useRouteQuery } from '@vueuse/router';
 import WipDateFilter from '../wip/home/components/WipDateFilter.vue';
