@@ -162,5 +162,6 @@ export const navItemData: NavItem[] = [
     name: "Playground",
     icon: Boxes,
     to: { name: "playground" },
+    permissionKey: import.meta.env.VITE_PLAYGROUND_KEY,
   },
 ];
