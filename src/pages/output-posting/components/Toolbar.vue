@@ -20,7 +20,7 @@ const props = defineProps<{
 }>()
 const selectedDepartment = defineModel<WorkerDepartment>()
 
-const selectedDepartmentId = ref<string>()
+const selectedDepartmentId = ref<string>('all')
 
 const { departments, fetchDepartments } = useDepartment()
 
