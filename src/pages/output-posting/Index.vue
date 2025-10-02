@@ -129,13 +129,15 @@ async function handleDepartmentChange(department: WorkerDepartment) {
     await getOutputPostings({
         page: 1,
         pages: 30,
-        operation_code: department.work_centers,
+        operation_code: department?.work_centers || [],
         startDate: selectedDateRange.value?.start,
         endDate: selectedDateRange.value?.end
     })
 }
 
 async function handleReset() {
+    selectedDepartment.value = undefined;
+
     await getOutputPostings({
         operation_code: [],
         startDate: selectedDateRange.value?.start,
