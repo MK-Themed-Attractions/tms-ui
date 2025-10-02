@@ -40,6 +40,11 @@ const selectedDateRange = ref<SelectedDateRange>()
 const selectedFilter = ref('all')
 const search = ref('')
 
+import { usePermission } from "@/layouts/main/usePermission";
+const { hasPermission } = usePermission();
+const OUTPUT_POSTING_TO_BC_KEY = import.meta.env.VITE_OUTPUT_POSTING_TO_BC_KEY;
+const OUTPUT_POSTING_SELECTION = import.meta.env.VITE_OUTPUT_POSTING_SELECTION_KEY;
+
 /* @ts-ignore */
 const { checkedItems, handleCheckAll, indicator, isChecked, toggleCheck } = useDataTableChecks<OutputPosting>(outputPostings)
 
@@ -159,7 +164,7 @@ watch(selectedFilter, async () => {
         <SectionHeader title="Output posting"
             description="Carefully check the task UUIDS before posting to prevent incorrect data on Business Central. QC failed tasks wont be included" />
 
-        <header class="position sticky -top-6 z-10 bg-muted p-4 rounded-md shadow-sm">
+        <header v-if="hasPermission(OUTPUT_POSTING_TO_BC_KEY)" class="position sticky -top-6 z-10 bg-muted p-4 rounded-md shadow-sm">
             <ButtonApp :prepend-icon="Send" :disabled="!checkedItems.length" @click="handleShowConfirmationDialog">Post
                 to Business Central</ButtonApp>
         </header>
@@ -183,12 +188,12 @@ watch(selectedFilter, async () => {
             </div>
             <DataTable v-if="outputPostings" :items="viewSelected ? checkedItems : outputPostings"
                 :columns="outputPostingDataTableColumns" :loading="planLoading">
-                <template #header.check="{ item }">
+                <template v-if="hasPermission(OUTPUT_POSTING_SELECTION)" #header.check="{ item }">
                     <TableCell>
                         <Checkbox @update:checked="handleCheckAll" :checked="indicator" />
                     </TableCell>
                 </template>
-                <template #item.check="{ item }">
+                <template v-if="hasPermission(OUTPUT_POSTING_SELECTION)" #item.check="{ item }">
                     <TableCell>
                         <Checkbox @click="toggleCheck(item)" :checked="isChecked(item)" />
                     </TableCell>

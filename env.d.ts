@@ -38,6 +38,8 @@ interface ImportMetaEnv {
   readonly VITE_USERS_KEY: string;
   readonly VITE_USERS_PERMISSION_KEY: string;
   readonly VITE_OUTPUT_POSTING_KEY: string;
+  readonly VITE_OUTPUT_POSTING_TO_BC_KEY: string;
+  readonly VITE_OUTPUT_POSTING_SELECTION_KEY: string;
   readonly VITE_INVENTORY_KEY: string;
 
   readonly VITE_TICKET_KEY: string;
