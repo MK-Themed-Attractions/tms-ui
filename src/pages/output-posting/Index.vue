@@ -52,7 +52,6 @@ function usePlan() {
     const { hasNextPage, hasPrevPage, items: outputPostings, paginate } = useSimplePaginate<OutputPosting>()
 
     async function getOutputPostings(params?: Partial<OutputPostingQueryParams>) {
-      console.log('getOutputPostings ' + selectedDepartment.value?.work_centers)
         const queryParams: Partial<OutputPostingQueryParams> = {
             page: page.value,
             pages: perPage.value,
