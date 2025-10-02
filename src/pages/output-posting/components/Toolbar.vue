@@ -7,6 +7,10 @@ import { ref, watch } from 'vue';
 import type { WorkerDepartment } from '@/types/workers';
 import { cn } from '@/lib/utils';
 
+import { usePermission } from "@/layouts/main/usePermission";
+const { hasPermission } = usePermission();
+const OUTPUT_POSTING_TO_BC_KEY = import.meta.env.VITE_OUTPUT_POSTING_TO_BC_KEY;
+
 defineOptions({
     inheritAttrs: false
 })
@@ -20,7 +24,7 @@ const props = defineProps<{
 }>()
 const selectedDepartment = defineModel<WorkerDepartment>()
 
-const selectedDepartmentId = ref<string>('all')
+const selectedDepartmentId = ref<string>()
 
 const { departments, fetchDepartments } = useDepartment()
 
@@ -51,6 +55,15 @@ function useDepartment() {
     }
 }
 
+watch(departments, (newDepartments) => {
+    if (hasPermission(OUTPUT_POSTING_TO_BC_KEY)) {
+      selectedDepartmentId.value = 'all'
+      return
+    }
+
+    selectedDepartmentId.value = newDepartments?.[0]?.id ?? ''
+}, { immediate: true })
+
 /* INITIALIZATION */
 if (!departments.value) {
     await fetchDepartments()
@@ -69,7 +82,7 @@ if (!departments.value) {
                 <SelectContent>
                     <SelectGroup>
                         <SelectLabel>Departments</SelectLabel>
-                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem v-if="hasPermission(OUTPUT_POSTING_TO_BC_KEY)" value="all">All</SelectItem>
                         <SelectItem v-for="department in departments" :key="department.id" :value="department.id">{{
                             department.name
                         }}</SelectItem>
