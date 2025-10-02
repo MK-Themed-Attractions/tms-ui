@@ -20,12 +20,123 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+
+      # -----------------------------
+      # Auto-detect commit count -> bump type
+      # -----------------------------
+      # Repo Variables (optional):
+      # - MINOR_THRESHOLD (default 2)
+      # - MAJOR_THRESHOLD (default 6)
+      - name: Determine commit count and auto bump type
+        id: auto_bump
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MINOR_THRESHOLD: ${{ vars.MINOR_THRESHOLD || '2' }}
+          MAJOR_THRESHOLD: ${{ vars.MAJOR_THRESHOLD || '6' }}
+        run: |
+          set -e
+          echo "Event: $GITHUB_EVENT_NAME"
+          COMMIT_COUNT=0
+
+          # determine commit count from event payload or API for PRs
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            COMMIT_COUNT=$(jq '.commits | length' "$GITHUB_EVENT_PATH" 2>/dev/null || echo 0)
+          elif [ "$GITHUB_EVENT_NAME" = "pull_request_target" ]; then
+            PR_NUM=$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+            if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ]; then
+              COMMIT_COUNT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/$PR_NUM/commits" | jq 'length' 2>/dev/null || echo 0)
+            else
+              echo "No PR number in payload — fallback to 0"
+            fi
+          else
+            echo "Unhandled event type ($GITHUB_EVENT_NAME) — defaulting commit count to 0"
+          fi
+
+          COMMIT_COUNT=${COMMIT_COUNT:-0}
+          echo "Commit count determined: $COMMIT_COUNT"
+
+          MINOR=${MINOR_THRESHOLD}
+          MAJOR=${MAJOR_THRESHOLD}
+
+          if [ "$COMMIT_COUNT" -lt "$MINOR" ]; then
+            BUMP_TYPE="patch"
+          elif [ "$COMMIT_COUNT" -lt "$MAJOR" ]; then
+            BUMP_TYPE="minor"
+          else
+            BUMP_TYPE="major"
+          fi
+
+          echo "Auto-selected bump type: $BUMP_TYPE (minor threshold=$MINOR, major threshold=$MAJOR)"
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+      # -----------------------------
+      # Bump / Set package.json version (automatic)
+      # - If VERSION_TO_SET is provided (repo variable), it will be used.
+      # - Otherwise uses auto-selected bump type from previous step.
+      # -----------------------------
+      - name: Bump / Set package.json version (automatic)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_TO_SET: ${{ vars.VERSION_TO_SET || '' }}                 # optional explicit version override
+          AUTO_BUMP_TYPE: ${{ steps.auto_bump.outputs.bump_type || '' }}   # computed bump type
+        run: |
+          set -e
+
+          if [ ! -f package.json ]; then
+            echo "No package.json found — skipping version bump."
+            exit 0
+          fi
+
+          CUR_VER=$(node -e "try{console.log(require('./package.json').version||'')}catch(e){console.log('')}")
+          echo "Current package.json version: $CUR_VER"
+
+          # Prefer explicit override if present
+          if [ -n "$VERSION_TO_SET" ]; then
+            echo "Setting explicit version: $VERSION_TO_SET"
+            jq --arg v "$VERSION_TO_SET" '.version=$v' package.json > /tmp/package.json && mv /tmp/package.json package.json
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add package.json
+            git commit -m "chore: set version to $VERSION_TO_SET [ci skip]" || echo "No changes to commit"
+            git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:${GITHUB_REF#refs/heads/} || echo "Push failed or no changes"
+
+          elif [ -n "$AUTO_BUMP_TYPE" ]; then
+            echo "Auto bump type from previous step: $AUTO_BUMP_TYPE"
+            case "$AUTO_BUMP_TYPE" in
+              patch|minor|major) ;;
+              *)
+                echo "Invalid AUTO_BUMP_TYPE: $AUTO_BUMP_TYPE — skipping bump"
+                exit 0
+                ;;
+            esac
+
+            # Use npm to bump version and create tag. Allow failure gracefully if nothing to do.
+            set +e
+            npm version "$AUTO_BUMP_TYPE" -m "chore: bump version to %s [ci skip]"
+            RC=$?
+            set -e
+
+            if [ $RC -ne 0 ]; then
+              echo "npm version returned non-zero ($RC). Possibly no change or protected tag — exiting bump step gracefully."
+              exit 0
+            fi
+
+            # push commit and tag
+            git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" --follow-tags
+          else
+            echo "No VERSION_TO_SET and no AUTO_BUMP_TYPE — skipping bump."
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -86,7 +197,6 @@ jobs:
           VITE_SUPERADMIN_IDS: ${{ vars.VITE_SUPERADMIN_IDS }}
           VITE_OUTPUT_POSTING_TO_BC_KEY: ${{ vars.VITE_OUTPUT_POSTING_TO_BC_KEY }}
           VITE_OUTPUT_POSTING_SELECTION_KEY: ${{ vars.VITE_OUTPUT_POSTING_SELECTION_KEY }}
-
         run: npm run build
 
       - uses: aws-actions/configure-aws-credentials@v3
@@ -110,7 +220,7 @@ jobs:
           TITLE="Prod Deployment - ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
 
           if [ -f package.json ]; then
-            # try to read version from package.json
+            # try to read version from package.json (this will reflect the bumped version if bump step ran)
             VER=$(node -e "try{const p=require('./package.json'); console.log(p.version||'')}catch(e){console.log('')}")
             if [ -n "$VER" ]; then
               TAG="v$VER"
