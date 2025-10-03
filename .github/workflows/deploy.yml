@@ -231,23 +231,71 @@ jobs:
           echo "tag_name=$TAG" >> $GITHUB_OUTPUT
           echo "release_title=$TITLE" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release (via github-script)
+      - name: Create or update GitHub Release (via github-script)
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const tag = process.env.TAG_NAME || `${{ steps.release_vars.outputs.tag_name }}`;
             const title = process.env.RELEASE_TITLE || `${{ steps.release_vars.outputs.release_title }}`;
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tag,
-              name: title,
-              generate_release_notes: true,
-              draft: false,
-              prerelease: false,
-              target_commitish: process.env.GITHUB_SHA || context.sha
-            });
+
+            // Optional: avoid creating a generic "Production" release.
+            // Remove this guard if you do want a "Production" release.
+            if (!/^v\d+\.\d+/.test(tag)) {
+              console.log(`Tag "${tag}" does not look like a version (skipping release creation).`);
+            } else {
+              try {
+                // Try to fetch existing release by tag
+                const { data: existing } = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
+                console.log(`Found existing release id=${existing.id} for tag ${tag} — updating release.`);
+                await github.rest.repos.updateRelease({
+                  owner,
+                  repo,
+                  release_id: existing.id,
+                  tag_name: tag,
+                  name: title,
+                  body: `Automated release for ${tag}`,
+                  draft: false,
+                  prerelease: false
+                });
+                console.log('Release updated.');
+              } catch (err) {
+                if (err.status === 404) {
+                  // Not found -> create new release
+                  console.log(`No release found for tag ${tag} — creating new release.`);
+                  await github.rest.repos.createRelease({
+                    owner,
+                    repo,
+                    tag_name: tag,
+                    name: title,
+                    generate_release_notes: true,
+                    draft: false,
+                    prerelease: false,
+                    target_commitish: process.env.GITHUB_SHA || context.sha
+                  });
+                  console.log('Release created.');
+                } else if (err.status === 422) {
+                  // In case of a race (create attempted concurrently), try to fetch and update
+                  console.warn('Received 422 — trying to fetch and update existing release.');
+                  const { data: existing2 } = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
+                  await github.rest.repos.updateRelease({
+                    owner,
+                    repo,
+                    release_id: existing2.id,
+                    tag_name: tag,
+                    name: title,
+                    body: `Automated release for ${tag}`,
+                    draft: false,
+                    prerelease: false
+                  });
+                  console.log('Release updated after race.');
+                } else {
+                  throw err;
+                }
+              }
+            }
         env:
           TAG_NAME: ${{ steps.release_vars.outputs.tag_name }}
           RELEASE_TITLE: ${{ steps.release_vars.outputs.release_title }}
