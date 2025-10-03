@@ -89,6 +89,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION_TO_SET: ${{ vars.VERSION_TO_SET || '' }}                 # optional explicit version override
           AUTO_BUMP_TYPE: ${{ steps.auto_bump.outputs.bump_type || '' }}   # computed bump type
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
           set -e
 
@@ -100,15 +101,22 @@ jobs:
           CUR_VER=$(node -e "try{console.log(require('./package.json').version||'')}catch(e){console.log('')}")
           echo "Current package.json version: $CUR_VER"
 
+          # Configure git user (needed for npm version commits)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Make the origin remote use the GitHub token so pushes/tags succeed
+          # (this rewrites origin only for the runner)
+          git remote set-url origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
           # Prefer explicit override if present
           if [ -n "$VERSION_TO_SET" ]; then
             echo "Setting explicit version: $VERSION_TO_SET"
             jq --arg v "$VERSION_TO_SET" '.version=$v' package.json > /tmp/package.json && mv /tmp/package.json package.json
 
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
             git add package.json
             git commit -m "chore: set version to $VERSION_TO_SET [ci skip]" || echo "No changes to commit"
+            # push commit to same branch (authenticated remote above)
             git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:${GITHUB_REF#refs/heads/} || echo "Push failed or no changes"
 
           elif [ -n "$AUTO_BUMP_TYPE" ]; then
@@ -129,10 +137,12 @@ jobs:
 
             if [ $RC -ne 0 ]; then
               echo "npm version returned non-zero ($RC). Possibly no change or protected tag — exiting bump step gracefully."
+              # If you want to debug, uncomment the next line to list tags and show package.json
+              # git tag --list; cat package.json
               exit 0
             fi
 
-            # push commit and tag
+            # push commit and tag to authenticated origin
             git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" --follow-tags
           else
             echo "No VERSION_TO_SET and no AUTO_BUMP_TYPE — skipping bump."
