@@ -12,12 +12,14 @@ import type {
   ProductAttachment,
   ProductBomQueryParams,
   ProductQueryParameter,
+  ProductResource,
   ProductRoutingBOM,
   ProductRoutingQueryParams,
   ProductRoutingWorkcenter,
   ProductShowQueryParams,
 } from "@/types/products";
 import { useStorage } from "@vueuse/core";
+import type { ProductResourceType } from "@/pages/products/show";
 
 export const useProductStore = defineStore("products", () => {
   const baseUrl = import.meta.env.VITE_PRODUCT;
@@ -129,6 +131,12 @@ export const useProductStore = defineStore("products", () => {
     return res?.data;
   }
 
+  /**
+   * @deprecated use getProductResources
+   * @param productSku
+   * @param loading
+   * @returns
+   */
   async function getProductTechnicalDrawings(
     productSku: string,
     loading: (loading: boolean) => void,
@@ -146,6 +154,13 @@ export const useProductStore = defineStore("products", () => {
     loading(false);
     return res?.files;
   }
+
+  /**
+   * @deprecated use getProductResources
+   * @param productSku
+   * @param loading
+   * @returns
+   */
 
   async function getProductPantoneReference(
     productSku: string,
@@ -165,6 +180,12 @@ export const useProductStore = defineStore("products", () => {
     return res?.files;
   }
 
+  /**
+   * @deprecated use getProductResources
+   * @param productSku
+   * @param loading
+   * @returns
+   */
   async function getProductAssemblyManual(
     productSku: string,
     loading: (loading: boolean) => void,
@@ -181,6 +202,21 @@ export const useProductStore = defineStore("products", () => {
 
     loading(false);
     return res?.files;
+  }
+
+  async function getProductResources(
+    productSku: string,
+    productResourceType: ProductResourceType,
+  ) {
+    await authStore.checkTokenValidity(
+      `${baseUrl}/api/auth/bearer-token`,
+      bearerToken,
+    );
+
+    const res = await get<ProductResource[]>(
+      `api/resources/${productSku}/${productResourceType}`,
+    );
+    return res;
   }
 
   async function getWorkCenters() {
@@ -244,6 +280,7 @@ export const useProductStore = defineStore("products", () => {
     getProductTechnicalDrawings,
     getProductPantoneReference,
     getProductAssemblyManual,
+    getProductResources,
     getWorkCenters,
     getBom,
     getBoms,

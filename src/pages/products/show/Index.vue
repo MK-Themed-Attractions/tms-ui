@@ -4,6 +4,7 @@ import type {
   ProductRoutingBOM,
   ProductQueryParameter,
   ProductAttachment,
+  ProductResource,
 } from "@/types/products";
 import { storeToRefs } from "pinia";
 import ImageCarousel from "./components/ImageCarousel.vue";
@@ -28,6 +29,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AttachmentDialog from "./components/AttachmentDialog.vue";
 import IndexSkeleton from "./components/IndexSkeleton.vue";
 import ProductCustomLabel from "./components/ProductCustomLabel.vue";
+import { productResourceTypes, type ProductResourceType } from ".";
 
 const props = defineProps<{
   productId: string;
@@ -70,6 +72,7 @@ function useProduct() {
 }
 
 function useRouting() {
+
   const defaultSelectedRouting = computed(() => product.value?.routings && product.value.routings.length ? product.value.routings.filter(r => !r.is_autocomplete)[0].operation_code : '')
   const selectedRouting = ref(defaultSelectedRouting.value);
   watchEffect(() => {
@@ -111,60 +114,54 @@ function useRouting() {
 }
 
 function useAttachments() {
-  type ProductAttachmentType = "technical" | "pantone" | "assembly";
   interface DialogData {
     title?: string;
     description?: string;
   }
 
   type AttachmentRecord = Partial<
-    Record<ProductAttachmentType, ProductAttachment[] | undefined>
+    Record<ProductResourceType, ProductResource[] | undefined>
   >;
 
   const attachmentDialog = ref(false);
   const attachmentLoading = ref(false);
   const attachments = ref<AttachmentRecord>({});
   const selectedAttachment = ref<DialogData>();
-  const selectedAttachmentType = ref<ProductAttachmentType>("technical");
+  const selectedAttachmentType = ref<ProductResourceType>("TDI");
 
-  function fetchAttachments() {
-    productStore
-      .getProductTechnicalDrawings(props.productId, (loading) => {
-        attachmentLoading.value = loading;
-      })
-      .then((result) => {
-        attachments.value.technical = result;
-      });
 
-    productStore
-      .getProductPantoneReference(props.productId, (loading) => {
-        attachmentLoading.value = loading;
-      })
-      .then((result) => {
-        attachments.value.pantone = result;
-      });
+  async function fetchAttachments() {
+    const promises = productResourceTypes.map(type => productStore.getProductResources(props.productId, type).then(res => ({ type: type, resources: res })))
+    const tae = await Promise.all(promises);
+    attachments.value = tae.reduce<AttachmentRecord>((acc, cur) => {
+      acc[cur.type] = cur.resources
+      return acc
+    }, {})
 
-    productStore
-      .getProductAssemblyManual(props.productId, (loading) => {
-        attachmentLoading.value = loading;
-      })
-      .then((result) => {
-        attachments.value.assembly = result;
-      });
+    console.log(attachments.value)
   }
 
-  function getAttachmentType(type: ProductAttachmentType): DialogData {
+
+  function getAttachmentType(type: ProductResourceType): DialogData {
     switch (type) {
-      case "assembly": {
-        selectedAttachmentType.value = "assembly";
+      case "TDI": {
+        selectedAttachmentType.value = "TDI";
+        return {
+          title: "Technical Drawing (TDI)",
+          description:
+            "Contains all files related to the technical drawings of this item. Clicking any file will take you to a new tab.",
+        };
+      }
+      case "MANUAL": {
+        selectedAttachmentType.value = 'MANUAL'
         return {
           title: "Assembly manual",
           description:
-            "Contains all files related to the assembly of this item. Clicking any file will take you to a new tab.",
-        };
+            "Contains all files related to the assembly of this item. Clicking any file will take you to a new tab",
+        }
       }
-      case "pantone": {
-        selectedAttachmentType.value = "pantone";
+      case "PANTONE": {
+        selectedAttachmentType.value = "PANTONE";
 
         return {
           title: "Pantone references",
@@ -172,11 +169,10 @@ function useAttachments() {
             "Contains all files related to the pantone reference of this item. Clicking any file will take you to a new tab.",
         };
       }
-      case "technical": {
-        selectedAttachmentType.value = "technical";
-
+      case "TDP": {
+        selectedAttachmentType.value = "TDP";
         return {
-          title: "Technical drawings",
+          title: "Technical drawings (TDP)",
           description:
             "Contains all files related to the technical drawings of this item. Clicking any file will take you to a new tab.",
         };
@@ -187,7 +183,7 @@ function useAttachments() {
     }
   }
 
-  function handleSelectAttachment(type: ProductAttachmentType) {
+  function handleSelectAttachment(type: ProductResourceType) {
     attachmentDialog.value = true;
     selectedAttachment.value = getAttachmentType(type);
   }
@@ -207,7 +203,7 @@ function useAttachments() {
 
 watchEffect(async () => {
   await fetchProduct(props.productId);
-  fetchAttachments();
+  await fetchAttachments();
 });
 
 /**
@@ -236,14 +232,18 @@ onActivated(() => {
           </ButtonApp>
 
           <template #content>
-            <DropdownMenuItem @click="handleSelectAttachment('technical')">
+            <DropdownMenuItem @click="handleSelectAttachment('TDI')">
               <Axis3D class="mr-2 h-4 w-4" />
-              Technical drawings
+              Technical drawings (TDI)
             </DropdownMenuItem>
-            <DropdownMenuItem @click="handleSelectAttachment('pantone')">
+            <DropdownMenuItem @click="handleSelectAttachment('TDP')">
+              <Axis3D class="mr-2 h-4 w-4" />
+              Technical drawings (TDP)
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleSelectAttachment('PANTONE')">
               <PaintBucket class="mr-2 h-4 w-4" /> Pantone reference
             </DropdownMenuItem>
-            <DropdownMenuItem @click="handleSelectAttachment('assembly')">
+            <DropdownMenuItem @click="handleSelectAttachment('MANUAL')">
               <Notebook class="mr-2 h-4 w-4" /> Assembly manual
             </DropdownMenuItem>
           </template>
@@ -269,7 +269,7 @@ onActivated(() => {
       </div>
     </ProductRouting>
 
-    <ProductCustomLabel  class="col-span-full"/>
+    <ProductCustomLabel class="col-span-full" />
 
     <Teleport to="#overlay">
       <AttachmentDialog v-model="attachmentDialog" :attachments="attachments[selectedAttachmentType]"

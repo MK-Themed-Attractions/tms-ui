@@ -9,13 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { ProductAttachment } from "@/types/products";
+import type { ProductResource } from "@/types/products";
 import { File, FileWarning, LoaderCircle } from "lucide-vue-next";
 
 const props = defineProps<{
   title?: string;
   description?: string;
-  attachments?: ProductAttachment[];
+  attachments?: ProductResource[];
   loading?: boolean;
 }>();
 
@@ -35,20 +35,10 @@ const dialog = defineModel({ default: false });
 
       <div v-if="!loading" class="rounded-md border border-dashed">
         <ul class="grid gap-2 p-3 text-sm" v-if="attachments?.length">
-          <li
-            v-for="attachment in attachments"
-            :key="attachment.link"
-            class="flex items-center gap-2"
-          >
+          <li v-for="attachment in attachments" :key="attachment.url" class="flex items-center gap-2">
             <File class="" :size="18" />
-            <ButtonApp
-              as="a"
-              variant="link"
-              class="whitespace-break-spaces p-0"
-              :href="attachment.link"
-              target="_blank"
-              >{{ attachment.name }}</ButtonApp
-            >
+            <ButtonApp as="a" variant="link" class="whitespace-break-spaces p-0" :href="attachment.url"
+              target="_blank">{{ attachment.name }}</ButtonApp>
           </li>
         </ul>
 
