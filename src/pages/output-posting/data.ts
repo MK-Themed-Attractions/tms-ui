@@ -6,8 +6,8 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     title: "",
   },
   {
-    key: 'image',
-    title: ''
+    key: "image",
+    title: "",
   },
   {
     key: "plan_code",
@@ -18,8 +18,8 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     title: "Product SKU",
   },
   {
-    key: 'plan.product_data.title',
-    title: 'Title'
+    key: "plan.product_data.title",
+    title: "Title",
   },
   {
     key: "operation_code",
@@ -34,11 +34,11 @@ export const outputPostingDataTableColumns: DataTableColumns[] = [
     title: "Task Count",
   },
   {
-    key: 'is_approved',
-    title: 'BC Status'
+    key: "is_approved",
+    title: "BC Status",
   },
   {
-    key:'updated_at',
-    title: 'Last modified'
-  }
+    key: "updated_at",
+    title: "Last modified",
+  },
 ];
