@@ -90,6 +90,10 @@ export interface ProductBomQueryParams {
   no: string[];
 }
 
+export type ProductResource = {
+  name: string;
+  url: string;
+};
 export type ProductRoutingOperationLetter =
   | "A"
   | "B"
